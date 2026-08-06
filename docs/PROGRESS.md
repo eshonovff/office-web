@@ -1,7 +1,7 @@
 # PROGRESS — Frontend
 
 **Фазаи ҷорӣ:** `fe-phase-1-auth-shell` (навбатӣ)
-**Ветка:** `feat/fe-phase-0-setup` → `dev`
+**Ветка:** `feat/fe-phase-0-setup` пӯшида шуд, merge ба `dev` ва `main`, tag `fe-phase-0`
 **Сана:** 2026-08-06
 
 | Фаза | Ном | Ҳолат |
