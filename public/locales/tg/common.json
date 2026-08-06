@@ -34,5 +34,43 @@
     "list": "Рӯйхат:",
     "noData": "Маълумот нест",
     "error": "Хатои боркунии маълумот"
+  },
+  "navigation": {
+    "dashboard": "Асосӣ",
+    "users": "Кормандон",
+    "roles": "Ролҳо",
+    "projects": "Проектҳо",
+    "inbox": "Инбокс",
+    "settings": "Танзимот"
+  },
+  "dashboard": {
+    "greeting": "Салом"
+  },
+  "forbidden": {
+    "title": "Дастрасӣ нест",
+    "description": "Шумо барои дидани ин саҳифа иҷозат надоред.",
+    "backHome": "Ба саҳифаи асосӣ"
+  },
+  "errors": {
+    "badRequest": "Дархости нодуруст",
+    "forbidden": "Дастрасӣ манъ аст",
+    "notFound": "Ёфт нашуд",
+    "conflict": "Ихтилофи маълумот",
+    "validation": "Хатои валидатсия",
+    "tooManyRequests": "Кӯшишҳои зиёд, каме сабр кунед",
+    "serverError": "Хатои сервер",
+    "badGateway": "Хатои пайвастшавӣ ба сервер",
+    "serviceUnavailable": "Хидмат ҳоло дастрас нест",
+    "noConnection": "Пайвастшавӣ ба интернет нест",
+    "unknown": "Хатогии номаълум"
+  },
+  "notFound": {
+    "title": "Саҳифа ёфт нашуд",
+    "description": "Роҳи дархостшуда вуҷуд надорад.",
+    "backHome": "Ба саҳифаи асосӣ"
+  },
+  "genericError": {
+    "title": "Хатогӣ рух дод",
+    "description": "Лутфан саҳифаро аз нав бор кунед."
   }
 }

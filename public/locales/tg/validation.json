@@ -1,0 +1,7 @@
+{
+  "usernameRequired": "Логинро ворид кунед",
+  "passwordRequired": "Рамзро ворид кунед",
+  "oldPassRequired": "Рамзи ҷориро ворид кунед",
+  "passwordMinLength": "Рамз бояд ҳадди аққал 8 аломат бошад",
+  "passwordsMustMatch": "Рамзҳо мувофиқат намекунанд"
+}
