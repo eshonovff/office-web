@@ -1,3 +1,5 @@
+export type Gender = 'Male' | 'Female';
+
 export interface RoleSummary {
   id: string;
   key: string;
@@ -9,19 +11,17 @@ export interface UserPermissionException {
   isGranted: boolean;
 }
 
-export interface UserListItem {
-  id: string;
-  fullName: string;
-  username: string;
-  isActive: boolean;
-  roles: RoleSummary[];
-}
-
 export interface UserDetail {
   id: string;
   fullName: string;
   username: string;
   phone: string | null;
+  email: string | null;
+  birthDate: string | null;
+  age: number | null;
+  address: string | null;
+  gender: Gender | null;
+  hasContractDocument: boolean;
   avatarUrl: string | null;
   isActive: boolean;
   mustChangePassword: boolean;
@@ -30,21 +30,32 @@ export interface UserDetail {
   permissionExceptions: UserPermissionException[];
 }
 
+export type UserListItem = Omit<UserDetail, 'onlyAssigned' | 'permissionExceptions'>;
+
 export interface CreateUserRequest {
   fullName: string;
-  username: string;
-  phone?: string | null;
+  phone: string;
+  email?: string | null;
+  birthDate?: string | null;
+  address?: string | null;
+  gender?: Gender | null;
+  avatar?: File | null;
 }
 
 export interface CreateUserResponse {
   id: string;
   username: string;
   temporaryPassword: string;
+  smsSent: boolean;
+  avatarUrl: string | null;
 }
 
 export interface UpdateUserRequest {
   fullName: string;
-  phone?: string | null;
+  email?: string | null;
+  birthDate?: string | null;
+  address?: string | null;
+  gender?: Gender | null;
   onlyAssigned: boolean;
 }
 
@@ -58,6 +69,7 @@ export interface SetUserPermissionsRequest {
 
 export interface ResetPasswordResponse {
   temporaryPassword: string;
+  smsSent: boolean;
 }
 
 export interface UsersListParams {
