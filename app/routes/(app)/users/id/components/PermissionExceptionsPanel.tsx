@@ -100,7 +100,10 @@ export function PermissionExceptionsPanel({
                       key={key}
                       className="flex flex-col gap-2 rounded-md border p-2.5 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center gap-2">
-                        <code className="text-xs">{key}</code>
+                        <span className="flex flex-col">
+                          <span className="text-sm">{t(`permissionLabels.${key}`, { ns: 'roles', defaultValue: key })}</span>
+                          <code className="text-muted-foreground text-2xs">{key}</code>
+                        </span>
                         <Badge
                           variant="outline"
                           className={cn(

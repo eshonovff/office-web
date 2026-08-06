@@ -13,5 +13,5 @@ export default [
     route('roles', 'routes/(app)/roles/route.tsx'),
   ]),
 
-  route('kitchen-sink', 'routes/kitchen-sink.tsx'),
+  ...(import.meta.env.DEV ? [route('kitchen-sink', 'routes/kitchen-sink.tsx')] : []),
 ] satisfies RouteConfig;

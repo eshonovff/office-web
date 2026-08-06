@@ -76,7 +76,10 @@ export function PermissionMatrixModal({
                     disabled={role.isSystem && role.key === 'owner'}
                     onCheckedChange={(checked) => toggle(key, checked)}
                   />
-                  <code className="text-xs">{key}</code>
+                  <span className="flex flex-col">
+                    <span>{t(`permissionLabels.${key}`, { defaultValue: key })}</span>
+                    <code className="text-muted-foreground text-2xs">{key}</code>
+                  </span>
                 </label>
               ))}
             </div>

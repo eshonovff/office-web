@@ -1,3 +1,4 @@
+import { LanguageSwitcher } from "~/components/layout/LanguageSwitcher";
 import { ModeToggle } from "~/components/layout/ModeToggle";
 import { UserNav } from "~/components/layout/UserNav";
 import { SidebarTrigger } from "~/components/ui/sidebar";
@@ -10,6 +11,7 @@ export default function Header() {
       </div>
 
       <div className="flex shrink-0 items-center gap-1 sm:gap-1.5 lg:gap-2">
+        <LanguageSwitcher />
         <ModeToggle />
         <div className="bg-border h-6 w-px shrink-0" aria-hidden="true" />
         <UserNav />

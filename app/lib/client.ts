@@ -112,12 +112,14 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const serverMessage: string | undefined = error.response.data?.detail || error.response.data?.title;
-
     const translationKey = status ? ERROR_MESSAGES[status] : undefined;
     const translatedMessage = translationKey ? i18next.t(translationKey, { ns: "common" }) : undefined;
 
-    const message = serverMessage || translatedMessage || i18next.t("errors.unknown", { ns: "common" });
+    // Server messages (ASP.NET ProblemDetails `detail`/`title`) are not localized —
+    // only fall back to them for status codes we have no mapped translation for.
+    const serverMessage: string | undefined = error.response.data?.detail || error.response.data?.title;
+
+    const message = translatedMessage || serverMessage || i18next.t("errors.unknown", { ns: "common" });
 
     toast.error(message);
 

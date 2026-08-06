@@ -1,8 +1,16 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarHeader } from "~/components/ui/sidebar";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+} from "~/components/ui/sidebar";
 import { getSidebarConfig, getVisibleNavigation } from "~/config/navigation";
 import { useCan } from "~/hooks/useCan";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import { NavMain } from "./NavMain";
 
 export function AppSidebar() {
@@ -24,6 +32,9 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="items-center group-data-[collapsible=icon]:items-center">
+        <LanguageSwitcher />
+      </SidebarFooter>
     </Sidebar>
   );
 }
