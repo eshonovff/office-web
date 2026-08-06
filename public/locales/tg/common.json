@@ -1,0 +1,38 @@
+{
+  "app": {
+    "name": "Office"
+  },
+  "modeToggle": {
+    "toggleTheme": "Иваз кардани мавзӯъ"
+  },
+  "actions": {
+    "confirm": "Тасдиқ",
+    "cancel": "Бекор кардан",
+    "areYouSure": "Оё шумо мутмаин ҳастед?"
+  },
+  "customSelect": {
+    "placeholder": "Интихоб кунед...",
+    "emptyText": "Чизе ёфт нашуд"
+  },
+  "fileInput": {
+    "selectFile": "Файлро интихоб кунед...",
+    "change": "Иваз кардан",
+    "delete": "Нест кардан",
+    "dragDrop": "Клик кунед ё файлро кашед"
+  },
+  "filters": {
+    "title": "Филтрҳо",
+    "reset": "Тоза кардан",
+    "close": "Пӯшидан",
+    "active": "фаъол",
+    "from": "Аз",
+    "to": "То",
+    "all": "Ҳама",
+    "apply": "Татбиқ кардан"
+  },
+  "table": {
+    "list": "Рӯйхат:",
+    "noData": "Маълумот нест",
+    "error": "Хатои боркунии маълумот"
+  }
+}

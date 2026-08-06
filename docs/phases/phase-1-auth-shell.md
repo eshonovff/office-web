@@ -35,8 +35,8 @@ Axios бо refresh, auth store, `useCan`, guard, layout, login, change-password.
 - [ ] 1.13 `(app)/layout.tsx` `clientLoader` — `/auth/me`, ҳифзи як ҷоя
 - [ ] 1.14 `mustChangePassword: true` → маҷбуран `/change-password`
 - [ ] 1.15 `HydrateFallback` — `<Splash>` то боркунӣ
-- [ ] 1.16 Sidebar аз `config/navigation.ts`, филтр бо `permission`
-- [ ] 1.17 Header: ном, аватар, ModeToggle, logout
+- [ ] 1.16 Sidebar аз `config/navigation.ts`, филтр бо `permission` — аз Nizom кӯчонида мешавад, вале роль ба permission иваз шавад
+- [ ] 1.17 Header: ном, аватар, ModeToggle, logout — аз Nizom кӯчонида мешавад, вале роль ба permission иваз шавад
 - [ ] 1.18 `ErrorBoundary` — 404 ва хатои умумӣ
 
 ### Саҳифаҳо
