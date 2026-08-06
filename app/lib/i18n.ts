@@ -1,6 +1,6 @@
-export const defaultNS = "common";
-export const fallbackLng = "tg";
-export const supportedLngs = ["tg"] as const;
+export const defaultNS = 'common';
+export const fallbackLng = 'tg';
+export const supportedLngs = ['tg'] as const;
 
 export type SupportedLng = (typeof supportedLngs)[number];
 
@@ -10,5 +10,5 @@ export const i18nConfig = {
   lng: fallbackLng,
   defaultNS,
   fallbackNS: defaultNS,
-  ns: [defaultNS, "auth", "validation"],
+  ns: [defaultNS, 'auth', 'validation', 'users', 'roles'],
 };

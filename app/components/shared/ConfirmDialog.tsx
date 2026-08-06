@@ -68,7 +68,7 @@ export function ConfirmDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="gap-6 p-6 sm:max-w-[400px]">
         <div className="flex flex-col items-center gap-4 text-center">
-          {/* Иконка с красивым фоном */}
+          {/* Status icon with a semantic background. */}
           <div className={cn('flex h-14 w-14 items-center justify-center rounded-full', config.color)}>
             <Icon className="h-7 w-7" />
           </div>
