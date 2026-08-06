@@ -1,0 +1,28 @@
+{
+  "title": "Ролҳо",
+  "create": "Роли нав",
+  "systemBadge": "Система",
+  "fields": {
+    "name": "Ном",
+    "key": "Калид",
+    "description": "Тавсиф",
+    "permissions": "Иҷозатҳо"
+  },
+  "editPermissions": "Танзими иҷозатҳо",
+  "createTitle": "Роли нав",
+  "createSuccess": "Роль сохта шуд",
+  "permissionsSaved": "Иҷозатҳо захира шуданд",
+  "deleteConfirmTitle": "Роль нест карда шавад?",
+  "deleteConfirmDescription": "Ин амал бозгашт надорад. Кормандони ин рольро дошта, онро гум мекунанд.",
+  "deleteSuccess": "Роль нест шуд",
+  "cannotDeleteSystem": "Роли системавиро нест кардан мумкин нест",
+  "permissionGroups": {
+    "users": "Кормандон",
+    "roles": "Ролҳо",
+    "projects": "Проектҳо",
+    "tasks": "Таскҳо",
+    "inbox": "Инбокс",
+    "channels": "Каналҳо",
+    "templates": "Шаблонҳо"
+  }
+}
