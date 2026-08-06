@@ -7,8 +7,10 @@
 | Чиз | Ҷой |
 |---|---|
 | Ҳамаи `components/ui/*` | base-ui primitives, 28 файл |
-| `DataTable`, `FilterSheet`, `Modal`, `ConfirmDialog`, `EmptyState`, `ByIdSkeleton`, `InfoItem`, `CustomSelect`, `CustomInput`, `DateInputField`, `UniversalImage`, `UserAvatar`, `CommandPalette` | `components/shared/` |
-| `layout/` — Sidebar, Header, ModeToggle, NavMain | + bug-и `Panel` ислоҳ шавад |
+| `DataTable`, `FilterSheet`, `Modal`, `ConfirmDialog`, `EmptyState`, `ByIdSkeleton`, `InfoItem`, `CustomSelect`, `CustomInput`, `DateInputField`, `UniversalImage`, `UserAvatar` | `components/shared/` |
+| `layout/ModeToggle`, `layout/Panel` | **фазаи 0** — бе вобастагӣ; bug-и `Panel` ислоҳ шавад |
+| `layout/Sidebar`, `Header`, `NavMain`, `UserNav` | **фазаи 1** — ба `useCan` ва `config/navigation.ts` вобастаанд |
+| `shared/CommandPalette` | **фазаи 6** (вазифаи 6.2) |
 | `styles/global.css` — токенҳои OKLCH, radius, shadow, animation | пурра |
 | `lib/utils.ts` (`cn`), `lib/date.ts`, `lib/format.ts`, `lib/form-data.ts` | пурра |
 | `store/useTableStore.ts`, `store/createModalStore.ts` | factory-ҳо |
