@@ -1,7 +1,7 @@
 import { type ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import type { TFunction } from "i18next";
 import { Eye, KeyRound, Power, PowerOff } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Permissions } from "~/config/permissions";
@@ -11,6 +11,7 @@ import type { RoleSummary, UserListItem } from "~/types/user";
 
 function UserActionsCell({ row, t }: { row: UserListItem; t: TFunction }) {
   const { can } = useCan();
+  const location = useLocation();
   const deactivateModal = useUsersModals((s) => s.deactivate);
   const activateModal = useUsersModals((s) => s.activate);
   const resetPasswordModal = useUsersModals((s) => s.resetPassword);
@@ -24,7 +25,7 @@ function UserActionsCell({ row, t }: { row: UserListItem; t: TFunction }) {
         size="icon"
         className="text-muted-foreground hover:text-foreground tap-target-44 h-8 w-8"
         title={t("actions.view", { ns: "common" })}
-        render={<Link to={`/users/${row.id}`} />}>
+        render={<Link to={`/users/${row.id}`} state={{ from: location.pathname }} />}>
         <Eye className="h-4 w-4" />
       </Button>
       {canManage && (

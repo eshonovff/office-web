@@ -10,7 +10,7 @@ export const i18nConfig = {
   fallbackLng,
   defaultNS,
   fallbackNS: defaultNS,
-  ns: [defaultNS, 'auth', 'validation', 'users', 'roles'],
+  ns: [defaultNS, 'auth', 'validation', 'users', 'roles', 'navigation'],
   detection: {
     order: ['localStorage'],
     caches: ['localStorage'],
