@@ -10,5 +10,5 @@ export const i18nConfig = {
   lng: fallbackLng,
   defaultNS,
   fallbackNS: defaultNS,
-  ns: [defaultNS],
+  ns: [defaultNS, "auth", "validation"],
 };

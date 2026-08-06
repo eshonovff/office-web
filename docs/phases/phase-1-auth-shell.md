@@ -14,36 +14,36 @@ Axios бо refresh, auth store, `useCan`, guard, layout, login, change-password.
 ## Вазифаҳо
 
 ### HTTP ва auth ⚠️ ҷои муҳимтарин
-- [ ] 1.1 `lib/client.ts` — instance, `withCredentials: true`
-- [ ] 1.2 Request interceptor: токен аз `useAuthStore`, **на аз cookie**
-- [ ] 1.3 Response interceptor — хатогиҳо ва toast (аз Nizom, `SILENT_URLS` мемонад)
-- [ ] 1.4 **Навбати refresh:** 401 → агар refresh давида истода бошад,
+- [x] 1.1 `lib/client.ts` — instance, `withCredentials: true`
+- [x] 1.2 Request interceptor: токен аз `useAuthStore`, **на аз cookie**
+- [x] 1.3 Response interceptor — хатогиҳо ва toast (аз Nizom, `SILENT_URLS` мемонад)
+- [x] 1.4 **Навбати refresh:** 401 → агар refresh давида истода бошад,
       request дар навбат истад; вагарна як refresh сар шавад.
       Баъди муваффақият ҳамаи request-ҳои навбат бо токени нав такрор шаванд
-- [ ] 1.5 Агар refresh 401 диҳад → `logout()` + `/login` + тоза кардани QueryClient
-- [ ] 1.6 **Тест:** 5 request-и ҳамзамон бо 401 → танҳо як даъвати `/auth/refresh`
-- [ ] 1.7 `store/useAuthStore.ts` — `accessToken`, `user`, `roles`, `permissions`. **Бе `persist`**
+- [x] 1.5 Агар refresh 401 диҳад → `logout()` + `/login` + тоза кардани QueryClient
+- [x] 1.6 **Тест:** 5 request-и ҳамзамон бо 401 → танҳо як даъвати `/auth/refresh`
+- [x] 1.7 `store/useAuthStore.ts` — `accessToken`, `user`, `roles`, `permissions`. **Бе `persist`**
 
 ### Доступ
-- [ ] 1.8 `config/permissions.ts` — `Record<path, PermissionKey>`
-- [ ] 1.9 `canAccessRoute` — **роути номаълум → `false`**
-- [ ] 1.10 `hooks/useCan.ts` — `can(key)`, `can([keys])` OR, `canAll([keys])` AND
-- [ ] 1.11 **Тестҳо:** роути номаълум, permission ҳаст/нест, OR, AND
+- [x] 1.8 `config/permissions.ts` — `Record<path, PermissionKey>`
+- [x] 1.9 `canAccessRoute` — **роути номаълум → `false`**
+- [x] 1.10 `hooks/useCan.ts` — `can(key)`, `can([keys])` OR, `canAll([keys])` AND
+- [x] 1.11 **Тестҳо:** роути номаълум, permission ҳаст/нест, OR, AND
 
 ### Роут ва shell
-- [ ] 1.12 `routes.ts` — дастӣ, `(auth)` ва `(app)`
-- [ ] 1.13 `(app)/layout.tsx` `clientLoader` — `/auth/me`, ҳифзи як ҷоя
-- [ ] 1.14 `mustChangePassword: true` → маҷбуран `/change-password`
-- [ ] 1.15 `HydrateFallback` — `<Splash>` то боркунӣ
-- [ ] 1.16 Sidebar аз `config/navigation.ts`, филтр бо `permission` — аз Nizom кӯчонида мешавад, вале роль ба permission иваз шавад
-- [ ] 1.17 Header: ном, аватар, ModeToggle, logout — аз Nizom кӯчонида мешавад, вале роль ба permission иваз шавад
-- [ ] 1.18 `ErrorBoundary` — 404 ва хатои умумӣ
+- [x] 1.12 `routes.ts` — дастӣ, `(auth)` ва `(app)`
+- [x] 1.13 `(app)/layout.tsx` `clientLoader` — `/auth/me`, ҳифзи як ҷоя
+- [x] 1.14 `mustChangePassword: true` → маҷбуран `/change-password`
+- [x] 1.15 `HydrateFallback` — `<Splash>` то боркунӣ
+- [x] 1.16 Sidebar аз `config/navigation.ts`, филтр бо `permission` — аз Nizom кӯчонида мешавад, вале роль ба permission иваз шавад
+- [x] 1.17 Header: ном, аватар, ModeToggle, logout — аз Nizom кӯчонида мешавад, вале роль ба permission иваз шавад
+- [x] 1.18 `ErrorBoundary` — 404 ва хатои умумӣ
 
 ### Саҳифаҳо
-- [ ] 1.19 `/login` — форма, Zod, хатои inline (бе toast)
-- [ ] 1.20 `/change-password`
-- [ ] 1.21 `/` dashboard — ҳозир холӣ, танҳо салом ва ном
-- [ ] 1.22 Саҳифаи `403` — «доступ надоред»
+- [x] 1.19 `/login` — форма, Zod, хатои inline (бе toast)
+- [x] 1.20 `/change-password`
+- [x] 1.21 `/` dashboard — ҳозир холӣ, танҳо салом ва ном
+- [x] 1.22 Саҳифаи `403` — «доступ надоред»
 
 ## Definition of Done
 - Login → dashboard, sidebar танҳо пунктҳои иҷозатдодашударо нишон медиҳад

@@ -1,0 +1,126 @@
+import axios, { type InternalAxiosRequestConfig } from "axios";
+import i18next from "i18next";
+import { toast } from "sonner";
+import { getQueryClient } from "~/lib/query-client";
+import { useAuthStore } from "~/store/useAuthStore";
+import type { RefreshResponse } from "~/types/auth";
+
+const baseURL = (import.meta.env.VITE_API_URL || "") + "/api";
+
+export const apiClient = axios.create({
+  baseURL,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// Separate instance for the refresh call itself — it must never go through
+// apiClient's response interceptor, or a failed refresh would recurse into
+// the same 401-handling logic that triggered it.
+const refreshClient = axios.create({ baseURL, withCredentials: true });
+
+const ERROR_MESSAGES: Record<number, string> = {
+  400: "errors.badRequest",
+  403: "errors.forbidden",
+  404: "errors.notFound",
+  409: "errors.conflict",
+  422: "errors.validation",
+  429: "errors.tooManyRequests",
+  500: "errors.serverError",
+  502: "errors.badGateway",
+  503: "errors.serviceUnavailable",
+};
+
+const SILENT_URLS = ["/auth/login"];
+
+const isSilent = (url?: string): boolean => SILENT_URLS.some((silent) => url?.includes(silent));
+
+apiClient.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().accessToken;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// ─── 401 → single in-flight refresh, queued requests replay after ─────────
+
+let isRefreshing = false;
+let refreshWaiters: Array<(token: string | null) => void> = [];
+
+function onRefreshed(token: string | null) {
+  refreshWaiters.forEach((resolve) => resolve(token));
+  refreshWaiters = [];
+}
+
+function logout() {
+  useAuthStore.getState().clear();
+  getQueryClient().clear();
+  window.location.href = "/login";
+}
+
+type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const status: number | undefined = error.response?.status;
+    const requestUrl: string | undefined = error.config?.url;
+    const config = error.config as RetriableConfig | undefined;
+
+    if (status === 401 && config && !config._retry && !isSilent(requestUrl)) {
+      config._retry = true;
+
+      if (isRefreshing) {
+        // A refresh is already in flight — queue this request and replay it
+        // (or fail it) once that refresh settles.
+        return new Promise((resolve, reject) => {
+          refreshWaiters.push((token) => {
+            if (!token) {
+              reject(error);
+              return;
+            }
+            config.headers.Authorization = `Bearer ${token}`;
+            resolve(apiClient(config));
+          });
+        });
+      }
+
+      isRefreshing = true;
+      try {
+        const { data } = await refreshClient.post<RefreshResponse>("/auth/refresh");
+        useAuthStore.getState().setAccessToken(data.accessToken);
+        onRefreshed(data.accessToken);
+        config.headers.Authorization = `Bearer ${data.accessToken}`;
+        return apiClient(config);
+      } catch (refreshError) {
+        onRefreshed(null);
+        logout();
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    if (isSilent(requestUrl)) {
+      return Promise.reject(error);
+    }
+
+    if (!error.response) {
+      toast.error(i18next.t("errors.noConnection", { ns: "common" }));
+      return Promise.reject(error);
+    }
+
+    const serverMessage: string | undefined = error.response.data?.detail || error.response.data?.title;
+
+    const translationKey = status ? ERROR_MESSAGES[status] : undefined;
+    const translatedMessage = translationKey ? i18next.t(translationKey, { ns: "common" }) : undefined;
+
+    const message = serverMessage || translatedMessage || i18next.t("errors.unknown", { ns: "common" });
+
+    toast.error(message);
+
+    return Promise.reject(error);
+  },
+);
