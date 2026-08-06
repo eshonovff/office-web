@@ -1,14 +1,19 @@
-export const defaultNS = "common";
-export const fallbackLng = "tg";
-export const supportedLngs = ["tg"] as const;
+export const defaultNS = 'common';
+export const fallbackLng = 'tg';
+export const supportedLngs = ['tg', 'ru'] as const;
+export const languageStorageKey = 'i18nextLng';
 
 export type SupportedLng = (typeof supportedLngs)[number];
 
 export const i18nConfig = {
   supportedLngs,
   fallbackLng,
-  lng: fallbackLng,
   defaultNS,
   fallbackNS: defaultNS,
-  ns: [defaultNS, "auth", "validation"],
+  ns: [defaultNS, 'auth', 'validation', 'users', 'roles', 'navigation'],
+  detection: {
+    order: ['localStorage'],
+    caches: ['localStorage'],
+    lookupLocalStorage: languageStorageKey,
+  },
 };

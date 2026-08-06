@@ -1,0 +1,85 @@
+{
+  "app": {
+    "name": "Office"
+  },
+  "modeToggle": {
+    "toggleTheme": "Сменить тему"
+  },
+  "actions": {
+    "confirm": "Подтвердить",
+    "cancel": "Отмена",
+    "areYouSure": "Вы уверены?",
+    "view": "Просмотр",
+    "edit": "Редактировать",
+    "save": "Сохранить"
+  },
+  "customSelect": {
+    "placeholder": "Выберите...",
+    "emptyText": "Ничего не найдено"
+  },
+  "fileInput": {
+    "selectFile": "Выберите файл...",
+    "change": "Изменить",
+    "delete": "Удалить",
+    "dragDrop": "Нажмите или перетащите файл"
+  },
+  "filters": {
+    "title": "Фильтры",
+    "reset": "Сбросить",
+    "close": "Закрыть",
+    "active": "активно",
+    "from": "От",
+    "to": "До",
+    "all": "Все",
+    "apply": "Применить"
+  },
+  "search": "Поиск",
+  "table": {
+    "list": "Список:",
+    "noData": "Нет данных",
+    "error": "Ошибка загрузки данных",
+    "columns": "Столбцы",
+    "columnVisibility": "Отображение столбцов",
+    "showAll": "Показать все",
+    "hideAll": "Скрыть все",
+    "resetColumns": "Восстановить"
+  },
+  "navigation": {
+    "dashboard": "Главная",
+    "users": "Сотрудники",
+    "roles": "Роли",
+    "projects": "Проекты",
+    "inbox": "Входящие",
+    "settings": "Настройки"
+  },
+  "dashboard": {
+    "greeting": "Здравствуйте"
+  },
+  "forbidden": {
+    "title": "Доступ запрещён",
+    "description": "У вас нет прав для просмотра этой страницы.",
+    "backHome": "На главную"
+  },
+  "errors": {
+    "badRequest": "Неверный запрос",
+    "forbidden": "Доступ запрещён",
+    "notFound": "Не найдено",
+    "conflict": "Конфликт данных",
+    "validation": "Ошибка валидации",
+    "tooManyRequests": "Слишком много попыток, подождите немного",
+    "serverError": "Ошибка сервера",
+    "badGateway": "Ошибка соединения с сервером",
+    "serviceUnavailable": "Сервис временно недоступен",
+    "noConnection": "Нет подключения к интернету",
+    "unknown": "Неизвестная ошибка"
+  },
+  "notFound": {
+    "title": "Страница не найдена",
+    "description": "Запрошенный путь не существует.",
+    "backHome": "На главную"
+  },
+  "genericError": {
+    "title": "Произошла ошибка",
+    "description": "Пожалуйста, перезагрузите страницу."
+  }
+}

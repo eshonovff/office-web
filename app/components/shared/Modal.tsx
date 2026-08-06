@@ -12,13 +12,10 @@ interface ModalProps {
 }
 
 /**
- * Базовый компонент для модальных окон.
+ * Base modal component.
  *
- * - `modal={false}` — фикс для ComboBox/Select внутри модалки:
- *   Radix Dialog с modal=true ставит inert на всё вне диалога,
- *   что блокирует портал ComboboxContent от получения событий.
- * - Контент скроллируется внутри, header и footer фиксированы.
- * - Overlay остаётся визуально (bg + blur), только focus trap отключён.
+ * - Content scrolls inside the dialog while header and footer stay fixed.
+ * - The shared Dialog wrapper owns the overlay and focus behavior.
  */
 export function Modal({ open, onClose, title, children, footer, className }: ModalProps) {
   return (

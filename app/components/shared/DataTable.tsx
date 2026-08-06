@@ -143,9 +143,7 @@ export function DataTable<TData>({
                   <TableHead
                     key={header.id}
                     className={cn(
-                      index === 0 &&
-                        pinFirstColumn &&
-                        'bg-card sticky left-0 z-10 shadow-[2px_0_0_0_rgba(0,0,0,0.06)]',
+                      index === 0 && pinFirstColumn && 'bg-card sticky left-0 z-10 shadow-[2px_0_0_0_rgba(0,0,0,0.06)]',
                       index === headerGroup.headers.length - 1 &&
                         pinLastColumn &&
                         'bg-card sticky right-0 z-10 w-[80px] min-w-[80px] border-l shadow-[-4px_0_8px_rgba(0,0,0,0.06)]'
@@ -188,7 +186,7 @@ export function DataTable<TData>({
                 <TableCell colSpan={visibleColumns.length}>
                   <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-12">
                     <AlertCircle className="text-destructive h-8 w-8" />
-                    <p className="text-sm">{t('table.error', { defaultValue: 'Ошибка загрузки данных' })}</p>
+                    <p className="text-sm">{t('table.error', { defaultValue: 'Хатои боркунии маълумот' })}</p>
                   </div>
                 </TableCell>
               </TableRow>
