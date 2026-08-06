@@ -4,19 +4,28 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { usersApi } from '~/api/users';
+import { Panel } from '~/components/layout/Panel';
 import { Button } from '~/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import { FormCustomSelect } from '~/components/ui/form/FormCustomSelect';
+import { FormDateInput } from '~/components/ui/form/FormDateInput';
+import { FormFileInput } from '~/components/ui/form/FormFileInput';
 import { FormInput } from '~/components/ui/form/FormInput';
+import { FormTextarea } from '~/components/ui/form/FormTextarea';
 import { useForm } from '~/hooks/useForm';
 import { createUserSchema, type CreateUserForm } from '~/validations/user';
 import { TemporaryPasswordModal } from '../components/TemporaryPasswordModal';
 
 export default function CreateUserPage() {
-  const { t } = useTranslation(['users', 'validation']);
+  const { t } = useTranslation(['users', 'validation', 'common']);
   const { t: tVal } = useTranslation('validation');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [created, setCreated] = useState<{ username: string; temporaryPassword: string } | null>(null);
+  const [created, setCreated] = useState<{
+    id: string;
+    username: string;
+    temporaryPassword: string;
+    smsSent: boolean;
+  } | null>(null);
 
   const schema = createUserSchema(tVal);
   const {
@@ -25,53 +34,100 @@ export default function CreateUserPage() {
     formState: { isSubmitting: isFormSubmitting },
   } = useForm<CreateUserForm>({
     resolver: zodResolver(schema),
-    defaultValues: { fullName: '', username: '', phone: '' },
+    defaultValues: { fullName: '', phone: '', email: '', birthDate: null, address: '', gender: null, avatar: null },
   });
 
   const { mutate, isPending } = useMutation({
     mutationFn: usersApi.create,
     onSuccess: (response) => {
       void queryClient.invalidateQueries({ queryKey: ['users'] });
-      setCreated({ username: response.username, temporaryPassword: response.temporaryPassword });
+      setCreated({
+        id: response.id,
+        username: response.username,
+        temporaryPassword: response.temporaryPassword,
+        smsSent: response.smsSent,
+      });
     },
   });
 
   const isSubmitting = isFormSubmitting || isPending;
 
-  return (
-    <div className="mx-auto max-w-lg space-y-4">
-      <h1 className="text-xl font-semibold">{t('createTitle')}</h1>
+  const genderOptions = [
+    { value: 'Male', label: t('fields.genderMale') },
+    { value: 'Female', label: t('fields.genderFemale') },
+  ];
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('fields.fullName')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form
-            id="create-user-form"
-            className="space-y-4"
-            onSubmit={handleSubmit((data) =>
-              mutate({ fullName: data.fullName, username: data.username, phone: data.phone || null })
-            )}>
+  function onSubmit(data: CreateUserForm) {
+    mutate({
+      fullName: data.fullName,
+      phone: data.phone,
+      email: data.email || null,
+      birthDate: data.birthDate || null,
+      address: data.address || null,
+      gender: data.gender || null,
+      avatar: data.avatar ?? null,
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold tracking-tight">{t('createTitle')}</h1>
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+            {t('actions.cancel', { ns: 'common' })}
+          </Button>
+          <Button type="submit" form="create-user-form" disabled={isSubmitting}>
+            {t('create')}
+          </Button>
+        </div>
+      </div>
+
+      <form id="create-user-form" onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Panel title={t('detail.avatarTitle')} className="lg:col-span-1">
+          <FormFileInput control={control} name="avatar" accept="image/*" aspectRatio="square" />
+        </Panel>
+
+        <Panel title={t('mainInfoTitle')} className="lg:col-span-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormInput control={control} name="fullName" label={t('fields.fullName')} required />
-            <FormInput control={control} name="username" label={t('fields.username')} required />
-            <FormInput control={control} name="phone" label={t('fields.phone')} />
-            <Button type="submit" disabled={isSubmitting}>
-              {t('create')}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+            <FormInput
+              control={control}
+              name="phone"
+              label={t('fields.phone')}
+              placeholder="+992XXXXXXXXX"
+              required
+            />
+            <FormInput
+              control={control}
+              name="email"
+              label={t('fields.email')}
+              type="email"
+              placeholder="example@mail.com"
+            />
+            <FormDateInput control={control} name="birthDate" label={t('fields.birthDate')} maxDate={new Date()} />
+            <FormCustomSelect
+              control={control}
+              name="gender"
+              label={t('fields.gender')}
+              options={genderOptions}
+              isClearable
+            />
+            <FormTextarea control={control} name="address" label={t('fields.address')} className="sm:col-span-2" />
+          </div>
+        </Panel>
+      </form>
 
       {created && (
         <TemporaryPasswordModal
           open
           onClose={() => {
             setCreated(null);
-            navigate(`/users`);
+            navigate(`/users/${created.id}`);
           }}
           username={created.username}
           temporaryPassword={created.temporaryPassword}
+          smsSent={created.smsSent}
         />
       )}
     </div>
