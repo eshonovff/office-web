@@ -1,7 +1,8 @@
 import type { TFunction } from 'i18next';
 import { z } from 'zod';
 
-const USERNAME_PATTERN = /^[a-zA-Z0-9_.]+$/;
+const PHONE_PATTERN = /^(\+992|992)?\d{9}$/;
+const AVATAR_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 export const createUserSchema = (t: TFunction) =>
   z.object({
@@ -9,16 +10,28 @@ export const createUserSchema = (t: TFunction) =>
       .string()
       .min(1, t('required', { ns: 'validation' }))
       .max(200, t('stringMax', { ns: 'validation', count: 200 })),
-    username: z
-      .string()
-      .min(1, t('required', { ns: 'validation' }))
-      .max(100, t('stringMax', { ns: 'validation', count: 100 }))
-      .regex(USERNAME_PATTERN, t('usernamePattern', { ns: 'validation' })),
     phone: z
       .string()
-      .max(30, t('stringMax', { ns: 'validation', count: 30 }))
+      .min(1, t('required', { ns: 'validation' }))
+      .regex(PHONE_PATTERN, t('phonePattern', { ns: 'validation' })),
+    email: z
+      .string()
+      .email(t('invalidEmail', { ns: 'validation' }))
+      .max(200, t('stringMax', { ns: 'validation', count: 200 }))
       .optional()
       .or(z.literal('')),
+    birthDate: z.string().nullable().optional(),
+    address: z
+      .string()
+      .max(500, t('stringMax', { ns: 'validation', count: 500 }))
+      .optional()
+      .or(z.literal('')),
+    gender: z.enum(['Male', 'Female']).nullable().optional(),
+    avatar: z
+      .instanceof(File)
+      .refine((file) => AVATAR_TYPES.includes(file.type), t('avatarType', { ns: 'validation' }))
+      .nullable()
+      .optional(),
   });
 
 export const updateUserSchema = (t: TFunction) =>
@@ -27,11 +40,19 @@ export const updateUserSchema = (t: TFunction) =>
       .string()
       .min(1, t('required', { ns: 'validation' }))
       .max(200, t('stringMax', { ns: 'validation', count: 200 })),
-    phone: z
+    email: z
       .string()
-      .max(30, t('stringMax', { ns: 'validation', count: 30 }))
+      .email(t('invalidEmail', { ns: 'validation' }))
+      .max(200, t('stringMax', { ns: 'validation', count: 200 }))
       .optional()
       .or(z.literal('')),
+    birthDate: z.string().nullable().optional(),
+    address: z
+      .string()
+      .max(500, t('stringMax', { ns: 'validation', count: 500 }))
+      .optional()
+      .or(z.literal('')),
+    gender: z.enum(['Male', 'Female']).nullable().optional(),
     onlyAssigned: z.boolean(),
   });
 
