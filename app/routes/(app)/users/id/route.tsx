@@ -11,18 +11,13 @@ import { ConfirmDialog } from '~/components/shared/ConfirmDialog';
 import { Panel } from '~/components/layout/Panel';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
-import { FormCustomSelect } from '~/components/ui/form/FormCustomSelect';
-import { FormDateInput } from '~/components/ui/form/FormDateInput';
 import { FormInput } from '~/components/ui/form/FormInput';
-import { FormTextarea } from '~/components/ui/form/FormTextarea';
 import { Label } from '~/components/ui/label';
 import { Switch } from '~/components/ui/switch';
 import { Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
 import { useForm } from '~/hooks/useForm';
 import { updateUserSchema, type UpdateUserForm } from '~/validations/user';
-import { AvatarPanel } from './components/AvatarPanel';
-import { ContractDocumentPanel } from './components/ContractDocumentPanel';
 import { PermissionExceptionsPanel } from './components/PermissionExceptionsPanel';
 import { RolesPanel } from './components/RolesPanel';
 import type { SetUserPermissionsRequest, SetUserRolesRequest, UserPermissionException } from '~/types/user';
@@ -53,29 +48,13 @@ export default function UserDetailPage() {
 
   const { control, handleSubmit } = useForm<UpdateUserForm>({
     resolver: zodResolver(updateUserSchema(t)),
-    values: user
-      ? {
-          fullName: user.fullName,
-          email: user.email ?? '',
-          birthDate: user.birthDate ?? null,
-          address: user.address ?? '',
-          gender: user.gender ?? null,
-          onlyAssigned: user.onlyAssigned,
-        }
-      : undefined,
+    values: user ? { fullName: user.fullName, phone: user.phone ?? '', onlyAssigned: user.onlyAssigned } : undefined,
   });
 
   const { mutate: updateInfo, isPending: isUpdatingInfo } = useMutation({
-    mutationFn: (data: UpdateUserForm) =>
-      usersApi.update(id!, {
-        ...data,
-        email: data.email || null,
-        birthDate: data.birthDate || null,
-        address: data.address || null,
-        gender: data.gender || null,
-      }),
+    mutationFn: (data: UpdateUserForm) => usersApi.update(id!, { ...data, phone: data.phone || null }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['users'] });
+      void queryClient.invalidateQueries({ queryKey: ['users', id] });
       toast.success(t('detail.updateSuccess'));
     },
   });
@@ -83,7 +62,7 @@ export default function UserDetailPage() {
   const { mutate: setRoles, isPending: isSavingRoles } = useMutation({
     mutationFn: (payload: SetUserRolesRequest) => usersApi.setRoles(id!, payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['users'] });
+      void queryClient.invalidateQueries({ queryKey: ['users', id] });
       setPendingChange(null);
     },
   });
@@ -91,7 +70,7 @@ export default function UserDetailPage() {
   const { mutate: setPermissions, isPending: isSavingPermissions } = useMutation({
     mutationFn: (payload: SetUserPermissionsRequest) => usersApi.setPermissions(id!, payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['users'] });
+      void queryClient.invalidateQueries({ queryKey: ['users', id] });
       setPendingChange(null);
     },
   });
@@ -110,24 +89,14 @@ export default function UserDetailPage() {
     roles.filter((r) => user.roles.some((ur) => ur.id === r.id)).flatMap((r) => r.permissions)
   );
 
-  const genderOptions = [
-    { value: 'Male', label: t('fields.genderMale') },
-    { value: 'Female', label: t('fields.genderFemale') },
-  ];
-
   return (
     <div className="flex-1 space-y-4 pb-8">
       <div className="flex items-center gap-3">
-        <div className="flex flex-col">
-          <h1 className="text-xl font-semibold">{user.fullName}</h1>
-          <span className="text-muted-foreground text-2xs">@{user.username}</span>
-        </div>
+        <h1 className="text-xl font-semibold">{user.fullName}</h1>
         <Badge variant="outline" className={user.isActive ? 'text-success border-success/30' : 'text-muted-foreground'}>
           {user.isActive ? t('active') : t('inactive')}
         </Badge>
       </div>
-
-      <AvatarPanel userId={user.id} fullName={user.fullName} hasAvatar={!!user.avatarUrl} canManage={canManage} />
 
       <Panel title={t('detail.personalInfo')} className="space-y-4">
         <form
@@ -135,45 +104,18 @@ export default function UserDetailPage() {
           onSubmit={handleSubmit((data) => updateInfo(data))}
           className="grid gap-4 sm:grid-cols-2">
           <FormInput control={control} name="fullName" label={t('fields.fullName')} required disabled={!canManage} />
-          <div className="flex flex-col gap-1.5">
-            <Label>{t('fields.phone')}</Label>
-            <p className="text-muted-foreground text-sm">{user.phone ?? '—'}</p>
+          <FormInput control={control} name="phone" label={t('fields.phone')} disabled={!canManage} />
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <Label>{t('fields.username')}</Label>
+            <p className="text-muted-foreground text-sm">@{user.username}</p>
           </div>
-          <FormInput control={control} name="email" label={t('fields.email')} type="email" disabled={!canManage} />
-          <FormDateInput control={control} name="birthDate" label={t('fields.birthDate')} />
-          <div className="flex flex-col gap-1.5">
-            <Label>{t('fields.age')}</Label>
-            <p className="text-muted-foreground text-sm">{user.age ?? '—'}</p>
-          </div>
-          <FormCustomSelect
-            control={control}
-            name="gender"
-            label={t('fields.gender')}
-            options={genderOptions}
-            isClearable
-            disabled={!canManage}
-          />
-          <FormTextarea
-            control={control}
-            name="address"
-            label={t('fields.address')}
-            disabled={!canManage}
-            className="sm:col-span-2"
-          />
           <div className="flex items-center gap-2 sm:col-span-2">
             <Switch
               id="only-assigned"
               checked={user.onlyAssigned}
               disabled={!canManage}
               onCheckedChange={(checked) =>
-                updateInfo({
-                  fullName: user.fullName,
-                  email: user.email ?? '',
-                  birthDate: user.birthDate ?? null,
-                  address: user.address ?? '',
-                  gender: user.gender ?? null,
-                  onlyAssigned: checked,
-                })
+                updateInfo({ fullName: user.fullName, phone: user.phone ?? '', onlyAssigned: checked })
               }
             />
             <Label htmlFor="only-assigned">{t('detail.onlyAssigned')}</Label>
@@ -186,8 +128,6 @@ export default function UserDetailPage() {
           </Button>
         )}
       </Panel>
-
-      <ContractDocumentPanel userId={user.id} hasDocument={user.hasContractDocument} canManage={canManage} />
 
       {canManage ? (
         <>

@@ -9,16 +9,9 @@ interface TemporaryPasswordModalProps {
   onClose: () => void;
   username: string;
   temporaryPassword: string;
-  smsSent?: boolean;
 }
 
-export function TemporaryPasswordModal({
-  open,
-  onClose,
-  username,
-  temporaryPassword,
-  smsSent,
-}: TemporaryPasswordModalProps) {
+export function TemporaryPasswordModal({ open, onClose, username, temporaryPassword }: TemporaryPasswordModalProps) {
   const { t } = useTranslation('users');
   const [copied, setCopied] = useState(false);
 
@@ -39,11 +32,6 @@ export function TemporaryPasswordModal({
           </Button>
         </div>
         <p className="text-muted-foreground text-2xs">{t('temporaryPasswordHint')}</p>
-        {smsSent !== undefined && (
-          <p className={smsSent ? 'text-success text-sm' : 'text-destructive text-sm'}>
-            {smsSent ? t('smsSentNotice') : t('smsNotSentNotice')}
-          </p>
-        )}
       </div>
     </Modal>
   );

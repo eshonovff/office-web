@@ -29,9 +29,9 @@ export default function UsersPage() {
   const deactivateModal = useUsersModals((s) => s.deactivate);
   const activateModal = useUsersModals((s) => s.activate);
   const resetPasswordModal = useUsersModals((s) => s.resetPassword);
-  const [revealedPassword, setRevealedPassword] = useState<
-    { username: string; temporaryPassword: string; smsSent: boolean } | null
-  >(null);
+  const [revealedPassword, setRevealedPassword] = useState<{ username: string; temporaryPassword: string } | null>(
+    null
+  );
 
   const { search, filters, setSearch, setFilters, resetFilters } = useUsersStore();
   const debouncedSearch = useDebounce(search);
@@ -81,11 +81,7 @@ export default function UsersPage() {
       const targetId = resetPasswordModal.data;
       const user = users.find((u) => u.id === targetId);
       resetPasswordModal.close();
-      setRevealedPassword({
-        username: user?.username ?? '',
-        temporaryPassword: response.temporaryPassword,
-        smsSent: response.smsSent,
-      });
+      setRevealedPassword({ username: user?.username ?? '', temporaryPassword: response.temporaryPassword });
     },
   });
 
@@ -116,13 +112,7 @@ export default function UsersPage() {
           </div>
         </div>
 
-        <DataTable
-          table={table}
-          isLoading={isLoading}
-          isFetching={isFetching}
-          isError={isError}
-          pinLastColumn
-        />
+        <DataTable table={table} isLoading={isLoading} isFetching={isFetching} isError={isError} />
       </div>
 
       <ConfirmDialog
@@ -161,7 +151,6 @@ export default function UsersPage() {
           onClose={() => setRevealedPassword(null)}
           username={revealedPassword.username}
           temporaryPassword={revealedPassword.temporaryPassword}
-          smsSent={revealedPassword.smsSent}
         />
       )}
     </div>
