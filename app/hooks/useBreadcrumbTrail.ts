@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
+import { projectsApi } from '~/api/projects';
 import { usersApi } from '~/api/users';
 import { buildBreadcrumbChain, filterAccessible } from '~/config/breadcrumbs';
 import { useCan } from '~/hooks/useCan';
+import type { ProjectDetail } from '~/types/project';
 import type { UserDetail } from '~/types/user';
 
 interface EntityQuery {
@@ -19,6 +21,11 @@ const ENTITY_QUERIES: Partial<Record<string, (params: Record<string, string | un
     queryKey: ['users', params.id],
     queryFn: () => usersApi.get(params.id!),
     select: (data) => (data as UserDetail).fullName,
+  }),
+  '/projects/:id': (params) => ({
+    queryKey: ['projects', params.id],
+    queryFn: () => projectsApi.get(params.id!),
+    select: (data) => (data as ProjectDetail).name,
   }),
 };
 

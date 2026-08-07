@@ -1,0 +1,11 @@
+{
+  "priority": {
+    "Low": "Низкий",
+    "Medium": "Средний",
+    "High": "Высокий",
+    "Urgent": "Срочно"
+  },
+  "unassigned": "Не назначено",
+  "emptyColumn": "Нет задач",
+  "doneBadge": "Готово"
+}

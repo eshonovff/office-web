@@ -2,5 +2,6 @@
   "usersCreate": "Новый сотрудник",
   "usersDetail": "Профиль сотрудника",
   "rolesDetail": "Профиль роли",
+  "projectDetail": "Доска проекта",
   "changePassword": "Смена пароля"
 }

@@ -1,0 +1,11 @@
+{
+  "priority": {
+    "Low": "Паст",
+    "Medium": "Миёна",
+    "High": "Баланд",
+    "Urgent": "Таъҷилӣ"
+  },
+  "unassigned": "Таъин нашуда",
+  "emptyColumn": "Таск нест",
+  "doneBadge": "Тамом"
+}
