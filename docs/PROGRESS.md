@@ -1,7 +1,7 @@
 # PROGRESS — Frontend
 
-**Фазаи ҷорӣ:** `fe-phase-2-users` (тайёр барои пӯшидан)
-**Ветка:** `feat/fe-phase-2-users`
+**Фазаи ҷорӣ:** `fe-phase-3-board`
+**Ветка:** `feat/fe-phase-3-board`
 **Сана:** 2026-08-06
 
 | Фаза | Ном | Ҳолат |
@@ -9,7 +9,7 @@
 | 0 | Setup ва UI kit | ✅ |
 | 1 | Auth ва shell | ✅ |
 | 2 | Кормандон ва ролҳо | ✅ |
-| 3 | Проект ва Kanban | ⬜ |
+| 3 | Проект ва Kanban | 🟡 |
 | 4 | Realtime | ⬜ |
 | 5 | Инбокс | ⬜ |
 | 6 | Сайқал ва deploy | ⬜ |
@@ -34,6 +34,9 @@
 | 2026-08-06 | `kitchen-sink` роут танҳо дар `import.meta.env.DEV` сабт мешавад | пеш дар prod бандл дастрас буд, hardcoded/омехта матн дошт |
 | 2026-08-06 | `fmtTJS` акнун бо забони ҷории i18n (`tg-TJ`/`ru-RU`) кор мекунад, на сахт-код `ru-RU` | номунтазамӣ бо забони интихобшуда |
 | 2026-08-06 | `client.ts`: хатогии тарҷумашуда акнун аз хатогии хоми backend бартарӣ дорад | пеш паёми backend (одатан бе тарҷума) паёми тарҷумашударо руи корбар мепӯшонд |
+| 2026-08-06 | `chore/breadcrumbs`: breadcrumb дар header-и `(app)/` илова шуд (`app/config/breadcrumbs.ts` + `useBreadcrumbTrail`), `LanguageSwitcher` аз поёни Sidebar бардошта шуд | навигатсияи корбар возеҳ шавад; switcher дар Header кофӣ буд |
+| 2026-08-06 | `feat/users-sms-login`: сохтан/таҳрири корманд ба phone+SMS login, аватар ва ҳуҷҷати шартнома гузашт | office-api-и users endpoint-ро нав кард |
+| 2026-08-06 | Ҳарду бранч ба `dev` merge ва push шуданд, typecheck/test/build тоза | пеш аз оғози Фазаи 3 |
 
 ## Масъалаҳои кушода
 
