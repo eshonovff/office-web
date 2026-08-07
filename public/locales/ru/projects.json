@@ -8,5 +8,12 @@
   },
   "archivedBadge": "Архив",
   "createTitle": "Новый проект",
-  "createSuccess": "Проект создан"
+  "createSuccess": "Проект создан",
+  "edit": "Редактировать",
+  "editTitle": "Редактирование проекта",
+  "updateSuccess": "Проект обновлён",
+  "members": "Участники",
+  "membersTitle": "Управление участниками",
+  "saveMembers": "Сохранить участников",
+  "membersSaved": "Участники обновлены"
 }

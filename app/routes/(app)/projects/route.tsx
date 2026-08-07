@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { Pencil, Plus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -13,7 +13,10 @@ import { Skeleton } from '~/components/ui/skeleton';
 import { Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
 import { CreateProjectModal } from './components/CreateProjectModal';
-import type { CreateProjectForm } from '~/validations/project';
+import { EditProjectModal } from './components/EditProjectModal';
+import { ManageMembersModal } from './components/ManageMembersModal';
+import type { CreateProjectForm, UpdateProjectForm } from '~/validations/project';
+import type { ProjectListItem } from '~/types/project';
 
 export default function ProjectsPage() {
   const { t } = useTranslation(['projects', 'common']);
@@ -22,6 +25,8 @@ export default function ProjectsPage() {
   const canManage = can(Permissions.Projects.Manage);
 
   const [creating, setCreating] = useState(false);
+  const [editingProject, setEditingProject] = useState<ProjectListItem | null>(null);
+  const [membersProjectId, setMembersProjectId] = useState<string | null>(null);
 
   const { data: projects = [], isLoading } = useQuery({ queryKey: ['projects'], queryFn: projectsApi.list });
 
@@ -33,6 +38,38 @@ export default function ProjectsPage() {
       setCreating(false);
     },
   });
+
+  const { mutate: updateProject, isPending: isUpdating } = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateProjectForm }) =>
+      projectsApi.update(id, { name: data.name, color: data.color || null }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success(t('updateSuccess'));
+      setEditingProject(null);
+    },
+  });
+
+  const { mutate: setMembers, isPending: isSavingMembers } = useMutation({
+    mutationFn: ({ id, userIds }: { id: string; userIds: string[] }) => projectsApi.setMembers(id, { userIds }),
+    onSuccess: (_data, { id }) => {
+      void queryClient.invalidateQueries({ queryKey: ['projects'] });
+      void queryClient.invalidateQueries({ queryKey: ['projects', id] });
+      toast.success(t('membersSaved'));
+      setMembersProjectId(null);
+    },
+  });
+
+  function openEdit(e: React.MouseEvent, project: ProjectListItem) {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingProject(project);
+  }
+
+  function openMembers(e: React.MouseEvent, projectId: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    setMembersProjectId(projectId);
+  }
 
   return (
     <div className="flex-1 space-y-4">
@@ -77,6 +114,22 @@ export default function ProjectsPage() {
                   )}
                 </div>
                 <span className="text-muted-foreground text-2xs">{project.key}</span>
+                {canManage && (
+                  <div className="mt-auto flex gap-1">
+                    <Button variant="outline" size="sm" className="gap-1.5" onClick={(e) => openEdit(e, project)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                      {t('edit')}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={(e) => openMembers(e, project.id)}>
+                      <Users className="h-3.5 w-3.5" />
+                      {t('members')}
+                    </Button>
+                  </div>
+                )}
               </Panel>
             </Link>
           ))}
@@ -91,6 +144,26 @@ export default function ProjectsPage() {
           createProject({ name: data.name, key: data.key, color: data.color || null })
         }
       />
+
+      {editingProject && (
+        <EditProjectModal
+          project={editingProject}
+          open
+          onClose={() => setEditingProject(null)}
+          isSaving={isUpdating}
+          onSave={(data) => updateProject({ id: editingProject.id, data })}
+        />
+      )}
+
+      {membersProjectId && (
+        <ManageMembersModal
+          projectId={membersProjectId}
+          open
+          onClose={() => setMembersProjectId(null)}
+          isSaving={isSavingMembers}
+          onSave={(userIds) => setMembers({ id: membersProjectId, userIds })}
+        />
+      )}
     </div>
   );
 }

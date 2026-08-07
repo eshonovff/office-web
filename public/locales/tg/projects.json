@@ -8,5 +8,12 @@
   },
   "archivedBadge": "Бойгонӣ",
   "createTitle": "Проекти нав",
-  "createSuccess": "Проект сохта шуд"
+  "createSuccess": "Проект сохта шуд",
+  "edit": "Таҳрир",
+  "editTitle": "Таҳрири проект",
+  "updateSuccess": "Проект нав шуд",
+  "members": "Аъзоён",
+  "membersTitle": "Идораи аъзоён",
+  "saveMembers": "Захираи аъзоён",
+  "membersSaved": "Аъзоён нав шуданд"
 }

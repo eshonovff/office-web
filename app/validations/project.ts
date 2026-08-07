@@ -17,4 +17,14 @@ export const createProjectSchema = (t: TFunction) =>
     color: z.string().max(20).optional().or(z.literal('')),
   });
 
+export const updateProjectSchema = (t: TFunction) =>
+  z.object({
+    name: z
+      .string()
+      .min(1, t('required', { ns: 'validation' }))
+      .max(100, t('stringMax', { ns: 'validation', count: 100 })),
+    color: z.string().max(20).optional().or(z.literal('')),
+  });
+
 export type CreateProjectForm = z.infer<ReturnType<typeof createProjectSchema>>;
+export type UpdateProjectForm = z.infer<ReturnType<typeof updateProjectSchema>>;
