@@ -1,0 +1,12 @@
+{
+  "title": "Проектҳо",
+  "create": "Проекти нав",
+  "fields": {
+    "name": "Ном",
+    "key": "Калид",
+    "color": "Ранг"
+  },
+  "archivedBadge": "Бойгонӣ",
+  "createTitle": "Проекти нав",
+  "createSuccess": "Проект сохта шуд"
+}

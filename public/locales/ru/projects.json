@@ -1,0 +1,12 @@
+{
+  "title": "Проекты",
+  "create": "Новый проект",
+  "fields": {
+    "name": "Название",
+    "key": "Ключ",
+    "color": "Цвет"
+  },
+  "archivedBadge": "Архив",
+  "createTitle": "Новый проект",
+  "createSuccess": "Проект создан"
+}
