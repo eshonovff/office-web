@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getMoveNeighbors, moveTaskInBoard } from '~/lib/position';
+import { assignTaskInBoard, getMoveNeighbors, moveTaskInBoard } from '~/lib/position';
 import type { BoardResponse, TaskListItem } from '~/types/task';
 
 function makeTask(id: string, columnId: string, position: number): TaskListItem {
@@ -82,5 +82,24 @@ describe('moveTaskInBoard', () => {
   it('is a no-op when the task id is not found', () => {
     const result = moveTaskInBoard(board, 'missing', 'col2', 0);
     expect(result).toBe(board);
+  });
+});
+
+describe('assignTaskInBoard', () => {
+  const board: BoardResponse = {
+    columns: [
+      { id: 'col1', name: 'Todo', orderIndex: 0, isDoneColumn: false, tasks: [makeTask('t1', 'col1', 1000)] },
+    ],
+  };
+
+  it('sets the assignee on the matching task, wherever it sits', () => {
+    const result = assignTaskInBoard(board, 't1', 'u1', 'Далер');
+    expect(result.columns[0].tasks[0]).toMatchObject({ assigneeId: 'u1', assigneeName: 'Далер' });
+  });
+
+  it('clears the assignee when passed null', () => {
+    const assigned = assignTaskInBoard(board, 't1', 'u1', 'Далер');
+    const cleared = assignTaskInBoard(assigned, 't1', null, null);
+    expect(cleared.columns[0].tasks[0]).toMatchObject({ assigneeId: null, assigneeName: null });
   });
 });

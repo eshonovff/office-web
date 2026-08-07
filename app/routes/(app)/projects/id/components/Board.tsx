@@ -13,15 +13,20 @@ import {
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useAssignTask } from '~/hooks/useAssignTask';
 import { useMoveTask } from '~/hooks/useMoveTask';
 import { getMoveNeighbors, moveTaskInBoard } from '~/lib/position';
+import type { ProjectMember } from '~/types/project';
 import type { BoardResponse, TaskListItem } from '~/types/task';
+import { ASSIGNEE_DROP_PREFIX, AssigneeAvatar } from './AssigneeAvatar';
 import { BoardColumn } from './BoardColumn';
 import { TaskDragOverlay } from './TaskDragOverlay';
 
 interface BoardProps {
   projectId: string;
   board: BoardResponse;
+  members: ProjectMember[];
 }
 
 function findColumnOfTask(board: BoardResponse, taskId: string) {
@@ -36,10 +41,12 @@ function findTask(board: BoardResponse, taskId: string): TaskListItem | undefine
   return undefined;
 }
 
-export function Board({ projectId, board }: BoardProps) {
+export function Board({ projectId, board, members }: BoardProps) {
+  const { t } = useTranslation('projects');
   const queryClient = useQueryClient();
   const boardKey = ['projects', projectId, 'board'] as const;
   const moveTask = useMoveTask(projectId);
+  const assignTask = useAssignTask(projectId);
 
   const [activeTask, setActiveTask] = useState<TaskListItem | null>(null);
   const dragStartSnapshot = useRef<BoardResponse | undefined>(undefined);
@@ -58,11 +65,13 @@ export function Board({ projectId, board }: BoardProps) {
     const { active, over } = event;
     if (!over) return;
 
+    const overId = over.id as string;
+    if (overId.startsWith(ASSIGNEE_DROP_PREFIX)) return;
+
     const current = queryClient.getQueryData<BoardResponse>(boardKey);
     if (!current) return;
 
     const activeId = active.id as string;
-    const overId = over.id as string;
     if (activeId === overId) return;
 
     const activeColumn = findColumnOfTask(current, activeId);
@@ -88,10 +97,19 @@ export function Board({ projectId, board }: BoardProps) {
     const { active, over } = event;
     if (!over || !snapshot) return;
 
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    if (overId.startsWith(ASSIGNEE_DROP_PREFIX)) {
+      const assigneeId = overId.slice(ASSIGNEE_DROP_PREFIX.length);
+      const member = members.find((m) => m.userId === assigneeId);
+      assignTask.mutate({ taskId: activeId, assigneeId, assigneeName: member?.fullName ?? null });
+      return;
+    }
+
     const current = queryClient.getQueryData<BoardResponse>(boardKey);
     if (!current) return;
 
-    const activeId = active.id as string;
     const column = findColumnOfTask(current, activeId);
     if (!column) return;
 
@@ -119,6 +137,17 @@ export function Board({ projectId, board }: BoardProps) {
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}>
+      {members.length > 0 && (
+        <div className="flex items-center gap-2 pb-1">
+          <span className="text-muted-foreground text-2xs">{t('members')}:</span>
+          <div className="flex -space-x-2">
+            {members.map((member) => (
+              <AssigneeAvatar key={member.userId} member={member} />
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="scrollbar-thin flex flex-1 gap-3 overflow-x-auto pb-2">
         {board.columns.map((column) => (
           <BoardColumn key={column.id} column={column} />

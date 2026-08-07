@@ -31,7 +31,7 @@ export default function ProjectBoardPage() {
           ))}
         </div>
       ) : (
-        <Board projectId={id!} board={board} />
+        <Board projectId={id!} board={board} members={project?.members ?? []} />
       )}
     </div>
   );

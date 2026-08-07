@@ -67,3 +67,18 @@ export function moveTaskInBoard(
     }),
   };
 }
+
+/** Pure optimistic update of a task's assignee, wherever it sits in the board. */
+export function assignTaskInBoard(
+  board: BoardResponse,
+  taskId: string,
+  assigneeId: string | null,
+  assigneeName: string | null
+): BoardResponse {
+  return {
+    columns: board.columns.map((column) => ({
+      ...column,
+      tasks: column.tasks.map((task) => (task.id === taskId ? { ...task, assigneeId, assigneeName } : task)),
+    })),
+  };
+}
