@@ -7,5 +7,20 @@
   },
   "unassigned": "Не назначено",
   "emptyColumn": "Нет задач",
-  "doneBadge": "Готово"
+  "doneBadge": "Готово",
+  "fields": {
+    "title": "Название",
+    "description": "Описание",
+    "priority": "Приоритет",
+    "dueDate": "Срок",
+    "assignee": "Ответственный",
+    "labels": "Теги"
+  },
+  "updateSuccess": "Задача обновлена",
+  "deleteTask": "Удалить задачу",
+  "deleteTaskConfirmTitle": "Удалить задачу?",
+  "deleteTaskConfirmDescription": "Это действие необратимо — комментарии, файлы и история задачи тоже будут удалены.",
+  "deleteSuccess": "Задача удалена",
+  "createTitle": "Новая задача",
+  "createSuccess": "Задача создана"
 }

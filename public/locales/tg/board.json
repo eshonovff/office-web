@@ -7,5 +7,20 @@
   },
   "unassigned": "Таъин нашуда",
   "emptyColumn": "Таск нест",
-  "doneBadge": "Тамом"
+  "doneBadge": "Тамом",
+  "fields": {
+    "title": "Сарлавҳа",
+    "description": "Тавсиф",
+    "priority": "Приоритет",
+    "dueDate": "Мӯҳлат",
+    "assignee": "Масъул",
+    "labels": "Тегҳо"
+  },
+  "updateSuccess": "Таск нав шуд",
+  "deleteTask": "Нест кардани таск",
+  "deleteTaskConfirmTitle": "Таск нест карда шавад?",
+  "deleteTaskConfirmDescription": "Ин амал бозгашт надорад — коммент, файл ва таърихи таск низ нест мешаванд.",
+  "deleteSuccess": "Таск нест шуд",
+  "createTitle": "Таски нав",
+  "createSuccess": "Таск сохта шуд"
 }

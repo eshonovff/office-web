@@ -14,7 +14,9 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Permissions } from '~/config/permissions';
 import { useAssignTask } from '~/hooks/useAssignTask';
+import { useCan } from '~/hooks/useCan';
 import { useMoveTask } from '~/hooks/useMoveTask';
 import { getMoveNeighbors, moveTaskInBoard } from '~/lib/position';
 import type { ProjectMember } from '~/types/project';
@@ -27,6 +29,7 @@ interface BoardProps {
   projectId: string;
   board: BoardResponse;
   members: ProjectMember[];
+  onOpenTask: (taskId: string) => void;
 }
 
 function findColumnOfTask(board: BoardResponse, taskId: string) {
@@ -41,8 +44,13 @@ function findTask(board: BoardResponse, taskId: string): TaskListItem | undefine
   return undefined;
 }
 
-export function Board({ projectId, board, members }: BoardProps) {
+export function Board({ projectId, board, members, onOpenTask }: BoardProps) {
   const { t } = useTranslation('projects');
+  const { can } = useCan();
+  const canMove = can(Permissions.Tasks.Move);
+  const canAssign = can(Permissions.Tasks.Assign);
+  const canDrag = canMove || canAssign;
+
   const queryClient = useQueryClient();
   const boardKey = ['projects', projectId, 'board'] as const;
   const moveTask = useMoveTask(projectId);
@@ -62,6 +70,8 @@ export function Board({ projectId, board, members }: BoardProps) {
   }
 
   function handleDragOver(event: DragOverEvent) {
+    if (!canMove) return; // no live column-reorder preview without permission to actually move
+
     const { active, over } = event;
     if (!over) return;
 
@@ -101,11 +111,14 @@ export function Board({ projectId, board, members }: BoardProps) {
     const overId = over.id as string;
 
     if (overId.startsWith(ASSIGNEE_DROP_PREFIX)) {
+      if (!canAssign) return;
       const assigneeId = overId.slice(ASSIGNEE_DROP_PREFIX.length);
       const member = members.find((m) => m.userId === assigneeId);
       assignTask.mutate({ taskId: activeId, assigneeId, assigneeName: member?.fullName ?? null });
       return;
     }
+
+    if (!canMove) return; // onDragOver never touched the cache for this user — nothing to persist or revert
 
     const current = queryClient.getQueryData<BoardResponse>(boardKey);
     if (!current) return;
@@ -137,7 +150,7 @@ export function Board({ projectId, board, members }: BoardProps) {
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}>
-      {members.length > 0 && (
+      {members.length > 0 && canAssign && (
         <div className="flex items-center gap-2 pb-1">
           <span className="text-muted-foreground text-2xs">{t('members')}:</span>
           <div className="flex -space-x-2">
@@ -150,7 +163,7 @@ export function Board({ projectId, board, members }: BoardProps) {
 
       <div className="scrollbar-thin flex flex-1 gap-3 overflow-x-auto pb-2">
         {board.columns.map((column) => (
-          <BoardColumn key={column.id} column={column} />
+          <BoardColumn key={column.id} column={column} onOpenTask={onOpenTask} draggable={canDrag} />
         ))}
       </div>
       <DragOverlay>{activeTask && <TaskDragOverlay task={activeTask} />}</DragOverlay>

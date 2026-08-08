@@ -7,9 +7,11 @@ import type { BoardColumnWithTasks } from '~/types/task';
 
 interface BoardColumnProps {
   column: BoardColumnWithTasks;
+  onOpenTask: (taskId: string) => void;
+  draggable: boolean;
 }
 
-export function BoardColumn({ column }: BoardColumnProps) {
+export function BoardColumn({ column, onOpenTask, draggable }: BoardColumnProps) {
   const { t } = useTranslation('board');
   const { setNodeRef } = useDroppable({ id: column.id });
   const taskIds = column.tasks.map((task) => task.id);
@@ -33,7 +35,9 @@ export function BoardColumn({ column }: BoardColumnProps) {
           {column.tasks.length === 0 ? (
             <p className="text-muted-foreground px-2 py-6 text-center text-2xs">{t('emptyColumn')}</p>
           ) : (
-            column.tasks.map((task) => <TaskCard key={task.id} task={task} />)
+            column.tasks.map((task) => (
+              <TaskCard key={task.id} task={task} onOpen={onOpenTask} draggable={draggable} />
+            ))
           )}
         </div>
       </SortableContext>

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 import { projectsApi } from '~/api/projects';
 import { tasksApi } from '~/api/tasks';
 import { Button } from '~/components/ui/button';
@@ -11,6 +11,7 @@ import { Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
 import { Board } from './components/Board';
 import { ManageColumnsModal } from './components/ManageColumnsModal';
+import { TaskDetailModal } from './components/TaskDetailModal';
 
 export default function ProjectBoardPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,30 @@ export default function ProjectBoardPage() {
   const canManage = can(Permissions.Projects.Manage);
 
   const [managingColumns, setManagingColumns] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openTaskId = searchParams.get('task');
+
+  function openTask(taskId: string) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('task', taskId);
+        return next;
+      },
+      { preventScrollReset: true }
+    );
+  }
+
+  function closeTask() {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('task');
+        return next;
+      },
+      { preventScrollReset: true }
+    );
+  }
 
   const { data: project } = useQuery({
     queryKey: ['projects', id],
@@ -51,7 +76,7 @@ export default function ProjectBoardPage() {
           ))}
         </div>
       ) : (
-        <Board projectId={id!} board={board} members={project?.members ?? []} />
+        <Board projectId={id!} board={board} members={project?.members ?? []} onOpenTask={openTask} />
       )}
 
       {project && (
@@ -60,6 +85,15 @@ export default function ProjectBoardPage() {
           columns={project.columns}
           open={managingColumns}
           onClose={() => setManagingColumns(false)}
+        />
+      )}
+
+      {openTaskId && (
+        <TaskDetailModal
+          projectId={id!}
+          taskId={openTaskId}
+          members={project?.members ?? []}
+          onClose={closeTask}
         />
       )}
     </div>
