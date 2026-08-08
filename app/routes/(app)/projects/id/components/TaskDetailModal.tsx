@@ -15,6 +15,7 @@ import { FormDateInput } from '~/components/ui/form/FormDateInput';
 import { FormInput } from '~/components/ui/form/FormInput';
 import { FormTextarea } from '~/components/ui/form/FormTextarea';
 import { Label } from '~/components/ui/label';
+import { Separator } from '~/components/ui/separator';
 import { Skeleton } from '~/components/ui/skeleton';
 import { Permissions } from '~/config/permissions';
 import { useAssignTask } from '~/hooks/useAssignTask';
@@ -24,6 +25,9 @@ import { updateTaskSchema, type UpdateTaskForm } from '~/validations/task';
 import type { ProjectMember } from '~/types/project';
 import type { TaskPriority } from '~/types/task';
 import { useState } from 'react';
+import { TaskActivitySection } from './TaskActivitySection';
+import { TaskAttachmentsSection } from './TaskAttachmentsSection';
+import { TaskCommentsSection } from './TaskCommentsSection';
 
 // office-api's DateTimeOffset? binder 500s on a bare 'YYYY-MM-DD' (no
 // time/offset) — the exact format DateInputField produces — so a full ISO
@@ -219,6 +223,19 @@ export function TaskDetailModal({ projectId, taskId, members, onClose }: TaskDet
             </Button>
           )}
         </form>
+      )}
+
+      {!isLoading && task && (
+        <div className="space-y-4">
+          <Separator />
+          <TaskAttachmentsSection taskId={taskId} canEdit={canEdit} />
+
+          <Separator />
+          <TaskCommentsSection taskId={taskId} members={members} canComment={can(Permissions.Tasks.View)} />
+
+          <Separator />
+          <TaskActivitySection taskId={taskId} />
+        </div>
       )}
 
       <ConfirmDialog

@@ -22,5 +22,22 @@
   "deleteTaskConfirmDescription": "Это действие необратимо — комментарии, файлы и история задачи тоже будут удалены.",
   "deleteSuccess": "Задача удалена",
   "createTitle": "Новая задача",
-  "createSuccess": "Задача создана"
+  "createSuccess": "Задача создана",
+  "comments": "Комментарии",
+  "commentPlaceholder": "Комментарий... (@ чтобы упомянуть сотрудника)",
+  "sendComment": "Отправить",
+  "attachments": "Файлы",
+  "uploadFile": "Загрузить файл",
+  "noAttachments": "Нет файлов",
+  "activity": "История",
+  "noActivity": "История пуста",
+  "activityAction": {
+    "created": "создал(а) задачу",
+    "updated": "обновил(а) задачу",
+    "moved": "переместил(а) задачу",
+    "assigned": "изменил(а) ответственного",
+    "commented": "оставил(а) комментарий",
+    "mention": "упомянул(а) вас",
+    "attachment_added": "добавил(а) файл"
+  }
 }

@@ -22,5 +22,22 @@
   "deleteTaskConfirmDescription": "Ин амал бозгашт надорад — коммент, файл ва таърихи таск низ нест мешаванд.",
   "deleteSuccess": "Таск нест шуд",
   "createTitle": "Таски нав",
-  "createSuccess": "Таск сохта шуд"
+  "createSuccess": "Таск сохта шуд",
+  "comments": "Комментҳо",
+  "commentPlaceholder": "Комментатон... (@ барои қайд кардани корманд)",
+  "sendComment": "Фиристодан",
+  "attachments": "Файлҳо",
+  "uploadFile": "Бор кардани файл",
+  "noAttachments": "Файл нест",
+  "activity": "Таърих",
+  "noActivity": "Таърих холӣ аст",
+  "activityAction": {
+    "created": "таск сохт",
+    "updated": "таскро нав кард",
+    "moved": "таскро кӯчонд",
+    "assigned": "масъулро иваз кард",
+    "commented": "коммент навишт",
+    "mention": "шуморо қайд кард",
+    "attachment_added": "файл илова кард"
+  }
 }
