@@ -1,15 +1,20 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router';
+import { toast } from 'sonner';
 import { projectsApi } from '~/api/projects';
 import { tasksApi } from '~/api/tasks';
 import { Button } from '~/components/ui/button';
 import { Skeleton } from '~/components/ui/skeleton';
 import { Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
+import { emptyBoardFilters, type BoardFilters } from '~/lib/taskFilter';
+import type { CreateTaskForm } from '~/validations/task';
 import { Board } from './components/Board';
+import { BoardFilterBar } from './components/BoardFilterBar';
+import { CreateTaskModal } from './components/CreateTaskModal';
 import { ManageColumnsModal } from './components/ManageColumnsModal';
 import { TaskDetailModal } from './components/TaskDetailModal';
 
@@ -18,8 +23,11 @@ export default function ProjectBoardPage() {
   const { t } = useTranslation('projects');
   const { can } = useCan();
   const canManage = can(Permissions.Projects.Manage);
+  const queryClient = useQueryClient();
 
   const [managingColumns, setManagingColumns] = useState(false);
+  const [creatingInColumn, setCreatingInColumn] = useState<string | null>(null);
+  const [filters, setFilters] = useState<BoardFilters>(emptyBoardFilters);
   const [searchParams, setSearchParams] = useSearchParams();
   const openTaskId = searchParams.get('task');
 
@@ -57,6 +65,16 @@ export default function ProjectBoardPage() {
     enabled: !!id,
   });
 
+  const { mutate: createTask, isPending: isCreatingTask } = useMutation({
+    mutationFn: (data: CreateTaskForm) =>
+      tasksApi.create({ projectId: id!, columnId: creatingInColumn!, title: data.title, priority: data.priority }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['projects', id, 'board'] });
+      toast.success(t('createSuccess', { ns: 'board' }));
+      setCreatingInColumn(null);
+    },
+  });
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
@@ -76,7 +94,22 @@ export default function ProjectBoardPage() {
           ))}
         </div>
       ) : (
-        <Board projectId={id!} board={board} members={project?.members ?? []} onOpenTask={openTask} />
+        <>
+          <BoardFilterBar
+            projectId={id!}
+            members={project?.members ?? []}
+            filters={filters}
+            onChange={setFilters}
+          />
+          <Board
+            projectId={id!}
+            board={board}
+            members={project?.members ?? []}
+            onOpenTask={openTask}
+            onCreateTask={setCreatingInColumn}
+            filters={filters}
+          />
+        </>
       )}
 
       {project && (
@@ -96,6 +129,13 @@ export default function ProjectBoardPage() {
           onClose={closeTask}
         />
       )}
+
+      <CreateTaskModal
+        open={creatingInColumn !== null}
+        onClose={() => setCreatingInColumn(null)}
+        isCreating={isCreatingTask}
+        onCreate={(data) => createTask(data)}
+      />
     </div>
   );
 }

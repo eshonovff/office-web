@@ -1,17 +1,24 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '~/components/ui/badge';
+import { Button } from '~/components/ui/button';
+import type { BoardFilters } from '~/lib/taskFilter';
+import { taskMatchesFilters } from '~/lib/taskFilter';
 import { TaskCard } from './TaskCard';
 import type { BoardColumnWithTasks } from '~/types/task';
 
 interface BoardColumnProps {
   column: BoardColumnWithTasks;
   onOpenTask: (taskId: string) => void;
+  onCreateTask: (columnId: string) => void;
   draggable: boolean;
+  canCreate: boolean;
+  filters: BoardFilters;
 }
 
-export function BoardColumn({ column, onOpenTask, draggable }: BoardColumnProps) {
+export function BoardColumn({ column, onOpenTask, onCreateTask, draggable, canCreate, filters }: BoardColumnProps) {
   const { t } = useTranslation('board');
   const { setNodeRef } = useDroppable({ id: column.id });
   const taskIds = column.tasks.map((task) => task.id);
@@ -36,11 +43,31 @@ export function BoardColumn({ column, onOpenTask, draggable }: BoardColumnProps)
             <p className="text-muted-foreground px-2 py-6 text-center text-2xs">{t('emptyColumn')}</p>
           ) : (
             column.tasks.map((task) => (
-              <TaskCard key={task.id} task={task} onOpen={onOpenTask} draggable={draggable} />
+              <TaskCard
+                key={task.id}
+                task={task}
+                onOpen={onOpenTask}
+                draggable={draggable}
+                matchesFilter={taskMatchesFilters(task, filters)}
+              />
             ))
           )}
         </div>
       </SortableContext>
+
+      {canCreate && (
+        <div className="px-2 pb-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground w-full justify-start gap-1.5"
+            onClick={() => onCreateTask(column.id)}>
+            <Plus className="h-3.5 w-3.5" />
+            {t('addTask')}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

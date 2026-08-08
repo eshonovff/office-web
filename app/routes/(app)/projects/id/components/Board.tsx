@@ -19,6 +19,7 @@ import { useAssignTask } from '~/hooks/useAssignTask';
 import { useCan } from '~/hooks/useCan';
 import { useMoveTask } from '~/hooks/useMoveTask';
 import { getMoveNeighbors, moveTaskInBoard } from '~/lib/position';
+import { emptyBoardFilters, type BoardFilters } from '~/lib/taskFilter';
 import type { ProjectMember } from '~/types/project';
 import type { BoardResponse, TaskListItem } from '~/types/task';
 import { ASSIGNEE_DROP_PREFIX, AssigneeAvatar } from './AssigneeAvatar';
@@ -30,6 +31,8 @@ interface BoardProps {
   board: BoardResponse;
   members: ProjectMember[];
   onOpenTask: (taskId: string) => void;
+  onCreateTask: (columnId: string) => void;
+  filters?: BoardFilters;
 }
 
 function findColumnOfTask(board: BoardResponse, taskId: string) {
@@ -44,11 +47,12 @@ function findTask(board: BoardResponse, taskId: string): TaskListItem | undefine
   return undefined;
 }
 
-export function Board({ projectId, board, members, onOpenTask }: BoardProps) {
+export function Board({ projectId, board, members, onOpenTask, onCreateTask, filters = emptyBoardFilters }: BoardProps) {
   const { t } = useTranslation('projects');
   const { can } = useCan();
   const canMove = can(Permissions.Tasks.Move);
   const canAssign = can(Permissions.Tasks.Assign);
+  const canCreate = can(Permissions.Tasks.Create);
   const canDrag = canMove || canAssign;
 
   const queryClient = useQueryClient();
@@ -163,7 +167,15 @@ export function Board({ projectId, board, members, onOpenTask }: BoardProps) {
 
       <div className="scrollbar-thin flex flex-1 gap-3 overflow-x-auto pb-2">
         {board.columns.map((column) => (
-          <BoardColumn key={column.id} column={column} onOpenTask={onOpenTask} draggable={canDrag} />
+          <BoardColumn
+            key={column.id}
+            column={column}
+            onOpenTask={onOpenTask}
+            onCreateTask={onCreateTask}
+            draggable={canDrag}
+            canCreate={canCreate}
+            filters={filters}
+          />
         ))}
       </div>
       <DragOverlay>{activeTask && <TaskDragOverlay task={activeTask} />}</DragOverlay>

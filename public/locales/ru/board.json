@@ -23,6 +23,7 @@
   "deleteSuccess": "Задача удалена",
   "createTitle": "Новая задача",
   "createSuccess": "Задача создана",
+  "addTask": "Добавить задачу",
   "comments": "Комментарии",
   "commentPlaceholder": "Комментарий... (@ чтобы упомянуть сотрудника)",
   "sendComment": "Отправить",
