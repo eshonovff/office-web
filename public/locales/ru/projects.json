@@ -15,5 +15,12 @@
   "members": "Участники",
   "membersTitle": "Управление участниками",
   "saveMembers": "Сохранить участников",
-  "membersSaved": "Участники обновлены"
+  "membersSaved": "Участники обновлены",
+  "manageColumns": "Управление колонками",
+  "doneColumn": "Колонка «готово»",
+  "addColumn": "Добавить колонку",
+  "createColumnSuccess": "Колонка создана",
+  "deleteColumnConfirmTitle": "Удалить колонку?",
+  "deleteColumnConfirmDescription": "Удалить можно только пустую колонку.",
+  "deleteColumnSuccess": "Колонка удалена"
 }

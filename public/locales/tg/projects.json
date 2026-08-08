@@ -15,5 +15,12 @@
   "members": "Аъзоён",
   "membersTitle": "Идораи аъзоён",
   "saveMembers": "Захираи аъзоён",
-  "membersSaved": "Аъзоён нав шуданд"
+  "membersSaved": "Аъзоён нав шуданд",
+  "manageColumns": "Идораи колонкаҳо",
+  "doneColumn": "Колонкаи \"тамом\"",
+  "addColumn": "Илова кардани колонка",
+  "createColumnSuccess": "Колонка сохта шуд",
+  "deleteColumnConfirmTitle": "Колонка нест карда шавад?",
+  "deleteColumnConfirmDescription": "Танҳо колонкаи холӣ нест карда мешавад.",
+  "deleteColumnSuccess": "Колонка нест шуд"
 }
