@@ -1,0 +1,25 @@
+{
+  "title": "Инбокс",
+  "status": {
+    "New": "Нав",
+    "InProgress": "Дар кор",
+    "Waiting": "Интизорӣ",
+    "Closed": "Пӯшида"
+  },
+  "channelType": {
+    "WhatsApp": "WhatsApp",
+    "Instagram": "Instagram",
+    "Facebook": "Facebook"
+  },
+  "allChannels": "Ҳама каналҳо",
+  "allStatuses": "Ҳама статусҳо",
+  "noConversations": "Мукотиба нест",
+  "loadMore": "Боз нишон додан",
+  "selectConversation": "Мукотибаеро аз рӯйхат интихоб кунед",
+  "unassigned": "Таъин нашуда",
+  "assignee": "Масъул",
+  "channel": "Канал",
+  "contact": "Мижоз",
+  "createdAt": "Сохта шуд",
+  "loadingMessages": "Боркунии паёмҳо..."
+}

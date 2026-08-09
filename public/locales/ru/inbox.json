@@ -1,0 +1,25 @@
+{
+  "title": "Входящие",
+  "status": {
+    "New": "Новое",
+    "InProgress": "В работе",
+    "Waiting": "Ожидание",
+    "Closed": "Закрыто"
+  },
+  "channelType": {
+    "WhatsApp": "WhatsApp",
+    "Instagram": "Instagram",
+    "Facebook": "Facebook"
+  },
+  "allChannels": "Все каналы",
+  "allStatuses": "Все статусы",
+  "noConversations": "Нет переписок",
+  "loadMore": "Показать ещё",
+  "selectConversation": "Выберите переписку из списка",
+  "unassigned": "Не назначено",
+  "assignee": "Ответственный",
+  "channel": "Канал",
+  "contact": "Клиент",
+  "createdAt": "Создано",
+  "loadingMessages": "Загрузка сообщений..."
+}

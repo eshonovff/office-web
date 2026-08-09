@@ -81,5 +81,11 @@
   "genericError": {
     "title": "Произошла ошибка",
     "description": "Пожалуйста, перезагрузите страницу."
+  },
+  "relativeTime": {
+    "justNow": "Только что",
+    "minutesAgo": "{{count}} мин назад",
+    "hoursAgo": "{{count}} ч назад",
+    "daysAgo": "{{count}} дн назад"
   }
 }
