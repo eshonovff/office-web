@@ -21,6 +21,13 @@
   "channel": "Канал",
   "statusLabel": "Статус",
   "statusUpdated": "Статус обновлён",
+  "connection": {
+    "idle": "Не подключено",
+    "connecting": "Подключение...",
+    "connected": "Онлайн",
+    "reconnecting": "Переподключение...",
+    "disconnected": "Соединение потеряно"
+  },
   "contact": "Клиент",
   "createdAt": "Создано",
   "loadingMessages": "Загрузка сообщений...",

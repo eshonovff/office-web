@@ -17,12 +17,22 @@ import { conversationsApi } from '~/api/conversations';
 import { EmptyState } from '~/components/shared/EmptyState';
 import { Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
+import { cn } from '~/lib/utils';
 import { useAuthStore } from '~/store/useAuthStore';
 import type { ConversationStatus } from '~/types/conversation';
 import { ASSIGNEE_DROP_PREFIX, AssigneeAvatar } from './components/AssigneeAvatar';
 import { ConversationList } from './components/ConversationList';
 import { ContextPanel } from './components/ContextPanel';
 import { MessageThread } from './components/MessageThread';
+import { useInboxRealtime } from './useInboxRealtime';
+
+const CONNECTION_DOT_CLASS = {
+  connected: 'bg-success',
+  connecting: 'bg-warning',
+  reconnecting: 'bg-warning',
+  disconnected: 'bg-destructive',
+  idle: 'bg-muted-foreground',
+} as const;
 
 export default function InboxPage() {
   const { t } = useTranslation('inbox');
@@ -65,6 +75,8 @@ export default function InboxPage() {
     for (const item of firstPage?.items ?? []) seen.set(item.channelId, item.channelName);
     return [...seen.entries()].map(([value, label]) => ({ value, label }));
   }, [firstPage]);
+
+  const hubStatus = useInboxRealtime(channelOptions.map((c) => c.value));
 
   // GET /channels/{id} (real channel membership) is gated on channels.manage,
   // which neither seeded inbox role has (see docs/PROGRESS.md #6) — so the
@@ -117,16 +129,24 @@ export default function InboxPage() {
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2">
-        {canAssign && assigneeOptions.length > 0 && (
-          <div className="flex items-center gap-2 px-1">
-            <span className="text-muted-foreground text-2xs">{t('assignee')}:</span>
-            <div className="flex gap-1.5">
-              {assigneeOptions.map((member) => (
-                <AssigneeAvatar key={member.userId} member={member} />
-              ))}
+        <div className="flex items-center justify-between gap-2 px-1">
+          {canAssign && assigneeOptions.length > 0 ? (
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-2xs">{t('assignee')}:</span>
+              <div className="flex gap-1.5">
+                {assigneeOptions.map((member) => (
+                  <AssigneeAvatar key={member.userId} member={member} />
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <span />
+          )}
+          <span
+            className={cn('h-2 w-2 shrink-0 rounded-full', CONNECTION_DOT_CLASS[hubStatus])}
+            title={t(`connection.${hubStatus}`)}
+          />
+        </div>
 
         <div className="grid min-h-0 grid-cols-[320px_1fr_300px] gap-3">
           <div className="bg-sidebar min-h-0 rounded-xl">

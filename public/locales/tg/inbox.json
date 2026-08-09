@@ -21,6 +21,13 @@
   "channel": "Канал",
   "statusLabel": "Статус",
   "statusUpdated": "Статус нав шуд",
+  "connection": {
+    "idle": "Пайваст нашуд",
+    "connecting": "Пайвастшавӣ...",
+    "connected": "Зинда пайваст",
+    "reconnecting": "Аз нав пайвастшавӣ...",
+    "disconnected": "Пайваст қатъ шуд"
+  },
   "contact": "Мижоз",
   "createdAt": "Сохта шуд",
   "loadingMessages": "Боркунии паёмҳо...",
