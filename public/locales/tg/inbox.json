@@ -21,5 +21,17 @@
   "channel": "Канал",
   "contact": "Мижоз",
   "createdAt": "Сохта шуд",
-  "loadingMessages": "Боркунии паёмҳо..."
+  "loadingMessages": "Боркунии паёмҳо...",
+  "noMessages": "Ҳанӯз паём нест",
+  "loadOlder": "Паёмҳои кӯҳна",
+  "internalNote": "Ёддошти дохилӣ",
+  "messageType": {
+    "Image": "Расм",
+    "Video": "Видео",
+    "Audio": "Аудио",
+    "File": "Файл",
+    "StoryReply": "Ҷавоб ба Story",
+    "Location": "Ҷойгиршавӣ",
+    "Contact": "Контакт"
+  }
 }

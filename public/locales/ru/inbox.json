@@ -21,5 +21,17 @@
   "channel": "Канал",
   "contact": "Клиент",
   "createdAt": "Создано",
-  "loadingMessages": "Загрузка сообщений..."
+  "loadingMessages": "Загрузка сообщений...",
+  "noMessages": "Пока нет сообщений",
+  "loadOlder": "Старые сообщения",
+  "internalNote": "Внутренняя заметка",
+  "messageType": {
+    "Image": "Изображение",
+    "Video": "Видео",
+    "Audio": "Аудио",
+    "File": "Файл",
+    "StoryReply": "Ответ на Story",
+    "Location": "Локация",
+    "Contact": "Контакт"
+  }
 }
