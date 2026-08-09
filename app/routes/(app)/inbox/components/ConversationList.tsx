@@ -15,10 +15,11 @@ const STATUSES: ConversationStatus[] = ['New', 'InProgress', 'Waiting', 'Closed'
 interface ConversationListProps {
   channelOptions: { value: string; label: string }[];
   selectedId: string | null;
+  draggable: boolean;
   onSelect: (id: string) => void;
 }
 
-export function ConversationList({ channelOptions, selectedId, onSelect }: ConversationListProps) {
+export function ConversationList({ channelOptions, selectedId, draggable, onSelect }: ConversationListProps) {
   const { t } = useTranslation('inbox');
   const { channelId, status, setChannelId, setStatus } = useInboxStore();
 
@@ -72,6 +73,7 @@ export function ConversationList({ channelOptions, selectedId, onSelect }: Conve
                 key={conversation.id}
                 conversation={conversation}
                 active={conversation.id === selectedId}
+                draggable={draggable}
                 onClick={() => onSelect(conversation.id)}
               />
             ))}

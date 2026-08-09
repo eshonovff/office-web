@@ -19,6 +19,8 @@
   "unassigned": "Таъин нашуда",
   "assignee": "Масъул",
   "channel": "Канал",
+  "statusLabel": "Статус",
+  "statusUpdated": "Статус нав шуд",
   "contact": "Мижоз",
   "createdAt": "Сохта шуд",
   "loadingMessages": "Боркунии паёмҳо...",

@@ -1,3 +1,4 @@
+import { useDraggable } from '@dnd-kit/core';
 import { MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
@@ -16,22 +17,32 @@ const STATUS_CLASS: Record<ConversationStatus, string> = {
 interface ConversationListItemProps {
   conversation: ConversationListItemType;
   active: boolean;
+  draggable: boolean;
   onClick: () => void;
 }
 
-export function ConversationListItem({ conversation, active, onClick }: ConversationListItemProps) {
+export function ConversationListItem({ conversation, active, draggable, onClick }: ConversationListItemProps) {
   const { t } = useTranslation('inbox');
+  // Assign-by-drag only — the list has no reorderable sequence of its own,
+  // so `useDraggable` (no drop target of its own) rather than `useSortable`.
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: conversation.id,
+    disabled: !draggable,
+  });
 
   const displayName = conversation.contactName || conversation.externalId;
   const initials = displayName.slice(0, 2).toUpperCase();
 
   return (
-    <button
-      type="button"
+    <div
+      ref={setNodeRef}
       onClick={onClick}
+      {...(draggable ? attributes : {})}
+      {...(draggable ? listeners : {})}
       className={cn(
-        'flex w-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-colors',
-        active ? 'bg-accent border-border' : 'hover:bg-accent/50 border-transparent'
+        'flex w-full cursor-pointer items-start gap-2.5 rounded-lg border p-2.5 text-left transition-colors',
+        active ? 'bg-accent border-border' : 'hover:bg-accent/50 border-transparent',
+        isDragging && 'opacity-40'
       )}>
       <Avatar>
         {conversation.contactAvatarUrl && <AvatarImage src={conversation.contactAvatarUrl} />}
@@ -62,8 +73,11 @@ export function ConversationListItem({ conversation, active, onClick }: Conversa
               {conversation.unreadCount}
             </Badge>
           )}
+          {conversation.assignedToName && (
+            <span className="text-muted-foreground truncate text-2xs">→ {conversation.assignedToName}</span>
+          )}
         </div>
       </div>
-    </button>
+    </div>
   );
 }
