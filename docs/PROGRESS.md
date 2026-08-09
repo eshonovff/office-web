@@ -1,18 +1,17 @@
 # PROGRESS — Frontend
 
-**Фазаи ҷорӣ:** `fe-phase-3-board`
-**Ветка:** `feat/fe-phase-3-board`
-**Сана:** 2026-08-06
+**Фазаи ҷорӣ:** `fe-phase-4-inbox` (тайёр барои пӯшидан)
+**Ветка:** `feat/fe-phase-4-inbox`
+**Сана:** 2026-08-09
 
 | Фаза | Ном | Ҳолат |
 |---|---|---|
 | 0 | Setup ва UI kit | ✅ |
 | 1 | Auth ва shell | ✅ |
 | 2 | Кормандон ва ролҳо | ✅ |
-| 3 | Проект ва Kanban | 🟡 |
-| 4 | Realtime | ⬜ |
-| 5 | Инбокс | ⬜ |
-| 6 | Сайқал ва deploy | ⬜ |
+| 3 | Проект ва Kanban | ✅ |
+| 4 | Инбокс + Realtime (якҷоя) | 🟡 |
+| 5 | Сайқал ва deploy | ⬜ |
 
 ⬜ нашуда · 🟡 дар кор · ✅ тамом · ⛔ басташуда
 
@@ -39,6 +38,9 @@
 | 2026-08-06 | Ҳарду бранч ба `dev` merge ва push шуданд, typecheck/test/build тоза | пеш аз оғози Фазаи 3 |
 | 2026-08-08 | Фазаи 3 (3.1–3.13, 3.15–3.22) дар `feat/fe-phase-3-board` тамом: types/API, `/projects` (CRUD, аъзоён), `/projects/:id` (board, drag&drop, assign-ба-аватар, идораи колонка), модали таск (таҳрир, тег, коммент+@mention, файл, таърих, филтр), permission-gate. 40 тест, typecheck/lint/build тоза, ҳама эндпойнт бо curl ба backend-и воқеӣ санҷида шуд | 10 commit, 2 хатои backend ёфта ва ҳуҷҷатнок карда шуд (#4, #5) |
 | 2026-08-08 | 3.14 (шумораи коммент дар карточка) иҷро нашуд | `GET /projects/{id}/board` `commentCount`/`attachmentCount` намедиҳад — бе N+1 фетч имконнопазир |
+| 2026-08-08 | `feat/fe-phase-3-board` ба `dev` merge ва push шуд (бе GitHub PR — воситаи `gh` насб набуд) | typecheck/test/build дар `dev` тоза |
+| 2026-08-09 | Фазаҳои 4 (Realtime)-и қаблӣ ва 5 (Инбокс)-и қаблӣ ба **як фаза** муттаҳид карда шуданд, бо рақами 4 | дархости корбар: "phase 4: the unified chat inbox" — backend-и воқеӣ содатар аз нақшаи қаблии `phase-5-inbox.md` буд (бе cursor pagination, бе virtualization, бе `/inbox/board`, бе ёддошти дохилӣ — ин хусусиятҳо дар backend вуҷуд надоранд), бинобар ин ба contract-и воқеӣ мутобиқ карда шуд, на ба ҳуҷҷати кӯҳна |
+| 2026-08-09 | Фазаи 4 (Инбокс+Realtime) тамом: `lib/signalr.ts` + `createHubStore` (бо тест), се сутуни `/inbox` (рӯйхат бо филтр, thread, context panel), composer бо мантиқи `windowExpiresAt`/409 (бо 5 тест), drag-and-drop assign (аз Board такрор истифода), тағйири статус, `/channels` барои идораи аъзоён, realtime (message/status/read) тавассути `/hubs/inbox`. 49 тест, typecheck/lint/build тоза, ҳама эндпойнт ва SignalR бо backend-и воқеӣ санҷида шуданд (аз ҷумла webhook-и қалбакии имзошуда) | 9 commit, 2 масъалаи иҷозати backend ёфта шуд (#6, #7) |
 
 ## Масъалаҳои кушода
 
@@ -50,3 +52,5 @@
 | 4 | ⛔ **Хатои `PATCH /api/tasks/{id}/move`** — гузоштани таск ба сар/охири колонка (яктои `beforeTaskId`/`afterTaskId` `null`) дар backend хато мекунад: `TasksEndpoints.cs`-и `MoveAsync` ду майдонро иваз (swap) кардааст. Санҷидашуда бо curl (2026-08-07). Сабаб, такрористеҳсол ва ислоҳи тавсияшуда: `office-api/docs/bug-move-task-position-swap.md`. Frontend (`app/lib/position.ts`) семантикаи дурустро татбиқ кардааст — интизори ислоҳи backend. | Faridun / backend team |
 | 5 | ⛔ **`POST/PATCH /api/tasks` бо `dueDate: "YYYY-MM-DD"` (бидуни вақт) → 500** — `DateTimeOffset?`-и backend санаи бидуни офсет/вақтро парс карда наметавонад ва ба ҷои 400 ба 500 меафтад. Санҷидашуда бо curl (2026-08-08). Тафсил: `office-api/docs/bug-task-duedate-date-only.md`. Frontend (`TaskDetailModal.tsx`) муваққатан пеш аз фиристодан ба `"...T00:00:00.000Z"` табдил медиҳад (бо concatenation-и сатр, на `Date`/timezone, то санаро барои корбарони UTC+5 ба қафо набарорад) — вале ин фикс дар як ҷо аст, ҷойҳои дигаре ки санаи бидуни вақт мефиристанд метавонанд ба ҳамин хато дучор шаванд. | Faridun / backend team |
 | 6 | ⚠️ **`GET /channels/{id}/whatsapp-templates` бо `channels.manage` баста шудааст** — вале нақшҳои сабтшудаи `Operator`/`Manager` (`DbSeeder.cs`) ин иҷозатро надоранд, танҳо `Owner`/`Admin`. Яъне вақте тирезаи 24-соата баста шавад, худи операторе ки бояд шаблон фиристад, наметавонад рӯйхати шаблонҳоро бинад — бояд ба админ муроҷиат кунад. Эҳтимол ин эндпойнт бояд бо `inbox.reply` кушода шавад, на `channels.manage`. Frontend (`Composer.tsx`) ҳозир `can(channels.manage)`-ро санҷида, барои корбарони бе он паёми фаҳмо нишон медиҳад (на 403 хом) | Faridun / backend team |
+| 7 | ⚠️ **`GET /channels/{id}` (аъзоёни воқеии канал) низ бо `channels.manage` баста шудааст** — ҳамон масъалаи №6, вале барои assign-by-drag дар `/inbox`. Оператор/менеҷер наметавонад рӯйхати воқеии аъзоёни канали худро барои "кӣ метавонад таъин шавад" бинад. Frontend (`route.tsx`-и inbox) ҳоло рӯйхати "таъиншудагони қаблӣ + худи корбар"-ро истифода мебарад (на аъзоёни воқеии канал) — кор мекунад, вале пурра нест. Беҳтараш эндпойнти сабуки "assignable users барои канал" бо `inbox.assign` кушода шавад | Faridun / backend team |
+| 8 | ℹ️ `InboxHub.JoinChannel`-и SignalR ҳанӯз санҷиши узвияти воқеӣ надорад (шарҳи худи `InboxHub.cs`: "барои фазаи 6" — рақами кӯҳна). Ҳар корбари authenticated метавонад ба гурӯҳи ҳар канале обуна шавад. Хатари амниятӣ надорад (маълумот аллакай тавассути REST endpoint-ҳо бо `ChannelAccessGuard` муҳофизат мешавад — SignalR танҳо push мекунад), вале бояд пеш аз production ислоҳ шавад | Faridun / backend team |
