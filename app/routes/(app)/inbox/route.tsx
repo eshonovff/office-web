@@ -11,10 +11,12 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router';
+import { Settings } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { conversationsApi } from '~/api/conversations';
 import { EmptyState } from '~/components/shared/EmptyState';
+import { Button } from '~/components/ui/button';
 import { Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
 import { cn } from '~/lib/utils';
@@ -38,6 +40,7 @@ export default function InboxPage() {
   const { t } = useTranslation('inbox');
   const { can } = useCan();
   const canAssign = can(Permissions.Inbox.Assign);
+  const canManageChannels = can(Permissions.Channels.Manage);
   const currentUser = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
 
@@ -142,10 +145,18 @@ export default function InboxPage() {
           ) : (
             <span />
           )}
-          <span
-            className={cn('h-2 w-2 shrink-0 rounded-full', CONNECTION_DOT_CLASS[hubStatus])}
-            title={t(`connection.${hubStatus}`)}
-          />
+          <div className="flex items-center gap-2">
+            {canManageChannels && (
+              <Button variant="outline" size="sm" className="gap-1.5" render={<Link to="/channels" />}>
+                <Settings className="h-3.5 w-3.5" />
+                {t('channelsTitle')}
+              </Button>
+            )}
+            <span
+              className={cn('h-2 w-2 shrink-0 rounded-full', CONNECTION_DOT_CLASS[hubStatus])}
+              title={t(`connection.${hubStatus}`)}
+            />
+          </div>
         </div>
 
         <div className="grid min-h-0 grid-cols-[320px_1fr_300px] gap-3">

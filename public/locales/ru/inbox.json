@@ -29,6 +29,10 @@
     "disconnected": "Соединение потеряно"
   },
   "contact": "Клиент",
+  "channelsTitle": "Каналы",
+  "manageMembers": "Управление участниками",
+  "membersSaved": "Участники обновлены",
+  "noUsers": "Нет сотрудников",
   "createdAt": "Создано",
   "loadingMessages": "Загрузка сообщений...",
   "noMessages": "Пока нет сообщений",

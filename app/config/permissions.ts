@@ -36,6 +36,7 @@ export const ROUTE_PERMISSIONS: Record<string, PermissionKey> = {
   "/projects/:id": Permissions.Tasks.View,
   "/inbox": Permissions.Inbox.View,
   "/inbox/board": Permissions.Inbox.View,
+  "/channels": Permissions.Channels.Manage,
   "/settings": Permissions.Templates.Manage,
 };
 

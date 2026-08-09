@@ -29,6 +29,10 @@
     "disconnected": "Пайваст қатъ шуд"
   },
   "contact": "Мижоз",
+  "channelsTitle": "Каналҳо",
+  "manageMembers": "Идораи аъзоён",
+  "membersSaved": "Аъзоён нав шуданд",
+  "noUsers": "Корманд нест",
   "createdAt": "Сохта шуд",
   "loadingMessages": "Боркунии паёмҳо...",
   "noMessages": "Ҳанӯз паём нест",
