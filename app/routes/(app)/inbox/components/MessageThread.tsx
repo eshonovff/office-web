@@ -6,7 +6,10 @@ import { EmptyState } from '~/components/shared/EmptyState';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Skeleton } from '~/components/ui/skeleton';
+import { Permissions } from '~/config/permissions';
+import { useCan } from '~/hooks/useCan';
 import type { ConversationDetail } from '~/types/conversation';
+import { Composer } from './Composer';
 import { MessageBubble } from './MessageBubble';
 
 const PAGE_SIZE = 30;
@@ -18,6 +21,8 @@ interface MessageThreadProps {
 
 export function MessageThread({ conversationId, conversation }: MessageThreadProps) {
   const { t } = useTranslation('inbox');
+  const { can } = useCan();
+  const canReply = can(Permissions.Inbox.Reply);
   const queryClient = useQueryClient();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -99,6 +104,8 @@ export function MessageThread({ conversationId, conversation }: MessageThreadPro
           </>
         )}
       </div>
+
+      {canReply && conversation && <Composer conversation={conversation} />}
     </div>
   );
 }

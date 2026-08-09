@@ -39,3 +39,18 @@ export function formatRelativeTime(date: string | Date | null | undefined): stri
 
   return formatDate(date);
 }
+
+/** Null when the window is already closed (or never opened) — nothing to count down. */
+export function formatWindowRemaining(windowExpiresAt: string | null | undefined): string | null {
+  if (!windowExpiresAt) return null;
+  const target = dayjs(windowExpiresAt);
+  const now = dayjs();
+  if (!target.isAfter(now)) return null;
+
+  const totalMinutes = target.diff(now, 'minute');
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours > 0) return i18next.t('windowRemainingHours', { ns: 'inbox', hours, minutes });
+  return i18next.t('windowRemainingMinutes', { ns: 'inbox', count: minutes });
+}

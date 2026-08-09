@@ -33,5 +33,18 @@
     "StoryReply": "Ҷавоб ба Story",
     "Location": "Ҷойгиршавӣ",
     "Contact": "Контакт"
-  }
+  },
+  "composerPlaceholder": "Паём нависед...",
+  "send": "Фиристодан",
+  "sending": "Фиристода истодааст...",
+  "windowRemainingHours": "{{hours}} соат {{minutes}} дақ монд",
+  "windowRemainingMinutes": "{{count}} дақ монд",
+  "windowClosedTitle": "Тирезаи 24-соата баста аст",
+  "windowClosedExplanation": "Мижоз зиёда аз 24 соат пеш нависта буд. Матни озод фиристода намешавад — танҳо шаблони тасдиқшуда.",
+  "windowClosedDuringSend": "Дар давоми фиристодан тиреза баста шуд. Шаблон интихоб кунед.",
+  "templates": "Шаблонҳо",
+  "selectTemplate": "Шаблон интихоб кунед",
+  "noTemplates": "Барои ин канал шаблон нест",
+  "templatesUnavailable": "Барои дидани шаблонҳо ба админ муроҷиат кунед — шумо иҷозати идораи каналро надоред.",
+  "sendTemplate": "Фиристодани шаблон"
 }

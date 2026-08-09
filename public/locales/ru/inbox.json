@@ -33,5 +33,18 @@
     "StoryReply": "Ответ на Story",
     "Location": "Локация",
     "Contact": "Контакт"
-  }
+  },
+  "composerPlaceholder": "Напишите сообщение...",
+  "send": "Отправить",
+  "sending": "Отправка...",
+  "windowRemainingHours": "Осталось {{hours}} ч {{minutes}} мин",
+  "windowRemainingMinutes": "Осталось {{count}} мин",
+  "windowClosedTitle": "24-часовое окно закрыто",
+  "windowClosedExplanation": "Клиент писал более 24 часов назад. Свободный текст отправить нельзя — только одобренный шаблон.",
+  "windowClosedDuringSend": "Окно закрылось во время отправки. Выберите шаблон.",
+  "templates": "Шаблоны",
+  "selectTemplate": "Выберите шаблон",
+  "noTemplates": "Для этого канала нет шаблонов",
+  "templatesUnavailable": "Обратитесь к администратору за шаблонами — у вас нет прав на управление каналом.",
+  "sendTemplate": "Отправить шаблон"
 }
