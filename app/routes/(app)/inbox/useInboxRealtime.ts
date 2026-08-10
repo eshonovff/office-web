@@ -17,35 +17,6 @@ interface MessagesCache {
   pageParams: unknown[];
 }
 
-// MessageReceived's payload is a raw anonymous object built ad hoc in
-// WebhookProcessor — a strict subset of MessageDto (no isInternalNote /
-// sentByUserId / sentByUserName). Fill the gaps with the same defaults the
-// backend uses for a fresh inbound message rather than leaving them
-// `undefined` and letting that leak into MessageBubble.
-function normalizeReceivedMessage(raw: Record<string, unknown>): Message {
-  return {
-    id: raw.id as string,
-    conversationId: raw.conversationId as string,
-    direction: raw.direction as Message['direction'],
-    type: raw.type as Message['type'],
-    body: (raw.body as string | null) ?? null,
-    mediaUrl: (raw.mediaUrl as string | null) ?? null,
-    externalId: (raw.externalId as string | null) ?? null,
-    deliveryStatus: raw.deliveryStatus as Message['deliveryStatus'],
-    isInternalNote: false,
-    sentByUserId: null,
-    sentByUserName: null,
-    createdAt: raw.createdAt as string,
-    mimeType: (raw.mimeType as string | null) ?? null,
-    sizeBytes: (raw.sizeBytes as number | null) ?? null,
-    originalFileName: (raw.originalFileName as string | null) ?? null,
-    voiceDurationSeconds: (raw.voiceDurationSeconds as number | null) ?? null,
-    thumbnailUrl: (raw.thumbnailUrl as string | null) ?? null,
-    mediaDeletedAt: (raw.mediaDeletedAt as string | null) ?? null,
-    mediaDownloadError: (raw.mediaDownloadError as string | null) ?? null,
-  };
-}
-
 /** Joins the /hubs/inbox channel groups for `channelIds` and keeps the inbox's queries live. */
 export function useInboxRealtime(channelIds: string[], openConversationId?: string | null) {
   const queryClient = useQueryClient();
@@ -98,7 +69,7 @@ export function useInboxRealtime(channelIds: string[], openConversationId?: stri
   }
 
   useSignalR(connection, {
-    MessageReceived: (raw: unknown) => appendMessage(normalizeReceivedMessage(raw as Record<string, unknown>)),
+    MessageReceived: (message: unknown) => appendMessage(message as Message),
     MessageSent: (message: unknown) => appendMessage(message as Message),
     ConversationAssigned: (conversation: unknown) => upsertConversation(conversation as ConversationDetail),
     // Backend also reuses this event for read receipts (MarkAsReadAsync) —

@@ -1,8 +1,10 @@
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useSignalR } from '~/hooks/useSignalR';
 import { useInboxRealtime } from './useInboxRealtime';
 
 const invalidateQueries = vi.fn();
+const setQueryData = vi.fn();
 const start = vi.fn();
 const stop = vi.fn();
 const invoke = vi.fn();
@@ -22,7 +24,7 @@ vi.mock('@microsoft/signalr', () => ({
 }));
 
 vi.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({ invalidateQueries }),
+  useQueryClient: () => ({ invalidateQueries, setQueryData }),
 }));
 
 vi.mock('~/hooks/useSignalR', () => ({
@@ -79,5 +81,50 @@ describe('useInboxRealtime', () => {
 
     renderHook(() => useInboxRealtime(['channel-1'], null));
     await vi.waitFor(() => expect(setError).toHaveBeenCalledWith('joinChannelFailed'));
+  });
+
+  it('appends the full MessageDto from realtime without normalizing it', () => {
+    const message = {
+      id: 'message-1',
+      conversationId: 'conversation-1',
+      direction: 'inbound',
+      type: 'image',
+      body: null,
+      mediaUrl: '/api/messages/message-1/media',
+      thumbnailUrl: '/api/messages/message-1/thumbnail',
+      externalId: 'wa-message-1',
+      deliveryStatus: 'delivered',
+      isInternalNote: true,
+      sentByUserId: 'user-1',
+      sentByUserName: 'Sender',
+      createdAt: '2026-08-10T12:00:00Z',
+      mimeType: 'image/png',
+      sizeBytes: 1024,
+      originalFileName: 'photo.png',
+      voiceDurationSeconds: null,
+      mediaDeletedAt: null,
+      mediaDownloadError: null,
+    };
+
+    renderHook(() => useInboxRealtime(['channel-1'], 'conversation-1'));
+
+    const handlers = vi.mocked(useSignalR).mock.calls.at(-1)?.[1];
+    handlers?.MessageReceived(message);
+
+    expect(setQueryData).toHaveBeenCalledWith(['conversations', 'conversation-1', 'messages'], expect.any(Function));
+    const updater = setQueryData.mock.calls[0][1] as (cache: {
+      pages: Array<{ items: unknown[]; totalCount: number; page: number; pageSize: number }>;
+      pageParams: unknown[];
+    }) => unknown;
+    const updated = updater({
+      pages: [{ items: [], totalCount: 0, page: 1, pageSize: 30 }],
+      pageParams: [1],
+    });
+
+    expect(updated).toMatchObject({
+      pages: [{ items: [message], totalCount: 1, page: 1, pageSize: 30 }],
+      pageParams: [1],
+    });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['conversations'], exact: false });
   });
 });
