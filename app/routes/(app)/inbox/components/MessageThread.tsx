@@ -11,6 +11,7 @@ import { useCan } from '~/hooks/useCan';
 import type { ConversationDetail } from '~/types/conversation';
 import { Composer } from './Composer';
 import { MessageBubble } from './MessageBubble';
+import { revokeMessageBlobCache } from '../useMessageBlobUrl';
 
 const PAGE_SIZE = 30;
 
@@ -58,6 +59,8 @@ export function MessageThread({ conversationId, conversation }: MessageThreadPro
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: 'end' });
   }, [messages.length]);
+
+  useEffect(() => revokeMessageBlobCache, []);
 
   return (
     <div className="flex h-full min-h-0 flex-col">

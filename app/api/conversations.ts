@@ -25,6 +25,14 @@ export const conversationsApi = {
     const { data } = await apiClient.post<Message>(`/conversations/${id}/messages`, payload);
     return data;
   },
+  getMediaBlob: async (path: string): Promise<Blob> => {
+    const { data } = await apiClient.get<Blob>(path, { responseType: 'blob' });
+    return data;
+  },
+  getThumbnailBlob: async (path: string): Promise<Blob> => {
+    const { data } = await apiClient.get<Blob>(path, { responseType: 'blob' });
+    return data;
+  },
   markAsRead: async (id: string): Promise<void> => {
     await apiClient.post(`/conversations/${id}/read`);
   },

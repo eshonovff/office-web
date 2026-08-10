@@ -15,6 +15,13 @@ export interface Message {
   sentByUserId: string | null;
   sentByUserName: string | null;
   createdAt: string;
+  mimeType: string | null;
+  sizeBytes: number | null;
+  originalFileName: string | null;
+  voiceDurationSeconds: number | null;
+  thumbnailUrl: string | null;
+  mediaDeletedAt: string | null;
+  mediaDownloadError: string | null;
 }
 
 export interface MessagesListParams {

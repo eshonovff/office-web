@@ -36,6 +36,13 @@ function normalizeReceivedMessage(raw: Record<string, unknown>): Message {
     sentByUserId: null,
     sentByUserName: null,
     createdAt: raw.createdAt as string,
+    mimeType: (raw.mimeType as string | null) ?? null,
+    sizeBytes: (raw.sizeBytes as number | null) ?? null,
+    originalFileName: (raw.originalFileName as string | null) ?? null,
+    voiceDurationSeconds: (raw.voiceDurationSeconds as number | null) ?? null,
+    thumbnailUrl: (raw.thumbnailUrl as string | null) ?? null,
+    mediaDeletedAt: (raw.mediaDeletedAt as string | null) ?? null,
+    mediaDownloadError: (raw.mediaDownloadError as string | null) ?? null,
   };
 }
 

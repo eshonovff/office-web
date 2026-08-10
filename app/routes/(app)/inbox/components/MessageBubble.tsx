@@ -1,8 +1,13 @@
-import { AlertCircle, Check, CheckCheck, Clock, Contact, FileText, Image, MapPin, Paperclip } from 'lucide-react';
+import { AlertCircle, Check, CheckCheck, Clock, Contact, Download, FileText, Image, MapPin, Paperclip } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '~/components/ui/button';
+import { Dialog, DialogContent, DialogTitle } from '~/components/ui/dialog';
+import { Progress } from '~/components/ui/progress';
 import { formatDate } from '~/lib/format';
 import { cn } from '~/lib/utils';
 import type { Message, MessageType } from '~/types/message';
+import { getMessageObjectUrl, useMessageBlobUrl } from '../useMessageBlobUrl';
 
 const MEDIA_ICON: Partial<Record<MessageType, typeof Image>> = {
   Image: Image,
@@ -27,6 +32,170 @@ function DeliveryStatusIcon({ status }: { status: Message['deliveryStatus'] }) {
     case 'Failed':
       return <AlertCircle className="text-destructive h-3 w-3" />;
   }
+}
+
+function formatBytes(bytes: number | null | undefined) {
+  if (!bytes) return '';
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(bytes < 10 * 1024 * 1024 ? 1 : 0)} MB`;
+}
+
+function formatDuration(seconds: number | null | undefined) {
+  if (!seconds) return '0:00';
+  const minutes = Math.floor(seconds / 60);
+  const rest = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, '0');
+  return `${minutes}:${rest}`;
+}
+
+function mediaErrorKey(status: ReturnType<typeof useMessageBlobUrl>['status']) {
+  if (status === 'gone') return 'mediaGone';
+  if (status === 'download-error') return 'mediaDownloadFailed';
+  if (status === 'not-found') return 'mediaNotFound';
+  if (status === 'error') return 'mediaLoadFailed';
+  return null;
+}
+
+function VoiceNotePlayer({ src, durationSeconds }: { src: string; durationSeconds: number | null }) {
+  const [currentTime, setCurrentTime] = useState(0);
+  const duration = durationSeconds || 0;
+  const progress = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
+
+  return (
+    <div className="min-w-56 space-y-2">
+      <audio
+        src={src}
+        controls
+        preload="metadata"
+        className="h-8 w-full"
+        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
+      />
+      <div className="flex items-center gap-2">
+        <Progress value={progress} className="h-1.5" />
+        <span className="text-2xs tabular-nums opacity-70">{formatDuration(durationSeconds)}</span>
+      </div>
+    </div>
+  );
+}
+
+function MediaStatus({ message, status }: { message: Message; status: ReturnType<typeof useMessageBlobUrl>['status'] }) {
+  const { t } = useTranslation('inbox');
+  const errorKey = message.mediaDownloadError ? 'mediaDownloadFailed' : mediaErrorKey(status);
+  if (message.mediaDeletedAt) return <p className="text-2xs opacity-75">{t('mediaGone')}</p>;
+  if (errorKey) return <p className="text-2xs opacity-75">{t(errorKey)}</p>;
+  if (status === 'loading') return <p className="text-2xs opacity-75">{t('mediaLoading')}</p>;
+  return null;
+}
+
+function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: boolean }) {
+  const { t } = useTranslation('inbox');
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [downloadStatus, setDownloadStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+  const media = useMessageBlobUrl('media', message.id, message.mediaDeletedAt ? null : message.mediaUrl);
+  const thumbnail = useMessageBlobUrl('thumbnail', message.id, message.thumbnailUrl);
+  const MediaIcon = MEDIA_ICON[message.type] ?? Paperclip;
+  const fileName = message.originalFileName || t(`messageType.${message.type}`);
+  const meta = formatBytes(message.sizeBytes);
+
+  async function downloadFile() {
+    if (!message.mediaUrl || downloadStatus === 'loading') return;
+    setDownloadStatus('loading');
+    try {
+      const objectUrl = await getMessageObjectUrl('media', message.id, message.mediaUrl);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = fileName;
+      link.click();
+      setDownloadStatus('idle');
+    } catch {
+      setDownloadStatus('error');
+    }
+  }
+
+  if (message.type === 'Image' || message.type === 'StoryReply') {
+    const previewUrl = thumbnail.objectUrl ?? media.objectUrl;
+    return (
+      <div className="space-y-1.5">
+        {previewUrl ? (
+          <button type="button" className="block overflow-hidden rounded-md" onClick={() => media.objectUrl && setLightboxOpen(true)}>
+            <img src={previewUrl} alt={fileName} className="max-h-56 max-w-full object-cover" />
+          </button>
+        ) : (
+          <div className="bg-muted flex min-h-24 min-w-48 items-center justify-center rounded-md">
+            <Image className="text-muted-foreground h-5 w-5" />
+          </div>
+        )}
+        <MediaStatus message={message} status={media.status === 'idle' ? thumbnail.status : media.status} />
+        {message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
+        <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+          <DialogContent className="max-w-4xl p-2" showCloseButton>
+            <DialogTitle className="sr-only">{fileName}</DialogTitle>
+            {media.objectUrl && <img src={media.objectUrl} alt={fileName} className="max-h-[80vh] w-full rounded-md object-contain" />}
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
+
+  if (message.type === 'Audio') {
+    return (
+      <div className="space-y-1.5">
+        {media.objectUrl ? (
+          message.voiceDurationSeconds ? (
+            <VoiceNotePlayer src={media.objectUrl} durationSeconds={message.voiceDurationSeconds} />
+          ) : (
+            <audio src={media.objectUrl} controls preload="metadata" className="w-64 max-w-full" />
+          )
+        ) : (
+          <div className="flex items-center gap-1.5 text-2xs">
+            <MediaIcon className="h-3.5 w-3.5" />
+            {t('messageType.Audio')}
+          </div>
+        )}
+        <MediaStatus message={message} status={media.status} />
+      </div>
+    );
+  }
+
+  if (message.type === 'Video') {
+    return (
+      <div className="space-y-1.5">
+        {media.objectUrl ? (
+          <video src={media.objectUrl} controls preload="metadata" className="max-h-64 max-w-full rounded-md" />
+        ) : (
+          <div className="flex items-center gap-1.5 text-2xs">
+            <MediaIcon className="h-3.5 w-3.5" />
+            {t('messageType.Video')}
+          </div>
+        )}
+        <MediaStatus message={message} status={media.status} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-current/10 p-2">
+      <FileText className="h-4 w-4 shrink-0" />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{fileName}</p>
+        {meta && <p className="text-2xs opacity-70">{meta}</p>}
+        {(message.mediaDeletedAt || message.mediaDownloadError || downloadStatus === 'error') && (
+          <p className="text-2xs opacity-75">
+            {message.mediaDeletedAt ? t('mediaGone') : message.mediaDownloadError ? t('mediaDownloadFailed') : t('mediaLoadFailed')}
+          </p>
+        )}
+      </div>
+      <Button
+        type="button"
+        variant={isOutbound ? 'secondary' : 'outline'}
+        size="icon-sm"
+        disabled={!message.mediaUrl || !!message.mediaDeletedAt || !!message.mediaDownloadError || downloadStatus === 'loading'}
+        onClick={downloadFile}>
+        <Download className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
 }
 
 interface MessageBubbleProps {
@@ -56,18 +225,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           <p className="text-2xs opacity-70">{message.sentByUserName}</p>
         )}
 
-        {MediaIcon && (
-          <a
-            href={message.mediaUrl ?? undefined}
-            target="_blank"
-            rel="noreferrer"
-            className={cn('flex items-center gap-1.5 text-2xs underline', !message.mediaUrl && 'pointer-events-none')}>
-            <MediaIcon className="h-3.5 w-3.5" />
-            {t(`messageType.${message.type}`)}
-          </a>
-        )}
+        {MediaIcon && <MessageMedia message={message} isOutbound={isOutbound} />}
 
-        {message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
+        {message.type === 'Text' && message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
 
         <div className={cn('flex items-center gap-1 text-2xs', isOutbound ? 'justify-end opacity-70' : 'text-muted-foreground')}>
           <span>{formatDate(message.createdAt, true)}</span>
