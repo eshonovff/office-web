@@ -1,5 +1,5 @@
 import type { AxiosProgressEvent } from 'axios';
-import { apiClient } from '~/lib/client';
+import { apiClient, originClient } from '~/lib/client';
 import type {
   ConversationDetail,
   ConversationListItem,
@@ -45,11 +45,11 @@ export const conversationsApi = {
     return data;
   },
   getMediaBlob: async (path: string): Promise<Blob> => {
-    const { data } = await apiClient.get<Blob>(path, { responseType: 'blob' });
+    const { data } = await originClient.get<Blob>(path, { responseType: 'blob' });
     return data;
   },
   getThumbnailBlob: async (path: string): Promise<Blob> => {
-    const { data } = await apiClient.get<Blob>(path, { responseType: 'blob' });
+    const { data } = await originClient.get<Blob>(path, { responseType: 'blob' });
     return data;
   },
   markAsRead: async (id: string): Promise<void> => {

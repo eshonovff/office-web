@@ -6,9 +6,18 @@ import { useAuthStore } from "~/store/useAuthStore";
 import type { RefreshResponse } from "~/types/auth";
 
 const baseURL = (import.meta.env.VITE_API_URL || "") + "/api";
+const originBaseURL = import.meta.env.VITE_API_URL || "";
 
 export const apiClient = axios.create({
   baseURL,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export const originClient = axios.create({
+  baseURL: originBaseURL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -42,13 +51,16 @@ const SILENT_URLS = ["/auth/login"];
 
 const isSilent = (url?: string): boolean => SILENT_URLS.some((silent) => url?.includes(silent));
 
-apiClient.interceptors.request.use((config) => {
+function withAuthorization(config: InternalAxiosRequestConfig) {
   const token = useAuthStore.getState().accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
-});
+}
+
+apiClient.interceptors.request.use(withAuthorization);
+originClient.interceptors.request.use(withAuthorization);
 
 // ─── 401 → single in-flight refresh, queued requests replay after ─────────
 
