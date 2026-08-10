@@ -20,6 +20,12 @@ export const apiClient = axios.create({
 // the same 401-handling logic that triggered it.
 const refreshClient = axios.create({ baseURL, withCredentials: true });
 
+export async function refreshAccessToken(): Promise<string> {
+  const { data } = await refreshClient.post<RefreshResponse>("/auth/refresh");
+  useAuthStore.getState().setAccessToken(data.accessToken);
+  return data.accessToken;
+}
+
 const ERROR_MESSAGES: Record<number, string> = {
   400: "errors.badRequest",
   403: "errors.forbidden",
@@ -89,10 +95,9 @@ apiClient.interceptors.response.use(
 
       isRefreshing = true;
       try {
-        const { data } = await refreshClient.post<RefreshResponse>("/auth/refresh");
-        useAuthStore.getState().setAccessToken(data.accessToken);
-        onRefreshed(data.accessToken);
-        config.headers.Authorization = `Bearer ${data.accessToken}`;
+        const accessToken = await refreshAccessToken();
+        onRefreshed(accessToken);
+        config.headers.Authorization = `Bearer ${accessToken}`;
         return apiClient(config);
       } catch (refreshError) {
         onRefreshed(null);
