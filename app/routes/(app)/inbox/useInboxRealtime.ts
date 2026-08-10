@@ -49,7 +49,7 @@ function normalizeReceivedMessage(raw: Record<string, unknown>): Message {
 /** Joins the /hubs/inbox channel groups for `channelIds` and keeps the inbox's queries live. */
 export function useInboxRealtime(channelIds: string[]) {
   const queryClient = useQueryClient();
-  const { connection, status, start, stop } = useInboxHub();
+  const { connection, status, reconnectCount, start, stop } = useInboxHub();
 
   useEffect(() => {
     void start();
@@ -68,7 +68,7 @@ export function useInboxRealtime(channelIds: string[]) {
       connection.invoke('JoinChannel', channelId).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connection, channelIds.join(',')]);
+  }, [connection, reconnectCount, channelIds.join(',')]);
 
   function appendMessage(message: Message) {
     queryClient.setQueryData<MessagesCache>(['conversations', message.conversationId, 'messages'], (old) => {

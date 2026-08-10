@@ -1,14 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 function makeFakeConnection() {
+  let reconnectedHandler: (() => void) | undefined;
   return {
     onreconnecting: vi.fn(),
-    onreconnected: vi.fn(),
+    onreconnected: vi.fn((handler: () => void) => {
+      reconnectedHandler = handler;
+    }),
     onclose: vi.fn(),
     start: vi.fn().mockResolvedValue(undefined),
     stop: vi.fn().mockResolvedValue(undefined),
     on: vi.fn(),
     off: vi.fn(),
+    emitReconnected: () => reconnectedHandler?.(),
   };
 }
 
@@ -81,5 +85,22 @@ describe('createHubStore', () => {
     expect(fake.stop).toHaveBeenCalledTimes(1);
     expect(useHub.getState().status).toBe('idle');
     expect(useHub.getState().connection).toBeNull();
+  });
+
+  it('increments reconnectCount after SignalR reconnects', async () => {
+    const { createHubConnection } = await import('~/lib/signalr');
+    const fake = makeFakeConnection();
+    vi.mocked(createHubConnection).mockReturnValue(fake as any);
+
+    const { createHubStore } = await import('~/store/createHubStore');
+    const useHub = createHubStore('/hubs/test');
+
+    await useHub.getState().start();
+    expect(useHub.getState().reconnectCount).toBe(0);
+
+    fake.emitReconnected();
+
+    expect(useHub.getState().status).toBe('connected');
+    expect(useHub.getState().reconnectCount).toBe(1);
   });
 });
