@@ -1,17 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { Send } from 'lucide-react';
-import { useState } from 'react';
+import { Paperclip, Send, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { channelsApi } from '~/api/channels';
 import { conversationsApi } from '~/api/conversations';
 import { CustomSelect } from '~/components/shared/CustomSelect';
 import { Button } from '~/components/ui/button';
+import { Progress } from '~/components/ui/progress';
 import { Textarea } from '~/components/ui/textarea';
 import { Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
 import { formatWindowRemaining } from '~/lib/format';
 import type { ConversationDetail } from '~/types/conversation';
+import type { Message } from '~/types/message';
 
 interface ComposerProps {
   conversation: ConversationDetail;
@@ -19,6 +21,43 @@ interface ComposerProps {
 
 function isWindowOpen(windowExpiresAt: string | null): boolean {
   return !!windowExpiresAt && dayjs(windowExpiresAt).isAfter(dayjs());
+}
+
+const MEDIA_LIMITS = {
+  image: 5 * 1024 * 1024,
+  audioVideo: 16 * 1024 * 1024,
+  document: 100 * 1024 * 1024,
+} as const;
+
+interface MessagesPage {
+  items: Message[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+interface MessagesCache {
+  pages: MessagesPage[];
+  pageParams: unknown[];
+}
+
+function classifyFile(file: File) {
+  if (file.type.startsWith('image/')) return { type: 'image', maxBytes: MEDIA_LIMITS.image };
+  if (file.type.startsWith('audio/') || file.type.startsWith('video/')) return { type: 'audioVideo', maxBytes: MEDIA_LIMITS.audioVideo };
+  return { type: 'document', maxBytes: MEDIA_LIMITS.document };
+}
+
+function formatLimit(bytes: number) {
+  return `${bytes / (1024 * 1024)} MB`;
+}
+
+function appendPendingMessage(queryClient: ReturnType<typeof useQueryClient>, conversationId: string, message: Message) {
+  queryClient.setQueryData<MessagesCache>(['conversations', conversationId, 'messages'], (old) => {
+    if (!old) return old;
+    const [first, ...rest] = old.pages;
+    if (!first || first.items.some((item) => item.id === message.id)) return old;
+    return { ...old, pages: [{ ...first, items: [message, ...first.items], totalCount: first.totalCount + 1 }, ...rest] };
+  });
 }
 
 export function Composer({ conversation }: ComposerProps) {
@@ -29,6 +68,11 @@ export function Composer({ conversation }: ComposerProps) {
 
   const [body, setBody] = useState('');
   const [templateName, setTemplateName] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   // Flips true only on a 409 mid-send — the render-time `windowOpen` check
   // already covers the common case (window already closed before typing).
   const [windowClosedDuringSend, setWindowClosedDuringSend] = useState(false);
@@ -62,6 +106,61 @@ export function Composer({ conversation }: ComposerProps) {
       }
     },
   });
+
+  const { mutate: uploadMedia, isPending: isUploading } = useMutation({
+    mutationFn: (file: File) =>
+      conversationsApi.uploadMedia(conversation.id, file, (event) => {
+        if (!event.total) return;
+        setUploadProgress(Math.round((event.loaded / event.total) * 100));
+      }),
+    onSuccess: (message) => {
+      appendPendingMessage(queryClient, conversation.id, message);
+      clearSelectedFile();
+      void queryClient.invalidateQueries({ queryKey: ['conversations'], exact: false });
+    },
+    onError: () => {
+      setUploadProgress(0);
+      setFileError(t('uploadFailed'));
+    },
+  });
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  function clearSelectedFile() {
+    setSelectedFile(null);
+    setFileError(null);
+    setUploadProgress(0);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    clearSelectedFile();
+    if (!file) return;
+
+    const { maxBytes } = classifyFile(file);
+    if (file.size > maxBytes) {
+      setFileError(t('fileTooLarge', { max: formatLimit(maxBytes) }));
+      return;
+    }
+
+    setSelectedFile(file);
+    if (file.type.startsWith('image/') || file.type.startsWith('video/') || file.type.startsWith('audio/')) {
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  }
+
+  function handleUploadMedia() {
+    if (!selectedFile || isUploading) return;
+    setUploadProgress(0);
+    uploadMedia(selectedFile);
+  }
 
   function handleSendText() {
     const trimmed = body.trim();
@@ -120,6 +219,10 @@ export function Composer({ conversation }: ComposerProps) {
         <p className="text-muted-foreground text-2xs">{formatWindowRemaining(conversation.windowExpiresAt)}</p>
       )}
       <div className="flex items-end gap-2">
+        <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
+        <Button type="button" variant="outline" size="icon" disabled={isPending || isUploading} onClick={() => fileInputRef.current?.click()}>
+          <Paperclip className="h-4 w-4" />
+        </Button>
         <Textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
@@ -133,6 +236,29 @@ export function Composer({ conversation }: ComposerProps) {
           {t('send')}
         </Button>
       </div>
+      {(selectedFile || fileError) && (
+        <div className="bg-muted/50 space-y-2 rounded-lg border p-2">
+          <div className="flex items-start gap-2">
+            {previewUrl && selectedFile?.type.startsWith('image/') && (
+              <img src={previewUrl} alt={selectedFile.name} className="h-14 w-14 rounded-md object-cover" />
+            )}
+            <div className="min-w-0 flex-1">
+              {selectedFile && <p className="truncate text-sm font-medium">{selectedFile.name}</p>}
+              {fileError && <p className="text-destructive text-2xs">{fileError}</p>}
+              {isUploading && <Progress value={uploadProgress} className="mt-2 h-1.5" />}
+            </div>
+            <Button type="button" variant="ghost" size="icon-sm" disabled={isUploading} onClick={clearSelectedFile}>
+              <X className="h-3.5 w-3.5" />
+            </Button>
+            {selectedFile && (
+              <Button type="button" size="sm" disabled={isUploading} onClick={handleUploadMedia} className="gap-1.5">
+                <Send className="h-3.5 w-3.5" />
+                {isUploading ? t('uploading') : t('sendFile')}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
