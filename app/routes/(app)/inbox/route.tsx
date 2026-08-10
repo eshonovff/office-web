@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { AlertCircle, Settings, Wifi } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
+import { channelsApi } from '~/api/channels';
 import { conversationsApi } from '~/api/conversations';
 import { EmptyState } from '~/components/shared/EmptyState';
 import { Button } from '~/components/ui/button';
@@ -83,13 +84,25 @@ export default function InboxPage() {
     staleTime: 5 * 60_000,
   });
 
+  const { data: allChannels } = useQuery({
+    queryKey: ['channels', 'realtime-access'],
+    queryFn: channelsApi.list,
+    enabled: canManageChannels,
+    staleTime: 5 * 60_000,
+  });
+
   const channelOptions = useMemo(() => {
     const seen = new Map<string, string>();
     for (const item of firstPage?.items ?? []) seen.set(item.channelId, item.channelName);
     return [...seen.entries()].map(([value, label]) => ({ value, label }));
   }, [firstPage]);
 
-  const hubStatus = useInboxRealtime(channelOptions.map((c) => c.value), selectedId);
+  const realtimeChannelIds = useMemo(() => {
+    if (allChannels) return allChannels.filter((channel) => channel.isActive).map((channel) => channel.id);
+    return channelOptions.map((channel) => channel.value);
+  }, [allChannels, channelOptions]);
+
+  const hubStatus = useInboxRealtime(realtimeChannelIds, selectedId);
 
   // GET /channels/{id} (real channel membership) is gated on channels.manage,
   // which neither seeded inbox role has (see docs/PROGRESS.md #6) — so the
