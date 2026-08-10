@@ -40,6 +40,7 @@ describe('createHubStore', () => {
     expect(fake.start).toHaveBeenCalledTimes(1);
     expect(useHub.getState().status).toBe('connected');
     expect(useHub.getState().connection).toBe(fake);
+    expect(useHub.getState().error).toBeNull();
   });
 
   it('does not open a second connection if start() is called while already connected', async () => {
@@ -69,6 +70,7 @@ describe('createHubStore', () => {
 
     expect(useHub.getState().status).toBe('disconnected');
     expect(useHub.getState().connection).toBeNull();
+    expect(useHub.getState().error).toBe('connectionFailed');
   });
 
   it('stop() tears down the connection and resets to idle', async () => {
@@ -85,6 +87,7 @@ describe('createHubStore', () => {
     expect(fake.stop).toHaveBeenCalledTimes(1);
     expect(useHub.getState().status).toBe('idle');
     expect(useHub.getState().connection).toBeNull();
+    expect(useHub.getState().error).toBeNull();
   });
 
   it('increments reconnectCount after SignalR reconnects', async () => {

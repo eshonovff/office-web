@@ -6,11 +6,13 @@ const invalidateQueries = vi.fn();
 const start = vi.fn();
 const stop = vi.fn();
 const invoke = vi.fn();
+const setError = vi.fn();
 
 let hubState = {
   connection: { state: 'Connected', invoke },
   status: 'connected',
   reconnectCount: 0,
+  setError,
   start,
   stop,
 };
@@ -28,7 +30,7 @@ vi.mock('~/hooks/useSignalR', () => ({
 }));
 
 vi.mock('~/store/useInboxHub', () => ({
-  useInboxHub: () => hubState,
+  useInboxHub: (selector?: (state: typeof hubState) => unknown) => (selector ? selector(hubState) : hubState),
 }));
 
 describe('useInboxRealtime', () => {
@@ -38,6 +40,7 @@ describe('useInboxRealtime', () => {
       connection: { state: 'Connected', invoke },
       status: 'connected',
       reconnectCount: 0,
+      setError,
       start,
       stop,
     };
@@ -69,5 +72,12 @@ describe('useInboxRealtime', () => {
 
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['conversations'], exact: false });
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['conversations', 'conversation-1', 'messages'] });
+  });
+
+  it('surfaces JoinChannel failures through the hub store', async () => {
+    invoke.mockRejectedValue(new Error('join failed'));
+
+    renderHook(() => useInboxRealtime(['channel-1'], null));
+    await vi.waitFor(() => expect(setError).toHaveBeenCalledWith('joinChannelFailed'));
   });
 });

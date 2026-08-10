@@ -50,6 +50,7 @@ function normalizeReceivedMessage(raw: Record<string, unknown>): Message {
 export function useInboxRealtime(channelIds: string[], openConversationId?: string | null) {
   const queryClient = useQueryClient();
   const { connection, status, reconnectCount, start, stop } = useInboxHub();
+  const setHubError = useInboxHub((s) => s.setError);
 
   useEffect(() => {
     void start();
@@ -65,10 +66,13 @@ export function useInboxRealtime(channelIds: string[], openConversationId?: stri
   useEffect(() => {
     if (!connection || connection.state !== HubConnectionState.Connected) return;
     for (const channelId of channelIds) {
-      connection.invoke('JoinChannel', channelId).catch(() => {});
+      connection
+        .invoke('JoinChannel', channelId)
+        .then(() => setHubError(null))
+        .catch(() => setHubError('joinChannelFailed'));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connection, reconnectCount, channelIds.join(',')]);
+  }, [connection, reconnectCount, setHubError, channelIds.join(',')]);
 
   useEffect(() => {
     if (reconnectCount === 0) return;
