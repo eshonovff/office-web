@@ -103,6 +103,7 @@ export default function InboxPage() {
   }, [allChannels, channelOptions]);
 
   const hubStatus = useInboxRealtime(realtimeChannelIds, selectedId);
+  const effectiveHubStatus = hubError ? 'disconnected' : hubStatus;
 
   // GET /channels/{id} (real channel membership) is gated on channels.manage,
   // which neither seeded inbox role has (see docs/PROGRESS.md #6) — so the
@@ -178,12 +179,12 @@ export default function InboxPage() {
             <div
               className={cn(
                 'flex items-center gap-1.5 rounded-md border px-2 py-1 text-2xs font-medium',
-                CONNECTION_BADGE_CLASS[hubStatus]
+                CONNECTION_BADGE_CLASS[effectiveHubStatus]
               )}
               title={hubError ? t(`connectionError.${hubError}`) : t(`connection.${hubStatus}`)}>
-              {hubError || hubStatus === 'disconnected' ? <AlertCircle className="h-3.5 w-3.5" /> : <Wifi className="h-3.5 w-3.5" />}
+              {effectiveHubStatus === 'disconnected' ? <AlertCircle className="h-3.5 w-3.5" /> : <Wifi className="h-3.5 w-3.5" />}
               <span>{hubError ? t(`connectionError.${hubError}`) : t(`connection.${hubStatus}`)}</span>
-              <span className={cn('h-2 w-2 shrink-0 rounded-full', CONNECTION_DOT_CLASS[hubStatus])} />
+              <span className={cn('h-2 w-2 shrink-0 rounded-full', CONNECTION_DOT_CLASS[effectiveHubStatus])} />
             </div>
           </div>
         </div>
