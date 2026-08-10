@@ -35,6 +35,15 @@ export const conversationsApi = {
     });
     return data;
   },
+  uploadVoiceNote: async (id: string, file: File, onUploadProgress?: (event: AxiosProgressEvent) => void): Promise<Message> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const { data } = await apiClient.post<Message>(`/conversations/${id}/voice-note`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress,
+    });
+    return data;
+  },
   getMediaBlob: async (path: string): Promise<Blob> => {
     const { data } = await apiClient.get<Blob>(path, { responseType: 'blob' });
     return data;

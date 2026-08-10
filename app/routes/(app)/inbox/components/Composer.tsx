@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { Paperclip, Send, X } from 'lucide-react';
+import { Mic, Paperclip, Send, Square, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { channelsApi } from '~/api/channels';
@@ -72,7 +72,15 @@ export function Composer({ conversation }: ComposerProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [recording, setRecording] = useState(false);
+  const [recordElapsed, setRecordElapsed] = useState(0);
+  const [recordError, setRecordError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingChunksRef = useRef<BlobPart[]>([]);
+  const recordingStreamRef = useRef<MediaStream | null>(null);
+  const recordingTimerRef = useRef<number | null>(null);
+  const shouldSendRecordingRef = useRef(false);
   // Flips true only on a 409 mid-send — the render-time `windowOpen` check
   // already covers the common case (window already closed before typing).
   const [windowClosedDuringSend, setWindowClosedDuringSend] = useState(false);
@@ -124,11 +132,42 @@ export function Composer({ conversation }: ComposerProps) {
     },
   });
 
+  const { mutate: uploadVoiceNote, isPending: isUploadingVoiceNote } = useMutation({
+    mutationFn: (file: File) =>
+      conversationsApi.uploadVoiceNote(conversation.id, file, (event) => {
+        if (!event.total) return;
+        setUploadProgress(Math.round((event.loaded / event.total) * 100));
+      }),
+    onSuccess: (message) => {
+      appendPendingMessage(queryClient, conversation.id, message);
+      setUploadProgress(0);
+      void queryClient.invalidateQueries({ queryKey: ['conversations'], exact: false });
+    },
+    onError: () => {
+      setUploadProgress(0);
+      setRecordError(t('voiceUploadFailed'));
+    },
+  });
+
   useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
+
+  useEffect(() => {
+    return () => {
+      stopRecordingTimer();
+      recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
+
+  function stopRecordingTimer() {
+    if (recordingTimerRef.current !== null) {
+      window.clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+  }
 
   function clearSelectedFile() {
     setSelectedFile(null);
@@ -160,6 +199,58 @@ export function Composer({ conversation }: ComposerProps) {
     if (!selectedFile || isUploading) return;
     setUploadProgress(0);
     uploadMedia(selectedFile);
+  }
+
+  async function startVoiceRecording() {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setRecordError(t('voiceUnsupported'));
+      return;
+    }
+
+    try {
+      setRecordError(null);
+      setRecordElapsed(0);
+      recordingChunksRef.current = [];
+      shouldSendRecordingRef.current = false;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recordingStreamRef.current = stream;
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+      const recorder = new MediaRecorder(stream, { mimeType });
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) recordingChunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        stopRecordingTimer();
+        stream.getTracks().forEach((track) => track.stop());
+        recordingStreamRef.current = null;
+        setRecording(false);
+
+        if (!shouldSendRecordingRef.current) return;
+        const blob = new Blob(recordingChunksRef.current, { type: mimeType });
+        if (blob.size > MEDIA_LIMITS.audioVideo) {
+          setRecordError(t('fileTooLarge', { max: formatLimit(MEDIA_LIMITS.audioVideo) }));
+          return;
+        }
+        const file = new File([blob], `voice-note-${Date.now()}.webm`, { type: mimeType });
+        setUploadProgress(0);
+        uploadVoiceNote(file);
+      };
+
+      recorder.start();
+      setRecording(true);
+      recordingTimerRef.current = window.setInterval(() => setRecordElapsed((value) => value + 1), 1000);
+    } catch {
+      setRecordError(t('voicePermissionDenied'));
+    }
+  }
+
+  function stopVoiceRecording(send: boolean) {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === 'inactive') return;
+    shouldSendRecordingRef.current = send;
+    recorder.stop();
   }
 
   function handleSendText() {
@@ -223,6 +314,14 @@ export function Composer({ conversation }: ComposerProps) {
         <Button type="button" variant="outline" size="icon" disabled={isPending || isUploading} onClick={() => fileInputRef.current?.click()}>
           <Paperclip className="h-4 w-4" />
         </Button>
+        <Button
+          type="button"
+          variant={recording ? 'default' : 'outline'}
+          size="icon"
+          disabled={isPending || isUploading || isUploadingVoiceNote}
+          onClick={() => (recording ? stopVoiceRecording(true) : startVoiceRecording())}>
+          {recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+        </Button>
         <Textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
@@ -257,6 +356,23 @@ export function Composer({ conversation }: ComposerProps) {
               </Button>
             )}
           </div>
+        </div>
+      )}
+      {(recording || recordError || isUploadingVoiceNote) && (
+        <div className="bg-muted/50 flex items-center gap-2 rounded-lg border p-2">
+          <Mic className="h-4 w-4 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium">
+              {recording ? t('recordingVoice', { duration: `${Math.floor(recordElapsed / 60)}:${String(recordElapsed % 60).padStart(2, '0')}` }) : t('voiceNote')}
+            </p>
+            {recordError && <p className="text-destructive text-2xs">{recordError}</p>}
+            {isUploadingVoiceNote && <Progress value={uploadProgress} className="mt-2 h-1.5" />}
+          </div>
+          {recording && (
+            <Button type="button" variant="ghost" size="icon-sm" onClick={() => stopVoiceRecording(false)}>
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          )}
         </div>
       )}
     </div>
