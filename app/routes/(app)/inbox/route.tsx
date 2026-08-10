@@ -79,7 +79,7 @@ export default function InboxPage() {
     return [...seen.entries()].map(([value, label]) => ({ value, label }));
   }, [firstPage]);
 
-  const hubStatus = useInboxRealtime(channelOptions.map((c) => c.value));
+  const hubStatus = useInboxRealtime(channelOptions.map((c) => c.value), selectedId);
 
   // GET /channels/{id} (real channel membership) is gated on channels.manage,
   // which neither seeded inbox role has (see docs/PROGRESS.md #6) — so the

@@ -47,7 +47,7 @@ function normalizeReceivedMessage(raw: Record<string, unknown>): Message {
 }
 
 /** Joins the /hubs/inbox channel groups for `channelIds` and keeps the inbox's queries live. */
-export function useInboxRealtime(channelIds: string[]) {
+export function useInboxRealtime(channelIds: string[], openConversationId?: string | null) {
   const queryClient = useQueryClient();
   const { connection, status, reconnectCount, start, stop } = useInboxHub();
 
@@ -69,6 +69,14 @@ export function useInboxRealtime(channelIds: string[]) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connection, reconnectCount, channelIds.join(',')]);
+
+  useEffect(() => {
+    if (reconnectCount === 0) return;
+    void queryClient.invalidateQueries({ queryKey: ['conversations'], exact: false });
+    if (openConversationId) {
+      void queryClient.invalidateQueries({ queryKey: ['conversations', openConversationId, 'messages'] });
+    }
+  }, [openConversationId, queryClient, reconnectCount]);
 
   function appendMessage(message: Message) {
     queryClient.setQueryData<MessagesCache>(['conversations', message.conversationId, 'messages'], (old) => {
