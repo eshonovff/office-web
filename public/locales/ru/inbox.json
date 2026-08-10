@@ -28,6 +28,10 @@
     "reconnecting": "Переподключение...",
     "disconnected": "Соединение потеряно"
   },
+  "connectionError": {
+    "connectionFailed": "Realtime не подключился",
+    "joinChannelFailed": "Realtime канала не подключился"
+  },
   "contact": "Клиент",
   "channelsTitle": "Каналы",
   "manageMembers": "Управление участниками",

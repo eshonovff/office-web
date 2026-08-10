@@ -28,6 +28,10 @@
     "reconnecting": "Аз нав пайвастшавӣ...",
     "disconnected": "Пайваст қатъ шуд"
   },
+  "connectionError": {
+    "connectionFailed": "Realtime пайваст нашуд",
+    "joinChannelFailed": "Realtime-и канал пайваст нашуд"
+  },
   "contact": "Мижоз",
   "channelsTitle": "Каналҳо",
   "manageMembers": "Идораи аъзоён",

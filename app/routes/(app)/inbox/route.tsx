@@ -11,7 +11,7 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Settings } from 'lucide-react';
+import { AlertCircle, Settings, Wifi } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { conversationsApi } from '~/api/conversations';
@@ -21,6 +21,7 @@ import { Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
 import { cn } from '~/lib/utils';
 import { useAuthStore } from '~/store/useAuthStore';
+import { useInboxHub } from '~/store/useInboxHub';
 import type { ConversationStatus } from '~/types/conversation';
 import { ASSIGNEE_DROP_PREFIX, AssigneeAvatar } from './components/AssigneeAvatar';
 import { ConversationList } from './components/ConversationList';
@@ -36,6 +37,14 @@ const CONNECTION_DOT_CLASS = {
   idle: 'bg-muted-foreground',
 } as const;
 
+const CONNECTION_BADGE_CLASS = {
+  connected: 'border-success/30 bg-success/10 text-success',
+  connecting: 'border-warning/30 bg-warning/10 text-warning',
+  reconnecting: 'border-warning/30 bg-warning/10 text-warning',
+  disconnected: 'border-destructive/30 bg-destructive/10 text-destructive',
+  idle: 'border-muted bg-muted text-muted-foreground',
+} as const;
+
 export default function InboxPage() {
   const { t } = useTranslation('inbox');
   const { can } = useCan();
@@ -43,6 +52,7 @@ export default function InboxPage() {
   const canManageChannels = can(Permissions.Channels.Manage);
   const currentUser = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
+  const hubError = useInboxHub((s) => s.error);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedId = searchParams.get('conversation');
@@ -152,10 +162,16 @@ export default function InboxPage() {
                 {t('channelsTitle')}
               </Button>
             )}
-            <span
-              className={cn('h-2 w-2 shrink-0 rounded-full', CONNECTION_DOT_CLASS[hubStatus])}
-              title={t(`connection.${hubStatus}`)}
-            />
+            <div
+              className={cn(
+                'flex items-center gap-1.5 rounded-md border px-2 py-1 text-2xs font-medium',
+                CONNECTION_BADGE_CLASS[hubStatus]
+              )}
+              title={hubError ? t(`connectionError.${hubError}`) : t(`connection.${hubStatus}`)}>
+              {hubError || hubStatus === 'disconnected' ? <AlertCircle className="h-3.5 w-3.5" /> : <Wifi className="h-3.5 w-3.5" />}
+              <span>{hubError ? t(`connectionError.${hubError}`) : t(`connection.${hubStatus}`)}</span>
+              <span className={cn('h-2 w-2 shrink-0 rounded-full', CONNECTION_DOT_CLASS[hubStatus])} />
+            </div>
           </div>
         </div>
 
