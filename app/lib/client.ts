@@ -149,7 +149,10 @@ apiClient.interceptors.response.use(
 
     const message = translatedMessage || serverMessage || i18next.t("errors.unknown", { ns: "common" });
 
-    toast.error(message);
+    // Keyed by request so retries of the same failing endpoint (TanStack
+    // Query's automatic retry, or several queries hitting it at once) update
+    // one toast in place instead of stacking a new one per attempt.
+    toast.error(message, { id: requestUrl ?? message });
 
     return Promise.reject(error);
   },

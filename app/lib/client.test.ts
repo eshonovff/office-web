@@ -45,6 +45,16 @@ vi.mock("axios", () => ({
   },
 }));
 
+vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
+vi.mock("i18next", () => ({ default: { t: (key: string) => key } }));
+
+function makeNotFoundError(url: string) {
+  return {
+    response: { status: 404, data: {} },
+    config: { url, headers: {} },
+  };
+}
+
 function makeUnauthorizedError(url: string) {
   return {
     response: { status: 401 },
@@ -99,6 +109,18 @@ describe("apiClient refresh queue", () => {
     expect(window.location.href).toBe("/login");
 
     Object.defineProperty(window, "location", { value: originalLocation, writable: true, configurable: true });
+  });
+
+  it("tags the error toast with the request url so a retried query updates one toast instead of stacking", async () => {
+    const { apiClient } = await import("~/lib/client");
+    const { toast } = await import("sonner");
+    void apiClient;
+    const [apiClientMock] = instances;
+
+    await expect(apiClientMock._resRejected!(makeNotFoundError("/tasks/123"))).rejects.toBeTruthy();
+
+    expect(toast.error).toHaveBeenCalledTimes(1);
+    expect(toast.error).toHaveBeenCalledWith(expect.any(String), { id: "/tasks/123" });
   });
 
   it("does not attempt a refresh for a failed /auth/login", async () => {
