@@ -23,6 +23,7 @@ import { useCan } from '~/hooks/useCan';
 import { cn } from '~/lib/utils';
 import { useAuthStore } from '~/store/useAuthStore';
 import { useInboxHub } from '~/store/useInboxHub';
+import type { MyChannelListItem } from '~/types/channel';
 import type { ConversationStatus } from '~/types/conversation';
 import { ASSIGNEE_DROP_PREFIX, AssigneeAvatar } from './components/AssigneeAvatar';
 import { ConversationList } from './components/ConversationList';
@@ -45,6 +46,17 @@ const CONNECTION_BADGE_CLASS = {
   disconnected: 'border-destructive/30 bg-destructive/10 text-destructive',
   idle: 'border-muted bg-muted text-muted-foreground',
 } as const;
+
+export function getInboxChannelOptions(channels: MyChannelListItem[] | undefined) {
+  return (channels ?? []).map((channel) => ({ value: channel.id, label: channel.name }));
+}
+
+export function getRealtimeChannelIds(channels: MyChannelListItem[] | undefined) {
+  return (channels ?? [])
+    .filter((channel) => channel.isActive)
+    .filter((channel) => channel.joinable ?? true)
+    .map((channel) => channel.id);
+}
 
 export default function InboxPage() {
   const { t } = useTranslation('inbox');
@@ -75,32 +87,28 @@ export default function InboxPage() {
     enabled: !!selectedId,
   });
 
-  // Non-admin users can't call GET /channels (gated on channels.manage), so
-  // the channel filter's options come from what's actually visible in the
-  // conversation data itself, not a separate channels fetch.
   const { data: firstPage } = useQuery({
-    queryKey: ['conversations', 'channel-options'],
+    queryKey: ['conversations', 'assignee-options'],
     queryFn: () => conversationsApi.list({ page: 1, pageSize: 100 }),
     staleTime: 5 * 60_000,
   });
 
-  const { data: allChannels } = useQuery({
-    queryKey: ['channels', 'realtime-access'],
-    queryFn: channelsApi.list,
-    enabled: canManageChannels,
+  const { data: myChannels } = useQuery({
+    queryKey: ['channels', 'mine'],
+    queryFn: channelsApi.mine,
     staleTime: 5 * 60_000,
   });
 
   const channelOptions = useMemo(() => {
-    const seen = new Map<string, string>();
-    for (const item of firstPage?.items ?? []) seen.set(item.channelId, item.channelName);
-    return [...seen.entries()].map(([value, label]) => ({ value, label }));
-  }, [firstPage]);
+    return getInboxChannelOptions(myChannels);
+  }, [myChannels]);
 
   const realtimeChannelIds = useMemo(() => {
-    if (allChannels) return allChannels.filter((channel) => channel.isActive).map((channel) => channel.id);
-    return channelOptions.map((channel) => channel.value);
-  }, [allChannels, channelOptions]);
+    // TODO: When /channels/mine starts returning joinable=false for filter-only
+    // channels, join only the channels with joinable=true while still showing
+    // every returned channel in the filter dropdown.
+    return getRealtimeChannelIds(myChannels);
+  }, [myChannels]);
 
   const hubStatus = useInboxRealtime(realtimeChannelIds, selectedId);
   const effectiveHubStatus = hubError ? 'disconnected' : hubStatus;

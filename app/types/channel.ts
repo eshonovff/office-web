@@ -9,6 +9,14 @@ export interface ChannelListItem {
   createdAt: string;
 }
 
+export interface MyChannelListItem {
+  id: string;
+  type: ChannelType;
+  name: string;
+  isActive: boolean;
+  joinable?: boolean;
+}
+
 export interface ChannelMember {
   userId: string;
   fullName: string;

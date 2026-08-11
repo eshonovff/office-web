@@ -1,9 +1,13 @@
 import { apiClient } from '~/lib/client';
-import type { ChannelDetail, ChannelListItem, SetChannelMembersRequest, WhatsAppTemplate } from '~/types/channel';
+import type { ChannelDetail, ChannelListItem, MyChannelListItem, SetChannelMembersRequest, WhatsAppTemplate } from '~/types/channel';
 
 export const channelsApi = {
   list: async (): Promise<ChannelListItem[]> => {
     const { data } = await apiClient.get<ChannelListItem[]>('/channels');
+    return data;
+  },
+  mine: async (): Promise<MyChannelListItem[]> => {
+    const { data } = await apiClient.get<MyChannelListItem[]>('/channels/mine');
     return data;
   },
   get: async (id: string): Promise<ChannelDetail> => {
