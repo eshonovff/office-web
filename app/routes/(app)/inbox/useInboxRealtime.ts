@@ -24,8 +24,12 @@ export function useInboxRealtime(channelIds: string[], openConversationId?: stri
   const setHubError = useInboxHub((s) => s.setError);
 
   useEffect(() => {
-    void start();
+    // React StrictMode mounts, cleans up, and mounts effects again in development.
+    // Deferring one tick lets that synthetic cleanup cancel the first start before
+    // SignalR begins negotiation and logs a misleading connection failure.
+    const startTimer = window.setTimeout(() => void start(), 0);
     return () => {
+      window.clearTimeout(startTimer);
       void stop();
     };
     // Mount/unmount only — start/stop are idempotent, and re-running this on
