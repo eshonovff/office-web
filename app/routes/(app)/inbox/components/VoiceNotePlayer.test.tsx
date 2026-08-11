@@ -66,4 +66,12 @@ describe('VoiceNotePlayer', () => {
     expect(screen.getAllByTestId('voice-wave-bar')).toHaveLength(2);
     expect(screen.getByRole('button')).toBeDisabled();
   });
+
+  it('renders a flat progress track with the file title for audio attachments without waveform data', () => {
+    render(<VoiceNotePlayer src="blob:audio-1" durationSeconds={30} peaks={[]} title="song.mp3" />);
+
+    expect(screen.getByText('song.mp3')).toBeInTheDocument();
+    expect(screen.getByTestId('audio-progress-track')).toBeInTheDocument();
+    expect(screen.queryByTestId('voice-wave-bar')).not.toBeInTheDocument();
+  });
 });

@@ -32,9 +32,11 @@ interface VoiceNotePlayerProps {
   durationSeconds: number | null;
   peaks: number[];
   disabled?: boolean;
+  /** Track title shown above the progress bar for regular audio attachments (voice notes omit it). */
+  title?: string;
 }
 
-export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false }: VoiceNotePlayerProps) {
+export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false, title }: VoiceNotePlayerProps) {
   const { t } = useTranslation('inbox');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const waveformRef = useRef<HTMLDivElement | null>(null);
@@ -45,6 +47,7 @@ export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false 
   const effectiveDuration = durationSeconds || mediaDuration;
   const progress = normalizedProgress(currentTime, effectiveDuration);
   const displayTime = playing || currentTime > 0 ? currentTime : effectiveDuration;
+  const hasWaveform = peaks.length > 0;
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -106,39 +109,69 @@ export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false 
         {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 translate-x-px" />}
       </Button>
       <div className="min-w-0 flex-1">
-        <div
-          ref={waveformRef}
-          role="slider"
-          aria-label={t('voiceSeek')}
-          aria-valuemin={0}
-          aria-valuemax={effectiveDuration ?? 0}
-          aria-valuenow={Math.floor(currentTime)}
-          tabIndex={disabled || !src ? -1 : 0}
-          className={cn('flex h-8 items-center gap-0.5', !disabled && src && 'cursor-pointer')}
-          onPointerDown={(event) => {
-            draggingRef.current = true;
-            event.currentTarget.setPointerCapture(event.pointerId);
-            seekFromPointer(event);
-          }}
-          onPointerMove={(event) => {
-            if (draggingRef.current) seekFromPointer(event);
-          }}
-          onPointerUp={(event) => {
-            draggingRef.current = false;
-            event.currentTarget.releasePointerCapture(event.pointerId);
-          }}>
-          {peaks.map((peak, index) => {
-            const filled = peaks.length <= 1 ? progress > 0 : index / (peaks.length - 1) <= progress;
-            return (
-              <span
-                key={`${index}-${peak}`}
-                data-testid="voice-wave-bar"
-                className={cn('w-1 rounded-full transition-colors', filled ? 'bg-current' : 'bg-current/30')}
-                style={{ height: `${Math.max(4, Math.round(peak * 24))}px` }}
-              />
-            );
-          })}
-        </div>
+        {title && <p className="truncate text-2xs font-medium">{title}</p>}
+        {hasWaveform ? (
+          <div
+            ref={waveformRef}
+            role="slider"
+            aria-label={t('voiceSeek')}
+            aria-valuemin={0}
+            aria-valuemax={effectiveDuration ?? 0}
+            aria-valuenow={Math.floor(currentTime)}
+            tabIndex={disabled || !src ? -1 : 0}
+            className={cn('flex h-8 items-center gap-0.5', !disabled && src && 'cursor-pointer')}
+            onPointerDown={(event) => {
+              draggingRef.current = true;
+              event.currentTarget.setPointerCapture(event.pointerId);
+              seekFromPointer(event);
+            }}
+            onPointerMove={(event) => {
+              if (draggingRef.current) seekFromPointer(event);
+            }}
+            onPointerUp={(event) => {
+              draggingRef.current = false;
+              event.currentTarget.releasePointerCapture(event.pointerId);
+            }}>
+            {peaks.map((peak, index) => {
+              const filled = peaks.length <= 1 ? progress > 0 : index / (peaks.length - 1) <= progress;
+              return (
+                <span
+                  key={`${index}-${peak}`}
+                  data-testid="voice-wave-bar"
+                  className={cn('w-1 rounded-full transition-colors', filled ? 'bg-current' : 'bg-current/30')}
+                  style={{ height: `${Math.max(4, Math.round(peak * 24))}px` }}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <div
+            ref={waveformRef}
+            role="slider"
+            aria-label={t('voiceSeek')}
+            aria-valuemin={0}
+            aria-valuemax={effectiveDuration ?? 0}
+            aria-valuenow={Math.floor(currentTime)}
+            tabIndex={disabled || !src ? -1 : 0}
+            data-testid="audio-progress-track"
+            className={cn('flex h-8 items-center', !disabled && src && 'cursor-pointer')}
+            onPointerDown={(event) => {
+              draggingRef.current = true;
+              event.currentTarget.setPointerCapture(event.pointerId);
+              seekFromPointer(event);
+            }}
+            onPointerMove={(event) => {
+              if (draggingRef.current) seekFromPointer(event);
+            }}
+            onPointerUp={(event) => {
+              draggingRef.current = false;
+              event.currentTarget.releasePointerCapture(event.pointerId);
+            }}>
+            <div className="bg-current/20 h-1 w-full overflow-hidden rounded-full">
+              <div className="bg-current h-full rounded-full transition-[width]" style={{ width: `${progress * 100}%` }} />
+            </div>
+          </div>
+        )}
         <div className="text-2xs tabular-nums opacity-75">{formatDuration(displayTime)}</div>
       </div>
     </div>

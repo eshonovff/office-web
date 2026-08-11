@@ -7,6 +7,7 @@ import { formatDate } from '~/lib/format';
 import { cn } from '~/lib/utils';
 import type { Message, MessageType } from '~/types/message';
 import { getMessageObjectUrl, useMessageBlobUrl } from '../useMessageBlobUrl';
+import { VideoMessage } from './VideoMessage';
 import { VoiceNotePlayer } from './VoiceNotePlayer';
 
 const MEDIA_ICON: Partial<Record<MessageType, typeof Image>> = {
@@ -64,7 +65,6 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
   const mediaUnavailable = !!message.mediaDeletedAt || !!message.mediaDownloadError;
   const media = useMessageBlobUrl('media', message.id, mediaUnavailable ? null : message.mediaUrl);
   const thumbnail = useMessageBlobUrl('thumbnail', message.id, message.mediaDownloadError ? null : message.thumbnailUrl);
-  const MediaIcon = MEDIA_ICON[message.type] ?? Paperclip;
   const fileName = message.originalFileName || t(`messageType.${message.type}`);
   const meta = formatBytes(message.sizeBytes);
 
@@ -109,40 +109,31 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
   }
 
   if (message.type === 'Audio') {
-    const showWaveform = !!message.waveformPeaks?.length;
+    const hasWaveform = !!message.waveformPeaks?.length;
     return (
       <div className="space-y-1.5">
-        {showWaveform ? (
-          <VoiceNotePlayer
-            src={message.mediaDeletedAt ? null : media.objectUrl}
-            durationSeconds={message.voiceDurationSeconds}
-            peaks={message.waveformPeaks!}
-            disabled={!!message.mediaDeletedAt || !!message.mediaDownloadError}
-          />
-        ) : media.objectUrl ? (
-          <audio src={media.objectUrl} controls preload="metadata" className="w-64 max-w-full" />
-        ) : (
-          <div className="flex items-center gap-1.5 text-2xs">
-            <MediaIcon className="h-3.5 w-3.5" />
-            {t('messageType.Audio')}
-          </div>
-        )}
+        <VoiceNotePlayer
+          src={message.mediaDeletedAt ? null : media.objectUrl}
+          durationSeconds={message.voiceDurationSeconds}
+          peaks={message.waveformPeaks ?? []}
+          disabled={!!message.mediaDeletedAt || !!message.mediaDownloadError}
+          title={hasWaveform ? undefined : (message.originalFileName ?? undefined)}
+        />
         <MediaStatus message={message} status={media.status} />
       </div>
     );
   }
 
   if (message.type === 'Video') {
+    const disabled = !!message.mediaDeletedAt || !!message.mediaDownloadError;
     return (
       <div className="space-y-1.5">
-        {media.objectUrl ? (
-          <video src={media.objectUrl} controls preload="metadata" className="max-h-64 max-w-full rounded-md" />
-        ) : (
-          <div className="flex items-center gap-1.5 text-2xs">
-            <MediaIcon className="h-3.5 w-3.5" />
-            {t('messageType.Video')}
-          </div>
-        )}
+        <VideoMessage
+          src={disabled ? null : media.objectUrl}
+          posterUrl={thumbnail.objectUrl}
+          disabled={disabled}
+          sizeLabel={meta || undefined}
+        />
         <MediaStatus message={message} status={media.status} />
       </div>
     );

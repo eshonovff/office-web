@@ -67,4 +67,19 @@ describe('MessageBubble media rendering', () => {
     expect(screen.getAllByTestId('voice-wave-bar')).toHaveLength(3);
     expect(screen.queryByText('messageType.Audio')).not.toBeInTheDocument();
   });
+
+  it('renders a titled flat-progress player for audio attachments with no waveform data', () => {
+    render(<MessageBubble message={{ ...baseMessage, waveformPeaks: [], originalFileName: 'track.mp3' }} />);
+
+    expect(screen.getByTestId('voice-note-player')).toBeInTheDocument();
+    expect(screen.getByText('track.mp3')).toBeInTheDocument();
+    expect(screen.queryByTestId('voice-wave-bar')).not.toBeInTheDocument();
+  });
+
+  it('renders a Telegram-style thumbnail with a play overlay for video messages', () => {
+    render(<MessageBubble message={{ ...baseMessage, type: 'Video', waveformPeaks: null }} />);
+
+    expect(screen.getByTestId('video-message')).toBeInTheDocument();
+    expect(screen.getByTestId('video-play-button')).toBeInTheDocument();
+  });
 });
