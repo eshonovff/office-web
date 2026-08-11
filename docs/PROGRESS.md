@@ -1,8 +1,8 @@
 # PROGRESS — Frontend
 
-**Фазаи ҷорӣ:** `fe-phase-4-inbox` (тайёр барои пӯшидан)
-**Ветка:** `feat/fe-phase-4-inbox`
-**Сана:** 2026-08-09
+**Фазаи ҷорӣ:** `fe-phase-5-polish-deploy` (ҳанӯз сар нашуда)
+**Ветка:** `dev`
+**Сана:** 2026-08-11
 
 | Фаза | Ном | Ҳолат |
 |---|---|---|
@@ -10,7 +10,7 @@
 | 1 | Auth ва shell | ✅ |
 | 2 | Кормандон ва ролҳо | ✅ |
 | 3 | Проект ва Kanban | ✅ |
-| 4 | Инбокс + Realtime (якҷоя) | 🟡 |
+| 4 | Инбокс + Realtime (якҷоя) | ✅ |
 | 5 | Сайқал ва deploy | ⬜ |
 
 ⬜ нашуда · 🟡 дар кор · ✅ тамом · ⛔ басташуда
@@ -41,6 +41,8 @@
 | 2026-08-08 | `feat/fe-phase-3-board` ба `dev` merge ва push шуд (бе GitHub PR — воситаи `gh` насб набуд) | typecheck/test/build дар `dev` тоза |
 | 2026-08-09 | Фазаҳои 4 (Realtime)-и қаблӣ ва 5 (Инбокс)-и қаблӣ ба **як фаза** муттаҳид карда шуданд, бо рақами 4 | дархости корбар: "phase 4: the unified chat inbox" — backend-и воқеӣ содатар аз нақшаи қаблии `phase-5-inbox.md` буд (бе cursor pagination, бе virtualization, бе `/inbox/board`, бе ёддошти дохилӣ — ин хусусиятҳо дар backend вуҷуд надоранд), бинобар ин ба contract-и воқеӣ мутобиқ карда шуд, на ба ҳуҷҷати кӯҳна |
 | 2026-08-09 | Фазаи 4 (Инбокс+Realtime) тамом: `lib/signalr.ts` + `createHubStore` (бо тест), се сутуни `/inbox` (рӯйхат бо филтр, thread, context panel), composer бо мантиқи `windowExpiresAt`/409 (бо 5 тест), drag-and-drop assign (аз Board такрор истифода), тағйири статус, `/channels` барои идораи аъзоён, realtime (message/status/read) тавассути `/hubs/inbox`. 49 тест, typecheck/lint/build тоза, ҳама эндпойнт ва SignalR бо backend-и воқеӣ санҷида шуданд (аз ҷумла webhook-и қалбакии имзошуда) | 9 commit, 2 масъалаи иҷозати backend ёфта шуд (#6, #7) |
+| 2026-08-10/11 | `feat/fe-phase-4-inbox` бо кори иловагӣ (медиа: расм/видео/аудио/voice note, upload, waveform, StrictMode/realtime фиксҳо — боз 16 commit) пурра шуд ва ба `dev` merge ва push шуд | Фазаи 4 ✅ пӯшида шуд |
+| 2026-08-11 | Дизайни audio/video-и дохили чат аз тегҳои native HTML (`<audio controls>`/`<video controls>`) ба плеерҳои дастӣ (мисли Telegram) иваз шуд: аудиои бе waveform акнун навори яклухт+номи файл дорад, видео thumbnail+тугмаи play дар марказ то пахш нашавад. Мустақим дар `dev` commit ва push шуд (на бранчи алоҳида, тағйироти хурди UI буд) | дархости корбар — дизайни native браузер ба стандарти барнома мувофиқ набуд |
 
 ## Масъалаҳои кушода
 
