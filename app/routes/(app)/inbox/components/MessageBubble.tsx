@@ -61,8 +61,9 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
   const { t } = useTranslation('inbox');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'loading' | 'error'>('idle');
-  const media = useMessageBlobUrl('media', message.id, message.mediaDeletedAt ? null : message.mediaUrl);
-  const thumbnail = useMessageBlobUrl('thumbnail', message.id, message.thumbnailUrl);
+  const mediaUnavailable = !!message.mediaDeletedAt || !!message.mediaDownloadError;
+  const media = useMessageBlobUrl('media', message.id, mediaUnavailable ? null : message.mediaUrl);
+  const thumbnail = useMessageBlobUrl('thumbnail', message.id, message.mediaDownloadError ? null : message.thumbnailUrl);
   const MediaIcon = MEDIA_ICON[message.type] ?? Paperclip;
   const fileName = message.originalFileName || t(`messageType.${message.type}`);
   const meta = formatBytes(message.sizeBytes);

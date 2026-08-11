@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Message } from '~/types/message';
+import { useMessageBlobUrl } from '../useMessageBlobUrl';
 import { MessageBubble } from './MessageBubble';
 
 vi.mock('../useMessageBlobUrl', () => ({
@@ -39,5 +40,23 @@ describe('MessageBubble media rendering', () => {
     expect(screen.getAllByTestId('voice-wave-bar')).toHaveLength(3);
     expect(screen.getByRole('button')).toBeDisabled();
     expect(screen.getByText('mediaGone')).toBeInTheDocument();
+  });
+
+  it('does not request media or thumbnail when the backend already reported a download error', () => {
+    render(
+      <MessageBubble
+        message={{
+          ...baseMessage,
+          type: 'Image',
+          thumbnailUrl: '/api/messages/message-1/thumbnail',
+          mediaDownloadError: 'WhatsApp download failed',
+          waveformPeaks: null,
+        }}
+      />
+    );
+
+    expect(vi.mocked(useMessageBlobUrl)).toHaveBeenNthCalledWith(1, 'media', 'message-1', null);
+    expect(vi.mocked(useMessageBlobUrl)).toHaveBeenNthCalledWith(2, 'thumbnail', 'message-1', null);
+    expect(screen.getByText('mediaDownloadFailed')).toBeInTheDocument();
   });
 });
