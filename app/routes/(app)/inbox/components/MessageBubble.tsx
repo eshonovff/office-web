@@ -3,11 +3,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '~/components/ui/dialog';
-import { Progress } from '~/components/ui/progress';
 import { formatDate } from '~/lib/format';
 import { cn } from '~/lib/utils';
 import type { Message, MessageType } from '~/types/message';
 import { getMessageObjectUrl, useMessageBlobUrl } from '../useMessageBlobUrl';
+import { VoiceNotePlayer } from './VoiceNotePlayer';
 
 const MEDIA_ICON: Partial<Record<MessageType, typeof Image>> = {
   Image: Image,
@@ -40,43 +40,12 @@ function formatBytes(bytes: number | null | undefined) {
   return `${(bytes / (1024 * 1024)).toFixed(bytes < 10 * 1024 * 1024 ? 1 : 0)} MB`;
 }
 
-function formatDuration(seconds: number | null | undefined) {
-  if (!seconds) return '0:00';
-  const minutes = Math.floor(seconds / 60);
-  const rest = Math.floor(seconds % 60)
-    .toString()
-    .padStart(2, '0');
-  return `${minutes}:${rest}`;
-}
-
 function mediaErrorKey(status: ReturnType<typeof useMessageBlobUrl>['status']) {
   if (status === 'gone') return 'mediaGone';
   if (status === 'download-error') return 'mediaDownloadFailed';
   if (status === 'not-found') return 'mediaNotFound';
   if (status === 'error') return 'mediaLoadFailed';
   return null;
-}
-
-function VoiceNotePlayer({ src, durationSeconds }: { src: string; durationSeconds: number | null }) {
-  const [currentTime, setCurrentTime] = useState(0);
-  const duration = durationSeconds || 0;
-  const progress = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
-
-  return (
-    <div className="min-w-56 space-y-2">
-      <audio
-        src={src}
-        controls
-        preload="metadata"
-        className="h-8 w-full"
-        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
-      />
-      <div className="flex items-center gap-2">
-        <Progress value={progress} className="h-1.5" />
-        <span className="text-2xs tabular-nums opacity-70">{formatDuration(durationSeconds)}</span>
-      </div>
-    </div>
-  );
 }
 
 function MediaStatus({ message, status }: { message: Message; status: ReturnType<typeof useMessageBlobUrl>['status'] }) {
@@ -139,14 +108,18 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
   }
 
   if (message.type === 'Audio') {
+    const showWaveform = !!message.voiceDurationSeconds && !!message.waveformPeaks?.length;
     return (
       <div className="space-y-1.5">
-        {media.objectUrl ? (
-          message.voiceDurationSeconds ? (
-            <VoiceNotePlayer src={media.objectUrl} durationSeconds={message.voiceDurationSeconds} />
-          ) : (
-            <audio src={media.objectUrl} controls preload="metadata" className="w-64 max-w-full" />
-          )
+        {showWaveform ? (
+          <VoiceNotePlayer
+            src={message.mediaDeletedAt ? null : media.objectUrl}
+            durationSeconds={message.voiceDurationSeconds}
+            peaks={message.waveformPeaks!}
+            disabled={!!message.mediaDeletedAt || !!message.mediaDownloadError}
+          />
+        ) : media.objectUrl ? (
+          <audio src={media.objectUrl} controls preload="metadata" className="w-64 max-w-full" />
         ) : (
           <div className="flex items-center gap-1.5 text-2xs">
             <MediaIcon className="h-3.5 w-3.5" />

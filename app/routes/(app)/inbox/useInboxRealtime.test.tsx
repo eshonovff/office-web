@@ -104,6 +104,7 @@ describe('useInboxRealtime', () => {
       voiceDurationSeconds: null,
       mediaDeletedAt: null,
       mediaDownloadError: null,
+      waveformPeaks: null,
     };
 
     renderHook(() => useInboxRealtime(['channel-1'], 'conversation-1'));

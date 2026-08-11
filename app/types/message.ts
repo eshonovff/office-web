@@ -22,6 +22,7 @@ export interface Message {
   thumbnailUrl: string | null;
   mediaDeletedAt: string | null;
   mediaDownloadError: string | null;
+  waveformPeaks: number[] | null;
 }
 
 export interface MessagesListParams {
