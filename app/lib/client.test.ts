@@ -9,6 +9,7 @@ interface FakeAxiosInstance {
     };
   };
   post: ReturnType<typeof vi.fn>;
+  get: ReturnType<typeof vi.fn>;
   _reqHandler?: (config: any) => any;
   _resRejected?: (error: unknown) => unknown;
 }
@@ -28,6 +29,7 @@ function createFakeAxiosInstance(): FakeAxiosInstance {
     },
   };
   fn.post = vi.fn();
+  fn.get = vi.fn();
   return fn;
 }
 
@@ -61,7 +63,7 @@ describe("apiClient refresh queue", () => {
     const { useAuthStore } = await import("~/store/useAuthStore");
     void apiClient;
 
-    const [apiClientMock, refreshClientMock] = instances;
+    const [apiClientMock, , refreshClientMock] = instances;
     refreshClientMock.post.mockResolvedValue({ data: { accessToken: "new-token" } });
 
     const errors = Array.from({ length: 5 }, () => makeUnauthorizedError("/tasks"));
@@ -87,7 +89,7 @@ describe("apiClient refresh queue", () => {
     void apiClient;
     useAuthStore.setState({ accessToken: "stale-token", user: null, roles: [], permissions: [] });
 
-    const [apiClientMock, refreshClientMock] = instances;
+    const [apiClientMock, , refreshClientMock] = instances;
     refreshClientMock.post.mockRejectedValue(makeUnauthorizedError("/auth/refresh"));
 
     const error = makeUnauthorizedError("/tasks");
@@ -102,7 +104,7 @@ describe("apiClient refresh queue", () => {
   it("does not attempt a refresh for a failed /auth/login", async () => {
     const { apiClient } = await import("~/lib/client");
     void apiClient;
-    const [apiClientMock, refreshClientMock] = instances;
+    const [apiClientMock, , refreshClientMock] = instances;
 
     await expect(apiClientMock._resRejected!(makeUnauthorizedError("/auth/login"))).rejects.toBeTruthy();
 

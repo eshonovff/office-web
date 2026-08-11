@@ -81,5 +81,11 @@
   "genericError": {
     "title": "Хатогӣ рух дод",
     "description": "Лутфан саҳифаро аз нав бор кунед."
+  },
+  "relativeTime": {
+    "justNow": "Ҳозир",
+    "minutesAgo": "{{count}} дақ. пеш",
+    "hoursAgo": "{{count}} соат пеш",
+    "daysAgo": "{{count}} рӯз пеш"
   }
 }

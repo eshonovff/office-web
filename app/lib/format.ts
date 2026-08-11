@@ -16,3 +16,41 @@ export function formatDate(date: string | Date | null | undefined, withTime = fa
   const fmt = withTime ? 'DD.MM.YYYY HH:mm' : 'DD.MM.YYYY';
   return dayjs(date).format(fmt);
 }
+
+// dayjs ships no Tajik locale, so `.fromNow()` would silently fall back to
+// English — same reasoning as fmtTJS/formatDate above. Built by hand with
+// plain {{count}} interpolation (no i18next plural-suffix keys), matching
+// the rest of this app's i18n convention (see e.g. validation.json's
+// stringMax) rather than relying on CLDR plural rules Tajik doesn't have.
+export function formatRelativeTime(date: string | Date | null | undefined): string {
+  if (!date) return '—';
+  const target = dayjs(date);
+  const now = dayjs();
+
+  const minutes = now.diff(target, 'minute');
+  if (minutes < 1) return i18next.t('relativeTime.justNow', { ns: 'common' });
+  if (minutes < 60) return i18next.t('relativeTime.minutesAgo', { ns: 'common', count: minutes });
+
+  const hours = now.diff(target, 'hour');
+  if (hours < 24) return i18next.t('relativeTime.hoursAgo', { ns: 'common', count: hours });
+
+  const days = now.diff(target, 'day');
+  if (days < 7) return i18next.t('relativeTime.daysAgo', { ns: 'common', count: days });
+
+  return formatDate(date);
+}
+
+/** Null when the window is already closed (or never opened) — nothing to count down. */
+export function formatWindowRemaining(windowExpiresAt: string | null | undefined): string | null {
+  if (!windowExpiresAt) return null;
+  const target = dayjs(windowExpiresAt);
+  const now = dayjs();
+  if (!target.isAfter(now)) return null;
+
+  const totalMinutes = target.diff(now, 'minute');
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours > 0) return i18next.t('windowRemainingHours', { ns: 'inbox', hours, minutes });
+  return i18next.t('windowRemainingMinutes', { ns: 'inbox', count: minutes });
+}
