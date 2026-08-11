@@ -109,7 +109,7 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
   }
 
   if (message.type === 'Audio') {
-    const showWaveform = !!message.voiceDurationSeconds && !!message.waveformPeaks?.length;
+    const showWaveform = !!message.waveformPeaks?.length;
     return (
       <div className="space-y-1.5">
         {showWaveform ? (

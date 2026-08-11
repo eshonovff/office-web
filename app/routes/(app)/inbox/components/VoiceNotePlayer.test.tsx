@@ -33,6 +33,17 @@ describe('VoiceNotePlayer', () => {
     expect(getSeekTime(120, 0, 100, 20)).toBe(20);
   });
 
+  it('uses audio metadata duration when a backfilled message has no DTO duration', () => {
+    render(<VoiceNotePlayer src="blob:voice-1" durationSeconds={null} peaks={[0.2, 0.4]} />);
+    const audio = document.querySelector('audio')!;
+    Object.defineProperty(audio, 'duration', { configurable: true, value: 9 });
+
+    fireEvent.loadedMetadata(audio);
+
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuemax', '9');
+    expect(screen.getByText('0:09')).toBeInTheDocument();
+  });
+
   it('pauses the previous voice note when another one starts', async () => {
     render(
       <>

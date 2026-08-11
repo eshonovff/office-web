@@ -59,4 +59,12 @@ describe('MessageBubble media rendering', () => {
     expect(vi.mocked(useMessageBlobUrl)).toHaveBeenNthCalledWith(2, 'thumbnail', 'message-1', null);
     expect(screen.getByText('mediaDownloadFailed')).toBeInTheDocument();
   });
+
+  it('renders the waveform for backfilled voice notes whose duration is still null', () => {
+    render(<MessageBubble message={{ ...baseMessage, voiceDurationSeconds: null }} />);
+
+    expect(screen.getByTestId('voice-note-player')).toBeInTheDocument();
+    expect(screen.getAllByTestId('voice-wave-bar')).toHaveLength(3);
+    expect(screen.queryByText('messageType.Audio')).not.toBeInTheDocument();
+  });
 });

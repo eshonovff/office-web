@@ -41,8 +41,10 @@ export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false 
   const draggingRef = useRef(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const progress = normalizedProgress(currentTime, durationSeconds);
-  const displayTime = playing || currentTime > 0 ? currentTime : durationSeconds;
+  const [mediaDuration, setMediaDuration] = useState<number | null>(null);
+  const effectiveDuration = durationSeconds || mediaDuration;
+  const progress = normalizedProgress(currentTime, effectiveDuration);
+  const displayTime = playing || currentTime > 0 ? currentTime : effectiveDuration;
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -52,9 +54,9 @@ export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false 
   }, []);
 
   function seekFromPointer(event: PointerEvent<HTMLDivElement>) {
-    if (disabled || !src || !audioRef.current || !waveformRef.current || !durationSeconds) return;
+    if (disabled || !src || !audioRef.current || !waveformRef.current || !effectiveDuration) return;
     const rect = waveformRef.current.getBoundingClientRect();
-    const nextTime = getSeekTime(event.clientX, rect.left, rect.width, durationSeconds);
+    const nextTime = getSeekTime(event.clientX, rect.left, rect.width, effectiveDuration);
     if (nextTime === null) return;
     audioRef.current.currentTime = nextTime;
     setCurrentTime(nextTime);
@@ -79,6 +81,10 @@ export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false 
           ref={audioRef}
           src={src}
           preload="metadata"
+          onLoadedMetadata={(event) => {
+            const duration = event.currentTarget.duration;
+            if (Number.isFinite(duration) && duration > 0) setMediaDuration(duration);
+          }}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
           onEnded={() => {
@@ -105,7 +111,7 @@ export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false 
           role="slider"
           aria-label={t('voiceSeek')}
           aria-valuemin={0}
-          aria-valuemax={durationSeconds ?? 0}
+          aria-valuemax={effectiveDuration ?? 0}
           aria-valuenow={Math.floor(currentTime)}
           tabIndex={disabled || !src ? -1 : 0}
           className={cn('flex h-8 items-center gap-0.5', !disabled && src && 'cursor-pointer')}
