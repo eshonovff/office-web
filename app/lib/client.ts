@@ -24,9 +24,6 @@ export const originClient = axios.create({
   },
 });
 
-// Separate instance for the refresh call itself — it must never go through
-// apiClient's response interceptor, or a failed refresh would recurse into
-// the same 401-handling logic that triggered it.
 const refreshClient = axios.create({ baseURL, withCredentials: true });
 
 export async function refreshAccessToken(): Promise<string> {
