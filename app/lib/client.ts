@@ -26,10 +26,24 @@ export const originClient = axios.create({
 
 const refreshClient = axios.create({ baseURL, withCredentials: true });
 
-export async function refreshAccessToken(): Promise<string> {
-  const { data } = await refreshClient.post<RefreshResponse>("/auth/refresh");
-  useAuthStore.getState().setAccessToken(data.accessToken);
-  return data.accessToken;
+// Concurrent callers (the bootstrap loader and, moments later, the 401
+// interceptor below) share this one in-flight call instead of each firing
+// their own /auth/refresh.
+let refreshPromise: Promise<string> | null = null;
+
+export function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = refreshClient
+      .post<RefreshResponse>("/auth/refresh")
+      .then(({ data }) => {
+        useAuthStore.getState().setAccessToken(data.accessToken);
+        return data.accessToken;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
 }
 
 const ERROR_MESSAGES: Record<number, string> = {

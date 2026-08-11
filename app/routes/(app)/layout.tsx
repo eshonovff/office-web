@@ -2,6 +2,7 @@ import { Outlet, redirect } from "react-router";
 import { authApi } from "~/api/auth";
 import { AppSidebar } from "~/components/layout/Sidebar";
 import Header from "~/components/layout/Header";
+import { refreshAccessToken } from "~/lib/client";
 import { SidebarProvider } from "~/components/ui/sidebar";
 import { canAccessRoute } from "~/config/permissions";
 import { useAuthStore } from "~/store/useAuthStore";
@@ -14,6 +15,18 @@ const ALWAYS_ALLOWED = new Set(["/", "/change-password", "/403"]);
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const pathname = new URL(request.url).pathname;
+
+  // On a hard refresh the access token only lives in memory and is gone —
+  // refresh it via the httpOnly cookie first so /auth/me never has to fire
+  // (and 401) without a token, then quietly bounce to /login if the
+  // refresh cookie itself is dead.
+  if (!useAuthStore.getState().accessToken) {
+    try {
+      await refreshAccessToken();
+    } catch {
+      return redirect("/login");
+    }
+  }
 
   const me = await authApi.me().catch(() => null);
   if (!me) {
