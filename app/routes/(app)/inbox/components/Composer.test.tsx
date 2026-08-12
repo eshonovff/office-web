@@ -8,7 +8,8 @@ import { conversationsApi } from '~/api/conversations';
 import { makeQueryClient } from '~/lib/query-client';
 import { useAuthStore } from '~/store/useAuthStore';
 import type { ConversationDetail } from '~/types/conversation';
-import { Composer } from './Composer';
+import { useInboxBreakpoint } from '../useInboxBreakpoint';
+import { autoResizeTextarea, Composer, computeTextareaMaxHeight } from './Composer';
 
 vi.mock('~/api/conversations', () => ({
   conversationsApi: { sendMessage: vi.fn() },
@@ -16,6 +17,7 @@ vi.mock('~/api/conversations', () => ({
 vi.mock('~/api/channels', () => ({
   channelsApi: { listWhatsAppTemplates: vi.fn() },
 }));
+vi.mock('../useInboxBreakpoint', () => ({ useInboxBreakpoint: vi.fn().mockReturnValue('desktop') }));
 
 function makeConversation(overrides: Partial<ConversationDetail> = {}): ConversationDetail {
   return {
@@ -151,5 +153,63 @@ describe('Composer', () => {
 
       await waitFor(() => expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledTimes(1));
     });
+  });
+
+  describe('send button label', () => {
+    it('shows the text label alongside the icon on tablet/desktop', () => {
+      vi.mocked(useInboxBreakpoint).mockReturnValue('desktop');
+      renderComposer(makeConversation({ windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+
+      expect(screen.getByText('send')).toBeInTheDocument();
+    });
+
+    it('is icon-only (with an accessible label) on mobile', () => {
+      vi.mocked(useInboxBreakpoint).mockReturnValue('mobile');
+      renderComposer(makeConversation({ windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+
+      expect(screen.queryByText('send')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'send' })).toBeInTheDocument();
+    });
+  });
+});
+
+describe('computeTextareaMaxHeight', () => {
+  it('is line height times max lines plus vertical padding and border', () => {
+    expect(computeTextareaMaxHeight(20, 16, 2, 4)).toBe(20 * 4 + 16 + 2);
+  });
+});
+
+describe('autoResizeTextarea', () => {
+  function makeTextarea(scrollHeight: number) {
+    const el = document.createElement('textarea');
+    document.body.appendChild(el);
+    Object.defineProperty(el, 'scrollHeight', { configurable: true, value: scrollHeight });
+    return el;
+  }
+
+  it('grows to fit content up to the max-lines cap, hiding overflow while under it', () => {
+    const el = makeTextarea(40);
+    autoResizeTextarea(el, 6);
+    expect(el.style.height).toBe('40px');
+    expect(el.style.overflowY).toBe('hidden');
+  });
+
+  it('caps the height and scrolls once content exceeds the max-lines cap', () => {
+    const el = makeTextarea(500);
+    autoResizeTextarea(el, 4);
+    expect(parseFloat(el.style.height)).toBeLessThan(500);
+    expect(el.style.overflowY).toBe('auto');
+  });
+
+  it('shrinks back down when content is cleared (e.g. right after sending)', () => {
+    const el = makeTextarea(500);
+    autoResizeTextarea(el, 4);
+    const grownHeight = parseFloat(el.style.height);
+
+    Object.defineProperty(el, 'scrollHeight', { configurable: true, value: 20 });
+    autoResizeTextarea(el, 4);
+
+    expect(parseFloat(el.style.height)).toBeLessThan(grownHeight);
+    expect(el.style.overflowY).toBe('hidden');
   });
 });

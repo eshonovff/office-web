@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { Mic, Paperclip, Send, Square, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { channelsApi } from '~/api/channels';
 import { conversationsApi } from '~/api/conversations';
@@ -14,6 +14,7 @@ import { useCan } from '~/hooks/useCan';
 import { formatWindowRemaining } from '~/lib/format';
 import type { ConversationDetail } from '~/types/conversation';
 import type { Message } from '~/types/message';
+import { useInboxBreakpoint } from '../useInboxBreakpoint';
 
 interface ComposerProps {
   conversation: ConversationDetail;
@@ -21,6 +22,38 @@ interface ComposerProps {
 
 function isWindowOpen(windowExpiresAt: string | null): boolean {
   return !!windowExpiresAt && dayjs(windowExpiresAt).isAfter(dayjs());
+}
+
+// Caps how tall the composer's textarea grows before it scrolls internally
+// instead of pushing the rest of the layout around — fewer lines on mobile,
+// where the on-screen keyboard already eats most of the vertical space.
+const COMPOSER_MAX_LINES = { mobile: 4, tablet: 5, desktop: 6 } as const;
+
+export function computeTextareaMaxHeight(
+  lineHeight: number,
+  verticalPadding: number,
+  verticalBorder: number,
+  maxLines: number
+): number {
+  return lineHeight * maxLines + verticalPadding + verticalBorder;
+}
+
+// CSS `field-sizing: content` (used for auto-grow-with-content in the base
+// Textarea component) is Chrome-only — Safari/Firefox just render a
+// fixed-size box that never grows. Rather than depend on that, this
+// textarea gets `field-sizing: fixed` (via inline style, so it always wins
+// regardless of class merge order) and its height is driven entirely by
+// this handler, giving identical behavior in every browser.
+export function autoResizeTextarea(el: HTMLTextAreaElement, maxLines: number) {
+  const style = window.getComputedStyle(el);
+  const lineHeight = parseFloat(style.lineHeight) || 20;
+  const verticalPadding = (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0);
+  const verticalBorder = (parseFloat(style.borderTopWidth) || 0) + (parseFloat(style.borderBottomWidth) || 0);
+  const maxHeight = computeTextareaMaxHeight(lineHeight, verticalPadding, verticalBorder, maxLines);
+
+  el.style.height = 'auto';
+  el.style.height = `${Math.min(el.scrollHeight, maxHeight)}px`;
+  el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
 }
 
 const MEDIA_LIMITS = {
@@ -65,6 +98,8 @@ export function Composer({ conversation }: ComposerProps) {
   const { can } = useCan();
   const canManageChannels = can(Permissions.Channels.Manage);
   const queryClient = useQueryClient();
+  const breakpoint = useInboxBreakpoint();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [body, setBody] = useState('');
   const [templateName, setTemplateName] = useState<string | null>(null);
@@ -165,6 +200,13 @@ export function Composer({ conversation }: ComposerProps) {
       recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, []);
+
+  // Runs before paint so the grown/shrunk height never flashes the old size
+  // — in particular, clearing `body` after a send snaps the box back down
+  // to its one-line height in the same frame instead of visibly collapsing.
+  useLayoutEffect(() => {
+    if (textareaRef.current) autoResizeTextarea(textareaRef.current, COMPOSER_MAX_LINES[breakpoint]);
+  }, [body, breakpoint]);
 
   function stopRecordingTimer() {
     if (recordingTimerRef.current !== null) {
@@ -333,16 +375,24 @@ export function Composer({ conversation }: ComposerProps) {
           {recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
         </Button>
         <Textarea
+          ref={textareaRef}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={t('composerPlaceholder')}
           rows={2}
-          className="flex-1"
+          className="scrollbar-thin flex-1 resize-none"
+          style={{ fieldSizing: 'fixed' } as React.CSSProperties}
         />
-        <Button type="button" disabled={!body.trim() || isPending} onClick={handleSendText} className="gap-1.5">
+        <Button
+          type="button"
+          size={breakpoint === 'mobile' ? 'icon' : 'default'}
+          disabled={!body.trim() || isPending}
+          onClick={handleSendText}
+          aria-label={t('send')}
+          className="gap-1.5">
           <Send className="h-3.5 w-3.5" />
-          {t('send')}
+          {breakpoint !== 'mobile' && t('send')}
         </Button>
       </div>
       {(selectedFile || fileError) && (
