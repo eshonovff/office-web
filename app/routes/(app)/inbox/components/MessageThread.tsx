@@ -15,6 +15,11 @@ import { MessageBubble } from './MessageBubble';
 import { revokeMessageBlobCache } from '../useMessageBlobUrl';
 
 const PAGE_SIZE = 30;
+const NEAR_BOTTOM_THRESHOLD_PX = 120;
+
+export function isScrolledNearBottom(scrollHeight: number, scrollTop: number, clientHeight: number): boolean {
+  return scrollHeight - scrollTop - clientHeight < NEAR_BOTTOM_THRESHOLD_PX;
+}
 
 interface MessageThreadProps {
   conversationId: string;
@@ -31,6 +36,12 @@ export function MessageThread({ conversationId, conversation, onBack, onOpenInfo
   const canReply = can(Permissions.Inbox.Reply);
   const queryClient = useQueryClient();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // Which conversation we last force-scrolled to the bottom for — lets the
+  // scroll effect tell "just opened this conversation" apart from "revisited
+  // it" (mobile keeps this component mounted when you go back to the list
+  // and return) or "new messages/older page arrived while already reading".
+  const scrolledForConversation = useRef<string | null>(null);
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['conversations', conversationId, 'messages'],
@@ -62,8 +73,21 @@ export function MessageThread({ conversationId, conversation, onBack, onOpenInfo
   }, [conversationId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ block: 'end' });
-  }, [messages.length]);
+    if (messages.length === 0) return;
+
+    const isFreshOpen = scrolledForConversation.current !== conversationId;
+    const container = scrollContainerRef.current;
+    const nearBottom = !container || isScrolledNearBottom(container.scrollHeight, container.scrollTop, container.clientHeight);
+
+    // Force the jump on first open of this conversation (or a switch to a
+    // different one); after that, only follow along if the user was already
+    // near the bottom — otherwise "load older" or a new realtime message
+    // would yank someone reading history back down.
+    if (isFreshOpen || nearBottom) {
+      bottomRef.current?.scrollIntoView({ block: 'end' });
+      scrolledForConversation.current = conversationId;
+    }
+  }, [messages.length, conversationId]);
 
   useEffect(() => revokeMessageBlobCache, []);
 
@@ -94,7 +118,7 @@ export function MessageThread({ conversationId, conversation, onBack, onOpenInfo
         )}
       </div>
 
-      <div className="scrollbar-thin flex-1 space-y-2 overflow-y-auto p-3">
+      <div ref={scrollContainerRef} className="scrollbar-thin flex-1 space-y-2 overflow-y-auto p-3">
         {isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 4 }).map((_, i) => (

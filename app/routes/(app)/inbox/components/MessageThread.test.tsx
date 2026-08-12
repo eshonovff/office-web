@@ -6,7 +6,8 @@ import { conversationsApi } from '~/api/conversations';
 import { makeQueryClient } from '~/lib/query-client';
 import { useAuthStore } from '~/store/useAuthStore';
 import type { ConversationDetail } from '~/types/conversation';
-import { MessageThread } from './MessageThread';
+import type { Message } from '~/types/message';
+import { isScrolledNearBottom, MessageThread } from './MessageThread';
 
 vi.mock('~/api/conversations', () => ({
   conversationsApi: {
@@ -14,6 +15,32 @@ vi.mock('~/api/conversations', () => ({
     markAsRead: vi.fn().mockResolvedValue(undefined),
   },
 }));
+
+function makeMessage(overrides: Partial<Message> = {}): Message {
+  return {
+    id: 'm1',
+    conversationId: 'c1',
+    direction: 'Inbound',
+    type: 'Text',
+    body: 'Салом',
+    mediaUrl: null,
+    externalId: 'ext-1',
+    deliveryStatus: 'Delivered',
+    isInternalNote: false,
+    sentByUserId: null,
+    sentByUserName: null,
+    createdAt: new Date().toISOString(),
+    mimeType: null,
+    sizeBytes: null,
+    originalFileName: null,
+    voiceDurationSeconds: null,
+    thumbnailUrl: null,
+    mediaDeletedAt: null,
+    mediaDownloadError: null,
+    waveformPeaks: null,
+    ...overrides,
+  };
+}
 
 function makeConversation(overrides: Partial<ConversationDetail> = {}): ConversationDetail {
   return {
@@ -78,5 +105,40 @@ describe('MessageThread header navigation', () => {
     renderThread();
     await waitFor(() => expect(conversationsApi.markAsRead).toHaveBeenCalledWith('c1'));
     expect(conversationsApi.markAsRead).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('isScrolledNearBottom', () => {
+  it('is true once fully scrolled to the bottom', () => {
+    expect(isScrolledNearBottom(1000, 700, 300)).toBe(true);
+  });
+
+  it('is true within the threshold of the bottom', () => {
+    expect(isScrolledNearBottom(1000, 600, 300)).toBe(true);
+  });
+
+  it('is false when scrolled well above the bottom (e.g. reading history)', () => {
+    expect(isScrolledNearBottom(1000, 200, 300)).toBe(false);
+  });
+});
+
+describe('MessageThread auto-scroll', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAuthStore.setState({ accessToken: null, user: null, roles: [], permissions: [] });
+    Element.prototype.scrollIntoView = vi.fn();
+  });
+
+  it('scrolls to the bottom the first time a conversation with messages opens', async () => {
+    vi.mocked(conversationsApi.listMessages).mockResolvedValue({
+      items: [makeMessage()],
+      totalCount: 1,
+      page: 1,
+      pageSize: 30,
+    });
+
+    renderThread();
+
+    await waitFor(() => expect(Element.prototype.scrollIntoView).toHaveBeenCalled());
   });
 });
