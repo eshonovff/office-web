@@ -30,6 +30,7 @@ import { ASSIGNEE_DROP_PREFIX, AssigneeAvatar } from './components/AssigneeAvata
 import { ConversationList } from './components/ConversationList';
 import { ContextPanel } from './components/ContextPanel';
 import { MessageThread } from './components/MessageThread';
+import { useInboxBreakpoint } from './useInboxBreakpoint';
 import { useInboxRealtime } from './useInboxRealtime';
 
 const CONNECTION_DOT_CLASS = {
@@ -104,12 +105,19 @@ export default function InboxPage() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedId = searchParams.get('conversation');
+  const infoOpen = searchParams.get('panel') === 'info';
+  const breakpoint = useInboxBreakpoint();
+  const mobileView = getInboxMobileView({ selectedId, infoOpen });
 
   function selectConversation(id: string) {
+    // Push (the default for setSearchParams) so opening a conversation from
+    // the list is its own history entry — the back button can return to the
+    // list instead of leaving /inbox entirely.
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev);
         next.set('conversation', id);
+        next.delete('panel');
         return next;
       },
       { preventScrollReset: true }
@@ -202,7 +210,11 @@ export default function InboxPage() {
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2">
-        <div className="flex items-center justify-between gap-2 px-1">
+        <div
+          className={cn(
+            'flex items-center justify-between gap-2 px-1',
+            breakpoint === 'mobile' && mobileView !== 'list' && 'hidden'
+          )}>
           {canAssign && assigneeOptions.length > 0 ? (
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground text-2xs">{t('assignee')}:</span>
@@ -246,8 +258,12 @@ export default function InboxPage() {
           </div>
         </div>
 
-        <div className="grid min-h-0 grid-cols-[320px_1fr_300px] gap-3">
-          <div className="bg-sidebar min-h-0 rounded-xl">
+        <div className="grid min-h-0 grid-cols-1 gap-3 md:grid-cols-[320px_1fr] xl:grid-cols-[320px_1fr_300px]">
+          <div
+            className={cn(
+              'bg-sidebar min-h-0 rounded-xl',
+              breakpoint === 'mobile' && mobileView !== 'list' && 'hidden'
+            )}>
             <ConversationList
               channelOptions={channelOptions}
               selectedId={selectedId}
@@ -256,7 +272,15 @@ export default function InboxPage() {
             />
           </div>
 
-          <div className="bg-sidebar min-h-0 rounded-xl">
+          {/* Kept mounted alongside the list (never conditionally unmounted) so
+              switching panes on mobile doesn't lose either one's scroll
+              position — see getInboxMobileView / R4 for the thread's own
+              auto-scroll behavior. */}
+          <div
+            className={cn(
+              'bg-sidebar min-h-0 rounded-xl',
+              breakpoint === 'mobile' && mobileView !== 'thread' && 'hidden'
+            )}>
             {selectedId ? (
               <MessageThread conversationId={selectedId} conversation={conversation ?? null} />
             ) : (
@@ -264,7 +288,9 @@ export default function InboxPage() {
             )}
           </div>
 
-          <div className="bg-sidebar min-h-0 rounded-xl">
+          {/* Permanent third column only at the desktop tier — on
+              mobile/tablet the same info shows as a pushed overlay (R3). */}
+          <div className="bg-sidebar hidden min-h-0 rounded-xl xl:block">
             {selectedId && conversation && (
               <ContextPanel
                 conversation={conversation}
