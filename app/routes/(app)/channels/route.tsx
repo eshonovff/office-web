@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pencil, Plus, Users } from 'lucide-react';
+import { Pencil, Plus, PowerOff, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { channelsApi } from '~/api/channels';
+import { ConfirmDialog } from '~/components/shared/ConfirmDialog';
 import { EmptyState } from '~/components/shared/EmptyState';
 import { Panel } from '~/components/layout/Panel';
 import { Badge } from '~/components/ui/badge';
@@ -20,6 +21,7 @@ export default function ChannelsPage() {
   const [managingChannelId, setManagingChannelId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [editingChannel, setEditingChannel] = useState<ChannelListItem | null>(null);
+  const [deactivatingChannel, setDeactivatingChannel] = useState<ChannelListItem | null>(null);
 
   const { data: channels = [], isLoading } = useQuery({
     queryKey: ['channels'],
@@ -41,6 +43,15 @@ export default function ChannelsPage() {
       void queryClient.invalidateQueries({ queryKey: ['channels'] });
       toast.success(t('channelUpdated'));
       setEditingChannel(null);
+    },
+  });
+
+  const { mutate: deactivateChannel, isPending: isDeactivating } = useMutation({
+    mutationFn: (id: string) => channelsApi.deactivate(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['channels'] });
+      toast.success(t('channelDeactivated'));
+      setDeactivatingChannel(null);
     },
   });
 
@@ -86,6 +97,16 @@ export default function ChannelsPage() {
                   <Users className="h-3.5 w-3.5" />
                   {t('manageMembers')}
                 </Button>
+                {channel.isActive && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:text-destructive gap-1.5"
+                    onClick={() => setDeactivatingChannel(channel)}>
+                    <PowerOff className="h-3.5 w-3.5" />
+                    {t('deactivate')}
+                  </Button>
+                )}
               </div>
             </Panel>
           ))}
@@ -116,6 +137,17 @@ export default function ChannelsPage() {
           onClose={() => setManagingChannelId(null)}
         />
       )}
+
+      <ConfirmDialog
+        open={!!deactivatingChannel}
+        onOpenChange={(open) => !open && setDeactivatingChannel(null)}
+        onConfirm={() => deactivatingChannel && deactivateChannel(deactivatingChannel.id)}
+        type="danger"
+        title={t('deactivateChannelTitle')}
+        description={deactivatingChannel ? t('deactivateChannelDescription', { name: deactivatingChannel.name }) : undefined}
+        confirmText={t('deactivate')}
+        isLoading={isDeactivating}
+      />
     </div>
   );
 }

@@ -44,6 +44,10 @@
   "editChannel": "Редактирование канала",
   "channelCreated": "Канал создан",
   "channelUpdated": "Канал обновлён",
+  "deactivate": "Деактивировать",
+  "channelDeactivated": "Канал деактивирован",
+  "deactivateChannelTitle": "Деактивировать канал?",
+  "deactivateChannelDescription": "«{{name}}» перейдёт в статус «Неактивен». История переписок сохранится, вы можете снова активировать канал через «Редактировать».",
   "fields": {
     "type": "Тип",
     "name": "Название",

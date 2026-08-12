@@ -44,6 +44,10 @@
   "editChannel": "Таҳрири канал",
   "channelCreated": "Канал сохта шуд",
   "channelUpdated": "Канал нав шуд",
+  "deactivate": "Ғайрифаъол кардан",
+  "channelDeactivated": "Канал ғайрифаъол шуд",
+  "deactivateChannelTitle": "Каналро ғайрифаъол кунам?",
+  "deactivateChannelDescription": "«{{name}}» ба ҳолати ғайрифаъол мегузарад (нишонаи «Неактивен»). Таърихи чат мемонад, шумо метавонед онро тавассути «Таҳрир» дубора фаъол кунед.",
   "fields": {
     "type": "Навъ",
     "name": "Ном",
