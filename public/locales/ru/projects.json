@@ -22,5 +22,11 @@
   "createColumnSuccess": "Колонка создана",
   "deleteColumnConfirmTitle": "Удалить колонку?",
   "deleteColumnConfirmDescription": "Удалить можно только пустую колонку.",
-  "deleteColumnSuccess": "Колонка удалена"
+  "deleteColumnSuccess": "Колонка удалена",
+  "manageLabels": "Управление тегами",
+  "addLabel": "Добавить тег",
+  "createLabelSuccess": "Тег создан",
+  "deleteLabelConfirmTitle": "Удалить тег?",
+  "deleteLabelConfirmDescription": "Тег будет удалён со всех задач, к которым он применён.",
+  "deleteLabelSuccess": "Тег удалён"
 }
