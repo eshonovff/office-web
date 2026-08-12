@@ -1,0 +1,11 @@
+{
+  "title": "Уведомления",
+  "empty": "Нет уведомлений",
+  "markAllRead": "Прочитать все",
+  "messages": {
+    "taskAssigned": "Вам назначена задача: «{{title}}»",
+    "deadlineTomorrow": "Срок задачи истекает завтра: «{{title}}»",
+    "mention": "Вас упомянули в комментарии",
+    "whatsappError": "Ошибка подключения WhatsApp"
+  }
+}

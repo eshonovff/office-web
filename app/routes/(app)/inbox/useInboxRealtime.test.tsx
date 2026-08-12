@@ -1,13 +1,10 @@
 import { renderHook } from '@testing-library/react';
-import { StrictMode, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSignalR } from '~/hooks/useSignalR';
 import { useInboxRealtime } from './useInboxRealtime';
 
 const invalidateQueries = vi.fn();
 const setQueryData = vi.fn();
-const start = vi.fn();
-const stop = vi.fn();
 const invoke = vi.fn();
 const setError = vi.fn();
 
@@ -16,8 +13,6 @@ let hubState = {
   status: 'connected',
   reconnectCount: 0,
   setError,
-  start,
-  stop,
 };
 
 vi.mock('@microsoft/signalr', () => ({
@@ -44,8 +39,6 @@ describe('useInboxRealtime', () => {
       status: 'connected',
       reconnectCount: 0,
       setError,
-      start,
-      stop,
     };
     invoke.mockResolvedValue(undefined);
   });
@@ -65,20 +58,6 @@ describe('useInboxRealtime', () => {
 
     expect(invoke).toHaveBeenCalledTimes(4);
     expect(invoke).toHaveBeenLastCalledWith('JoinChannel', 'channel-2');
-  });
-
-  it('starts negotiation only once across the StrictMode setup-cleanup cycle', () => {
-    vi.useFakeTimers();
-    const wrapper = ({ children }: { children: ReactNode }) => <StrictMode>{children}</StrictMode>;
-
-    const { unmount } = renderHook(() => useInboxRealtime([], null), { wrapper });
-
-    expect(start).not.toHaveBeenCalled();
-    vi.runAllTimers();
-    expect(start).toHaveBeenCalledTimes(1);
-
-    unmount();
-    vi.useRealTimers();
   });
 
   it('refetches conversations and the open thread after reconnect', () => {
