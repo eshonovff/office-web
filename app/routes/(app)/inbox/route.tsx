@@ -77,6 +77,22 @@ export function getEffectiveHubStatus({ channelsFailed, channelsLoading, hubErro
   return hubStatus;
 }
 
+export type InboxMobileView = 'list' | 'thread' | 'info';
+
+interface InboxMobileViewInputs {
+  selectedId: string | null;
+  infoOpen: boolean;
+}
+
+// On a single-pane (mobile) screen, exactly one of these three panes is on
+// screen at a time, driven entirely by URL state (?conversation, ?panel=info)
+// so the browser's own back button walks the same stack the UI does.
+export function getInboxMobileView({ selectedId, infoOpen }: InboxMobileViewInputs): InboxMobileView {
+  if (selectedId && infoOpen) return 'info';
+  if (selectedId) return 'thread';
+  return 'list';
+}
+
 export default function InboxPage() {
   const { t } = useTranslation('inbox');
   const { can } = useCan();
