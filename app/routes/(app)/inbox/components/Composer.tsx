@@ -283,7 +283,7 @@ export function Composer({ conversation }: ComposerProps) {
 
   if (showTemplates) {
     return (
-      <div className="space-y-2 border-t p-3">
+      <div className="space-y-2 border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="bg-warning/10 border-warning/30 rounded-lg border p-2.5">
           <p className="text-warning text-sm font-medium">{t('windowClosedTitle')}</p>
           <p className="text-muted-foreground mt-0.5 text-2xs">
@@ -314,7 +314,7 @@ export function Composer({ conversation }: ComposerProps) {
   }
 
   return (
-    <div className="space-y-1.5 border-t p-3">
+    <div className="space-y-1.5 border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       {windowOpen && conversation.windowExpiresAt && isWhatsApp && (
         <p className="text-muted-foreground text-2xs">{formatWindowRemaining(conversation.windowExpiresAt)}</p>
       )}

@@ -48,7 +48,8 @@ export function ImageLightbox({ open, onOpenChange, src, alt }: ImageLightboxPro
       <DialogContent
         className={cn(
           'top-0 left-0 h-dvh max-h-none w-screen max-w-none translate-x-0 translate-y-0 gap-0 rounded-none p-0',
-          'sm:top-1/2 sm:left-1/2 sm:h-auto sm:w-auto sm:max-w-4xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:rounded-xl sm:p-2'
+          'pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]',
+          'sm:top-1/2 sm:left-1/2 sm:h-auto sm:w-auto sm:max-w-4xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:rounded-xl sm:p-2 sm:pt-2 sm:pb-2'
         )}>
         <DialogTitle className="sr-only">{alt}</DialogTitle>
         {src && (
@@ -63,7 +64,7 @@ export function ImageLightbox({ open, onOpenChange, src, alt }: ImageLightboxPro
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}>
-            <img src={src} alt={alt} className="max-h-[90vh] max-w-full rounded-md object-contain sm:max-h-[80vh]" />
+            <img src={src} alt={alt} className="max-h-[90dvh] max-w-full rounded-md object-contain sm:max-h-[80dvh]" />
           </div>
         )}
       </DialogContent>
