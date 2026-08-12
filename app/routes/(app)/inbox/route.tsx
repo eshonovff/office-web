@@ -8,7 +8,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, RefreshCw, Settings, Wifi } from 'lucide-react';
@@ -30,6 +30,7 @@ import { ASSIGNEE_DROP_PREFIX, AssigneeAvatar } from './components/AssigneeAvata
 import { ConversationList } from './components/ConversationList';
 import { ContextPanel } from './components/ContextPanel';
 import { MessageThread } from './components/MessageThread';
+import { useInboxStore } from './store';
 import { useInboxBreakpoint } from './useInboxBreakpoint';
 import { useInboxRealtime } from './useInboxRealtime';
 
@@ -76,6 +77,45 @@ export function getEffectiveHubStatus({ channelsFailed, channelsLoading, hubErro
   if (channelsLoading) return 'connecting';
   if (hubError) return 'disconnected';
   return hubStatus;
+}
+
+interface AssigneeOption {
+  userId: string;
+  fullName: string;
+}
+
+// Union of every channel's members, deduped by userId — used for the "Все
+// каналы" (no channel filter, no conversation open) case.
+export function mergeChannelMembers(memberLists: AssigneeOption[][]): AssigneeOption[] {
+  const seen = new Map<string, string>();
+  for (const members of memberLists) {
+    for (const member of members) {
+      seen.set(member.userId, member.fullName);
+    }
+  }
+  return [...seen.entries()].map(([userId, fullName]) => ({ userId, fullName }));
+}
+
+interface AssigneeOptionsInputs {
+  selectedId: string | null;
+  conversationAssignableUsers: AssigneeOption[] | undefined;
+  filterChannelId: string | null;
+  filterChannelMembers: AssigneeOption[] | undefined;
+  allChannelsMembers: AssigneeOption[][];
+}
+
+// Three tiers of precedence for the assignee strip's targets — a conversation
+// open beats the channel filter, which beats "every accessible channel".
+export function getAssigneeOptions({
+  selectedId,
+  conversationAssignableUsers,
+  filterChannelId,
+  filterChannelMembers,
+  allChannelsMembers,
+}: AssigneeOptionsInputs): AssigneeOption[] {
+  if (selectedId) return conversationAssignableUsers ?? [];
+  if (filterChannelId) return filterChannelMembers ?? [];
+  return mergeChannelMembers(allChannelsMembers);
 }
 
 export type InboxMobileView = 'list' | 'thread' | 'info';
@@ -196,19 +236,57 @@ export default function InboxPage() {
   const effectiveHubStatus = getEffectiveHubStatus({ channelsFailed, channelsLoading, hubError, hubStatus });
   const statusLabel = channelsFailed ? t('connectionError.channelsFailed') : hubError ? t(`connectionError.${hubError}`) : t(`connection.${effectiveHubStatus}`);
 
-  // GET /conversations/{id}/assignable-users requires inbox.assign and
-  // returns the real membership of THAT conversation's channel (see
-  // docs/PROGRESS.md #7) — so who's draggable-onto depends on whichever
-  // conversation is currently open, not a cross-channel union. Dragging a
-  // different conversation (a different channel) onto one of these avatars
-  // can still 409; assignConversation's onError below surfaces exactly why.
-  const { data: assignableUsers } = useQuery({
+  const filterChannelId = useInboxStore((s) => s.channelId);
+
+  // Assignee strip targets, three tiers of precedence — inbox.assign-gated
+  // endpoints for all of them (docs/PROGRESS.md #7):
+  // 1. A conversation is open: GET /conversations/{id}/assignable-users —
+  //    that conversation's own channel, ignoring the list filter entirely.
+  // 2. No conversation open, a specific channel filter is set: GET
+  //    /channels/{id}'s `members` for that one channel.
+  // 3. No conversation open, filter is "Все каналы": union of every
+  //    /channels/mine channel's members, deduped.
+  // Dragging a conversation from a channel other than what the strip
+  // currently reflects can still 409 — client.ts surfaces the backend's
+  // specific reason instead of a generic "conflict".
+  const { data: conversationAssignableUsers } = useQuery({
     queryKey: ['conversations', selectedId, 'assignable-users'],
     queryFn: () => conversationsApi.listAssignableUsers(selectedId!),
     enabled: canAssign && !!selectedId,
     staleTime: 5 * 60_000,
   });
-  const assigneeOptions = assignableUsers ?? [];
+
+  const { data: filterChannelDetail } = useQuery({
+    queryKey: ['channels', filterChannelId],
+    queryFn: () => channelsApi.get(filterChannelId!),
+    enabled: canAssign && !selectedId && !!filterChannelId,
+    staleTime: 5 * 60_000,
+  });
+
+  const allChannelsQueries = useQueries({
+    queries: (myChannels ?? []).map((channel) => ({
+      queryKey: ['channels', channel.id],
+      queryFn: () => channelsApi.get(channel.id),
+      enabled: canAssign && !selectedId && !filterChannelId,
+      staleTime: 5 * 60_000,
+    })),
+  });
+
+  const assigneeOptions = useMemo(
+    () =>
+      getAssigneeOptions({
+        selectedId,
+        conversationAssignableUsers,
+        filterChannelId,
+        filterChannelMembers: filterChannelDetail?.members,
+        allChannelsMembers: allChannelsQueries.map((query) => query.data?.members ?? []),
+      }),
+    // allChannelsQueries is a fresh array every render (useQueries) — its
+    // .dataUpdatedAt fingerprint is the real "did any channel's data change"
+    // signal; comparing the array reference itself would recompute every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedId, conversationAssignableUsers, filterChannelId, filterChannelDetail, allChannelsQueries.map((q) => q.dataUpdatedAt).join(',')]
+  );
 
   // 409s (assigning someone outside the conversation's channel) already
   // surface with their specific backend reason via the apiClient interceptor
