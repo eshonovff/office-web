@@ -1,11 +1,30 @@
 import { apiClient } from '~/lib/client';
-import type { ChannelDetail, ChannelListItem, MyChannelListItem, SetChannelMembersRequest, WhatsAppTemplate } from '~/types/channel';
+import type {
+  ChannelDetail,
+  ChannelListItem,
+  CreateChannelRequest,
+  MyChannelListItem,
+  SetChannelMembersRequest,
+  UpdateChannelRequest,
+  WhatsAppTemplate,
+} from '~/types/channel';
 import type { AssignableUser } from '~/types/conversation';
 
 export const channelsApi = {
   list: async (): Promise<ChannelListItem[]> => {
     const { data } = await apiClient.get<ChannelListItem[]>('/channels');
     return data;
+  },
+  create: async (payload: CreateChannelRequest): Promise<ChannelDetail> => {
+    const { data } = await apiClient.post<ChannelDetail>('/channels', payload);
+    return data;
+  },
+  update: async (id: string, payload: UpdateChannelRequest): Promise<ChannelDetail> => {
+    const { data } = await apiClient.patch<ChannelDetail>(`/channels/${id}`, payload);
+    return data;
+  },
+  deactivate: async (id: string): Promise<void> => {
+    await apiClient.delete(`/channels/${id}`);
   },
   mine: async (): Promise<MyChannelListItem[]> => {
     const { data } = await apiClient.get<MyChannelListItem[]>('/channels/mine');

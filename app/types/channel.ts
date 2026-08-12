@@ -31,6 +31,19 @@ export interface SetChannelMembersRequest {
   userIds: string[];
 }
 
+export interface CreateChannelRequest {
+  type: ChannelType;
+  name: string;
+  externalId: string;
+  credentials: string;
+}
+
+export interface UpdateChannelRequest {
+  name: string;
+  credentials?: string;
+  isActive: boolean;
+}
+
 export interface WhatsAppTemplate {
   name: string;
   language: string;
