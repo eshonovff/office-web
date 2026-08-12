@@ -18,6 +18,8 @@
   "selectConversation": "Выберите переписку из списка",
   "unassigned": "Не назначено",
   "assignee": "Ответственный",
+  "back": "Назад",
+  "conversationInfo": "Информация о переписке",
   "channel": "Канал",
   "statusLabel": "Статус",
   "statusUpdated": "Статус обновлён",

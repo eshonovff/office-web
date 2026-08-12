@@ -9,15 +9,16 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, RefreshCw, Settings, Wifi } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { channelsApi } from '~/api/channels';
 import { conversationsApi } from '~/api/conversations';
 import { EmptyState } from '~/components/shared/EmptyState';
 import { Button } from '~/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '~/components/ui/sheet';
 import { Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
 import { cn } from '~/lib/utils';
@@ -104,10 +105,21 @@ export default function InboxPage() {
   const hubError = useInboxHub((s) => s.error);
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const selectedId = searchParams.get('conversation');
   const infoOpen = searchParams.get('panel') === 'info';
   const breakpoint = useInboxBreakpoint();
   const mobileView = getInboxMobileView({ selectedId, infoOpen });
+
+  // Baseline history depth at the moment /inbox first mounted. Comparing the
+  // current depth against it tells goBack() whether there's actually an
+  // app-pushed entry to pop — if the page was opened straight to a deep link
+  // (?conversation=x from a shared URL, a refresh, ...), there isn't one, and
+  // popping would leave the app entirely instead of landing on the list.
+  const baselineHistoryIndex = useRef<number | null>(null);
+  useEffect(() => {
+    baselineHistoryIndex.current = (window.history.state as { idx?: number } | null)?.idx ?? null;
+  }, []);
 
   function selectConversation(id: string) {
     // Push (the default for setSearchParams) so opening a conversation from
@@ -121,6 +133,39 @@ export default function InboxPage() {
         return next;
       },
       { preventScrollReset: true }
+    );
+  }
+
+  function openInfo() {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('panel', 'info');
+        return next;
+      },
+      { preventScrollReset: true }
+    );
+  }
+
+  // Used by every "close/back" affordance (thread's back arrow, info panel's
+  // close) so the browser's own back button and in-app buttons behave the
+  // same way: pop one level at a time (info -> thread -> list) instead of
+  // jumping straight out of /inbox.
+  function goBack() {
+    const currentIndex = (window.history.state as { idx?: number } | null)?.idx ?? null;
+    const baseline = baselineHistoryIndex.current;
+    if (baseline !== null && currentIndex !== null && currentIndex > baseline) {
+      navigate(-1);
+      return;
+    }
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (infoOpen) next.delete('panel');
+        else next.delete('conversation');
+        return next;
+      },
+      { replace: true, preventScrollReset: true }
     );
   }
 
@@ -282,14 +327,18 @@ export default function InboxPage() {
               breakpoint === 'mobile' && mobileView !== 'thread' && 'hidden'
             )}>
             {selectedId ? (
-              <MessageThread conversationId={selectedId} conversation={conversation ?? null} />
+              <MessageThread
+                conversationId={selectedId}
+                conversation={conversation ?? null}
+                onBack={breakpoint === 'mobile' ? goBack : undefined}
+                onOpenInfo={breakpoint !== 'desktop' ? openInfo : undefined}
+              />
             ) : (
               <EmptyState message={t('selectConversation')} className="h-full" />
             )}
           </div>
 
-          {/* Permanent third column only at the desktop tier — on
-              mobile/tablet the same info shows as a pushed overlay (R3). */}
+          {/* Permanent third column only at the desktop tier. */}
           <div className="bg-sidebar hidden min-h-0 rounded-xl xl:block">
             {selectedId && conversation && (
               <ContextPanel
@@ -301,6 +350,26 @@ export default function InboxPage() {
           </div>
         </div>
       </div>
+
+      {/* Mobile/tablet: same info as a pushed overlay instead of a permanent
+          column — closing it (X, overlay tap, Escape, or the hardware back
+          button) all funnel through onOpenChange -> goBack(). */}
+      {breakpoint !== 'desktop' && (
+        <Sheet open={infoOpen} onOpenChange={(open) => !open && goBack()}>
+          <SheetContent side="right" className="scrollbar-thin flex flex-col overflow-y-auto p-0">
+            <SheetHeader className="sr-only">
+              <SheetTitle>{t('conversationInfo')}</SheetTitle>
+            </SheetHeader>
+            {selectedId && conversation && (
+              <ContextPanel
+                conversation={conversation}
+                isChangingStatus={isChangingStatus}
+                onStatusChange={(status) => changeStatus({ id: conversation.id, status })}
+              />
+            )}
+          </SheetContent>
+        </Sheet>
+      )}
     </DndContext>
   );
 }

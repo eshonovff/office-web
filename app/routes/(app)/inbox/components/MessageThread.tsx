@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, Info } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { conversationsApi } from '~/api/conversations';
@@ -18,9 +19,13 @@ const PAGE_SIZE = 30;
 interface MessageThreadProps {
   conversationId: string;
   conversation: ConversationDetail | null;
+  /** Shown as a back arrow — mobile only, where the thread replaces the list on screen. */
+  onBack?: () => void;
+  /** Shown as an info button — mobile/tablet only, where ContextPanel isn't a permanent column. */
+  onOpenInfo?: () => void;
 }
 
-export function MessageThread({ conversationId, conversation }: MessageThreadProps) {
+export function MessageThread({ conversationId, conversation, onBack, onOpenInfo }: MessageThreadProps) {
   const { t } = useTranslation('inbox');
   const { can } = useCan();
   const canReply = can(Permissions.Inbox.Reply);
@@ -64,16 +69,28 @@ export function MessageThread({ conversationId, conversation }: MessageThreadPro
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center justify-between gap-2 border-b px-3 py-2.5">
-        {conversation ? (
-          <>
-            <span className="text-sm font-semibold">{conversation.contactName || conversation.externalId}</span>
-            <Badge variant="outline" className="text-2xs">
-              {t(`status.${conversation.status}`)}
-            </Badge>
-          </>
-        ) : (
-          <Skeleton className="h-5 w-40" />
+      <div className="flex items-center gap-2 border-b px-3 py-2.5">
+        {onBack && (
+          <Button type="button" variant="ghost" size="icon-sm" aria-label={t('back')} onClick={onBack} className="-ml-1 shrink-0">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        )}
+        <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          {conversation ? (
+            <>
+              <span className="truncate text-sm font-semibold">{conversation.contactName || conversation.externalId}</span>
+              <Badge variant="outline" className="text-2xs shrink-0">
+                {t(`status.${conversation.status}`)}
+              </Badge>
+            </>
+          ) : (
+            <Skeleton className="h-5 w-40" />
+          )}
+        </div>
+        {onOpenInfo && (
+          <Button type="button" variant="ghost" size="icon-sm" aria-label={t('conversationInfo')} onClick={onOpenInfo} className="shrink-0">
+            <Info className="h-4 w-4" />
+          </Button>
         )}
       </div>
 
