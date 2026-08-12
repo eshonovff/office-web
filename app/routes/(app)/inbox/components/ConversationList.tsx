@@ -1,12 +1,17 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { Filter } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { conversationsApi } from '~/api/conversations';
 import { EmptyState } from '~/components/shared/EmptyState';
+import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { CustomSelect } from '~/components/shared/CustomSelect';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '~/components/ui/sheet';
 import { Skeleton } from '~/components/ui/skeleton';
 import type { ConversationStatus } from '~/types/conversation';
 import { useInboxStore } from '../store';
+import { useInboxBreakpoint } from '../useInboxBreakpoint';
 import { ConversationListItem } from './ConversationListItem';
 
 const PAGE_SIZE = 20;
@@ -22,6 +27,9 @@ interface ConversationListProps {
 export function ConversationList({ channelOptions, selectedId, draggable, onSelect }: ConversationListProps) {
   const { t } = useTranslation('inbox');
   const { channelId, status, setChannelId, setStatus } = useInboxStore();
+  const breakpoint = useInboxBreakpoint();
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilterCount = (channelId ? 1 : 0) + (status ? 1 : 0);
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['conversations', { channelId, status }],
@@ -42,24 +50,61 @@ export function ConversationList({ channelOptions, selectedId, draggable, onSele
 
   return (
     <div className="flex h-full min-w-0 flex-col gap-2">
-      <div className="flex gap-2 p-2 pb-0">
-        <CustomSelect
-          options={channelOptions}
-          value={channelId}
-          onChange={(value) => setChannelId((value as string) ?? null)}
-          isClearable
-          placeholder={t('allChannels')}
-          className="min-w-0 flex-1"
-        />
-        <CustomSelect
-          options={statusOptions}
-          value={status}
-          onChange={(value) => setStatus((value as ConversationStatus) ?? null)}
-          isClearable
-          placeholder={t('allStatuses')}
-          className="min-w-0 flex-1"
-        />
-      </div>
+      {breakpoint === 'mobile' ? (
+        <div className="p-2 pb-0">
+          <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => setFiltersOpen(true)}>
+            <Filter className="h-3.5 w-3.5" />
+            {t('filters')}
+            {activeFilterCount > 0 && (
+              <Badge variant="secondary" className="h-4 min-w-4 justify-center px-1 text-2xs">
+                {activeFilterCount}
+              </Badge>
+            )}
+          </Button>
+          <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+            <SheetContent side="bottom">
+              <SheetHeader>
+                <SheetTitle>{t('filters')}</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col gap-3 p-4 pt-0">
+                <CustomSelect
+                  options={channelOptions}
+                  value={channelId}
+                  onChange={(value) => setChannelId((value as string) ?? null)}
+                  isClearable
+                  placeholder={t('allChannels')}
+                />
+                <CustomSelect
+                  options={statusOptions}
+                  value={status}
+                  onChange={(value) => setStatus((value as ConversationStatus) ?? null)}
+                  isClearable
+                  placeholder={t('allStatuses')}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      ) : (
+        <div className="flex gap-2 p-2 pb-0">
+          <CustomSelect
+            options={channelOptions}
+            value={channelId}
+            onChange={(value) => setChannelId((value as string) ?? null)}
+            isClearable
+            placeholder={t('allChannels')}
+            className="min-w-0 flex-1"
+          />
+          <CustomSelect
+            options={statusOptions}
+            value={status}
+            onChange={(value) => setStatus((value as ConversationStatus) ?? null)}
+            isClearable
+            placeholder={t('allStatuses')}
+            className="min-w-0 flex-1"
+          />
+        </div>
+      )}
 
       <div className="scrollbar-thin flex-1 space-y-1.5 overflow-y-auto px-2 pb-2">
         {isLoading ? (
