@@ -18,3 +18,21 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: vi.fn(),
   }),
 });
+
+// jsdom also has no PointerEvent — fireEvent.pointerX drops pointerType/
+// clientY silently, and base-ui primitives that dispatch a synthetic
+// PointerEvent themselves (Checkbox, Switch, ...) throw outright without
+// this. A minimal MouseEvent-based stand-in is enough for both.
+if (typeof globalThis.PointerEvent === "undefined") {
+  class PointerEventPolyfill extends MouseEvent {
+    pointerId: number;
+    pointerType: string;
+    constructor(type: string, params: MouseEventInit & { pointerId?: number; pointerType?: string } = {}) {
+      super(type, params);
+      this.pointerId = params.pointerId ?? 0;
+      this.pointerType = params.pointerType ?? "mouse";
+    }
+  }
+  // @ts-expect-error minimal polyfill, not spec-complete
+  globalThis.PointerEvent = PointerEventPolyfill;
+}

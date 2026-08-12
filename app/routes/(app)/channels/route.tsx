@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Users } from 'lucide-react';
+import { Pencil, Plus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -9,15 +9,17 @@ import { Panel } from '~/components/layout/Panel';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Skeleton } from '~/components/ui/skeleton';
-import type { CreateChannelRequest } from '~/types/channel';
+import type { ChannelListItem, CreateChannelRequest, UpdateChannelRequest } from '~/types/channel';
 import { ChannelMembersModal } from './components/ChannelMembersModal';
 import { CreateChannelModal } from './components/CreateChannelModal';
+import { EditChannelModal } from './components/EditChannelModal';
 
 export default function ChannelsPage() {
   const { t } = useTranslation(['inbox', 'common']);
   const queryClient = useQueryClient();
   const [managingChannelId, setManagingChannelId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [editingChannel, setEditingChannel] = useState<ChannelListItem | null>(null);
 
   const { data: channels = [], isLoading } = useQuery({
     queryKey: ['channels'],
@@ -30,6 +32,15 @@ export default function ChannelsPage() {
       void queryClient.invalidateQueries({ queryKey: ['channels'] });
       toast.success(t('channelCreated'));
       setCreating(false);
+    },
+  });
+
+  const { mutate: updateChannel, isPending: isSaving } = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateChannelRequest }) => channelsApi.update(id, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['channels'] });
+      toast.success(t('channelUpdated'));
+      setEditingChannel(null);
     },
   });
 
@@ -66,14 +77,16 @@ export default function ChannelsPage() {
                   </Badge>
                 )}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-auto gap-1.5"
-                onClick={() => setManagingChannelId(channel.id)}>
-                <Users className="h-3.5 w-3.5" />
-                {t('manageMembers')}
-              </Button>
+              <div className="mt-auto flex flex-wrap gap-1.5">
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setEditingChannel(channel)}>
+                  <Pencil className="h-3.5 w-3.5" />
+                  {t('actions.edit', { ns: 'common' })}
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setManagingChannelId(channel.id)}>
+                  <Users className="h-3.5 w-3.5" />
+                  {t('manageMembers')}
+                </Button>
+              </div>
             </Panel>
           ))}
         </div>
@@ -85,6 +98,16 @@ export default function ChannelsPage() {
         isCreating={isCreating}
         onCreate={(payload) => createChannel(payload)}
       />
+
+      {editingChannel && (
+        <EditChannelModal
+          channel={editingChannel}
+          open
+          onClose={() => setEditingChannel(null)}
+          isSaving={isSaving}
+          onSave={(payload) => updateChannel({ id: editingChannel.id, payload })}
+        />
+      )}
 
       {managingChannelId && (
         <ChannelMembersModal

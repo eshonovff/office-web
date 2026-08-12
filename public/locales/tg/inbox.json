@@ -41,7 +41,9 @@
   "channelsTitle": "Каналҳо",
   "create": "Сохтан",
   "createChannel": "Канали нав",
+  "editChannel": "Таҳрири канал",
   "channelCreated": "Канал сохта шуд",
+  "channelUpdated": "Канал нав шуд",
   "fields": {
     "type": "Навъ",
     "name": "Ном",
@@ -49,9 +51,12 @@
     "phoneNumberId": "Phone Number ID",
     "wabaId": "WABA ID",
     "accessToken": "Access Token",
-    "credentials": "Credentials (JSON)"
+    "credentials": "Credentials (JSON)",
+    "isActive": "Фаъол"
   },
   "phoneNumberIdHint": "Ин ҳамчун ID-и канал (external ID) захира мешавад — бо ҳамин WhatsApp webhook-ҳо ба канал мувофиқ меоянд.",
+  "editCredentialsHint": "Барои нигоҳ доштани токени ҷорӣ, WABA ID ва Access Token-ро холӣ гузоред. Барои иваз кардан, ҳарду майдонро пур кунед.",
+  "editCredentialsHintGeneric": "Барои нигоҳ доштани credentials-и ҷорӣ, майдонро холӣ гузоред.",
   "manageMembers": "Идораи аъзоён",
   "membersSaved": "Аъзоён нав шуданд",
   "noUsers": "Корманд нест",

@@ -41,7 +41,9 @@
   "channelsTitle": "Каналы",
   "create": "Создать",
   "createChannel": "Новый канал",
+  "editChannel": "Редактирование канала",
   "channelCreated": "Канал создан",
+  "channelUpdated": "Канал обновлён",
   "fields": {
     "type": "Тип",
     "name": "Название",
@@ -49,9 +51,12 @@
     "phoneNumberId": "Phone Number ID",
     "wabaId": "WABA ID",
     "accessToken": "Access Token",
-    "credentials": "Credentials (JSON)"
+    "credentials": "Credentials (JSON)",
+    "isActive": "Активен"
   },
   "phoneNumberIdHint": "Сохраняется как ID канала (external ID) — по нему вебхуки WhatsApp находят канал.",
+  "editCredentialsHint": "Чтобы сохранить текущий токен, оставьте WABA ID и Access Token пустыми. Чтобы изменить — заполните оба поля.",
+  "editCredentialsHintGeneric": "Чтобы сохранить текущие credentials, оставьте поле пустым.",
   "manageMembers": "Управление участниками",
   "membersSaved": "Участники обновлены",
   "noUsers": "Нет сотрудников",
