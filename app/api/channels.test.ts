@@ -48,4 +48,12 @@ describe('channelsApi', () => {
 
     expect(instances[0].get).toHaveBeenCalledWith('/channels/mine');
   });
+
+  it('fetches assignable users for a channel', async () => {
+    const { channelsApi } = await import('~/api/channels');
+
+    await channelsApi.listAssignableUsers('ch1');
+
+    expect(instances[0].get).toHaveBeenCalledWith('/channels/ch1/assignable-users');
+  });
 });

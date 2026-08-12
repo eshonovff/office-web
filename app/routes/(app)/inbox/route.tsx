@@ -243,12 +243,17 @@ export default function InboxPage() {
   // 1. A conversation is open: GET /conversations/{id}/assignable-users —
   //    that conversation's own channel, ignoring the list filter entirely.
   // 2. No conversation open, a specific channel filter is set: GET
-  //    /channels/{id}'s `members` for that one channel.
+  //    /channels/{id}/assignable-users for that one channel (members +
+  //    Owner/Admin — unlike GET /channels/{id}, which is members-only).
   // 3. No conversation open, filter is "Все каналы": union of every
-  //    /channels/mine channel's members, deduped.
-  // Dragging a conversation from a channel other than what the strip
-  // currently reflects can still 409 — client.ts surfaces the backend's
-  // specific reason instead of a generic "conflict".
+  //    /channels/mine channel's assignable users, deduped.
+  // Every per-channel query below is keyed by channelId alone (['channels',
+  // id, 'assignable-users']), so switching the filter in and out of "Все
+  // каналы" reuses whatever's already cached instead of refetching — the
+  // same channel's data is the same query regardless of which tier asked
+  // for it. Dragging a conversation from a channel other than what the
+  // strip currently reflects can still 409 — client.ts surfaces the
+  // backend's specific reason instead of a generic "conflict".
   const { data: conversationAssignableUsers } = useQuery({
     queryKey: ['conversations', selectedId, 'assignable-users'],
     queryFn: () => conversationsApi.listAssignableUsers(selectedId!),
@@ -256,17 +261,17 @@ export default function InboxPage() {
     staleTime: 5 * 60_000,
   });
 
-  const { data: filterChannelDetail } = useQuery({
-    queryKey: ['channels', filterChannelId],
-    queryFn: () => channelsApi.get(filterChannelId!),
+  const { data: filterChannelUsers } = useQuery({
+    queryKey: ['channels', filterChannelId, 'assignable-users'],
+    queryFn: () => channelsApi.listAssignableUsers(filterChannelId!),
     enabled: canAssign && !selectedId && !!filterChannelId,
     staleTime: 5 * 60_000,
   });
 
   const allChannelsQueries = useQueries({
     queries: (myChannels ?? []).map((channel) => ({
-      queryKey: ['channels', channel.id],
-      queryFn: () => channelsApi.get(channel.id),
+      queryKey: ['channels', channel.id, 'assignable-users'],
+      queryFn: () => channelsApi.listAssignableUsers(channel.id),
       enabled: canAssign && !selectedId && !filterChannelId,
       staleTime: 5 * 60_000,
     })),
@@ -278,14 +283,14 @@ export default function InboxPage() {
         selectedId,
         conversationAssignableUsers,
         filterChannelId,
-        filterChannelMembers: filterChannelDetail?.members,
-        allChannelsMembers: allChannelsQueries.map((query) => query.data?.members ?? []),
+        filterChannelMembers: filterChannelUsers,
+        allChannelsMembers: allChannelsQueries.map((query) => query.data ?? []),
       }),
     // allChannelsQueries is a fresh array every render (useQueries) — its
     // .dataUpdatedAt fingerprint is the real "did any channel's data change"
     // signal; comparing the array reference itself would recompute every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedId, conversationAssignableUsers, filterChannelId, filterChannelDetail, allChannelsQueries.map((q) => q.dataUpdatedAt).join(',')]
+    [selectedId, conversationAssignableUsers, filterChannelId, filterChannelUsers, allChannelsQueries.map((q) => q.dataUpdatedAt).join(',')]
   );
 
   // 409s (assigning someone outside the conversation's channel) already

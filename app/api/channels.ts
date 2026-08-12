@@ -1,5 +1,6 @@
 import { apiClient } from '~/lib/client';
 import type { ChannelDetail, ChannelListItem, MyChannelListItem, SetChannelMembersRequest, WhatsAppTemplate } from '~/types/channel';
+import type { AssignableUser } from '~/types/conversation';
 
 export const channelsApi = {
   list: async (): Promise<ChannelListItem[]> => {
@@ -19,6 +20,10 @@ export const channelsApi = {
   },
   listWhatsAppTemplates: async (id: string): Promise<WhatsAppTemplate[]> => {
     const { data } = await apiClient.get<WhatsAppTemplate[]>(`/channels/${id}/whatsapp-templates`);
+    return data;
+  },
+  listAssignableUsers: async (id: string): Promise<AssignableUser[]> => {
+    const { data } = await apiClient.get<AssignableUser[]>(`/channels/${id}/assignable-users`);
     return data;
   },
 };
