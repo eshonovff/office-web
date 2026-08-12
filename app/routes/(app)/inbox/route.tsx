@@ -8,7 +8,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, RefreshCw, Settings, Wifi } from 'lucide-react';
@@ -22,7 +22,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '~/components/ui/sh
 import { Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
 import { cn } from '~/lib/utils';
-import { useAuthStore } from '~/store/useAuthStore';
 import { useInboxHub } from '~/store/useInboxHub';
 import type { HubStatus } from '~/store/createHubStore';
 import type { MyChannelListItem } from '~/types/channel';
@@ -79,6 +78,23 @@ export function getEffectiveHubStatus({ channelsFailed, channelsLoading, hubErro
   return hubStatus;
 }
 
+interface AssigneeOption {
+  userId: string;
+  fullName: string;
+}
+
+// Union of every channel's members, deduped by userId (a staff member on
+// more than one channel only needs one avatar in the strip).
+export function mergeChannelMembers(memberLists: AssigneeOption[][]): AssigneeOption[] {
+  const seen = new Map<string, string>();
+  for (const members of memberLists) {
+    for (const member of members) {
+      seen.set(member.userId, member.fullName);
+    }
+  }
+  return [...seen.entries()].map(([userId, fullName]) => ({ userId, fullName }));
+}
+
 export type InboxMobileView = 'list' | 'thread' | 'info';
 
 interface InboxMobileViewInputs {
@@ -100,7 +116,6 @@ export default function InboxPage() {
   const { can } = useCan();
   const canAssign = can(Permissions.Inbox.Assign);
   const canManageChannels = can(Permissions.Channels.Manage);
-  const currentUser = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const hubError = useInboxHub((s) => s.error);
 
@@ -175,12 +190,6 @@ export default function InboxPage() {
     enabled: !!selectedId,
   });
 
-  const { data: firstPage } = useQuery({
-    queryKey: ['conversations', 'assignee-options'],
-    queryFn: () => conversationsApi.list({ page: 1, pageSize: 100 }),
-    staleTime: 5 * 60_000,
-  });
-
   const {
     data: myChannels,
     isLoading: channelsLoading,
@@ -204,20 +213,30 @@ export default function InboxPage() {
   const effectiveHubStatus = getEffectiveHubStatus({ channelsFailed, channelsLoading, hubError, hubStatus });
   const statusLabel = channelsFailed ? t('connectionError.channelsFailed') : hubError ? t(`connectionError.${hubError}`) : t(`connection.${effectiveHubStatus}`);
 
-  // GET /channels/{id} (real channel membership) is gated on channels.manage,
-  // which neither seeded inbox role has (see docs/PROGRESS.md #6) — so the
-  // assign-by-drag target list is derived from who's already assigned across
-  // visible conversations, plus the current user (the single most common
-  // target: "assign to me"). Not the full staff roster, but works without
-  // a permission every inbox operator would otherwise be denied.
-  const assigneeOptions = useMemo(() => {
-    const seen = new Map<string, string>();
-    if (currentUser) seen.set(currentUser.id, currentUser.fullName);
-    for (const item of firstPage?.items ?? []) {
-      if (item.assignedTo && item.assignedToName) seen.set(item.assignedTo, item.assignedToName);
-    }
-    return [...seen.entries()].map(([userId, fullName]) => ({ userId, fullName }));
-  }, [firstPage, currentUser]);
+  // GET /channels/{id} now requires inbox.assign (was channels.manage — see
+  // docs/PROGRESS.md #7, closed) specifically so the assign-by-drag target
+  // list can be the real membership of every channel the user has access
+  // to, not a heuristic. Fetch each /channels/mine entry's full detail and
+  // union their `members`, deduped by userId — a channel's set of members
+  // rarely changes, so this is cheap and stays correct as staff are added.
+  const channelDetailQueries = useQueries({
+    queries: (myChannels ?? []).map((channel) => ({
+      queryKey: ['channels', channel.id],
+      queryFn: () => channelsApi.get(channel.id),
+      enabled: canAssign,
+      staleTime: 5 * 60_000,
+    })),
+  });
+
+  const assigneeOptions = useMemo(
+    () => mergeChannelMembers(channelDetailQueries.map((query) => query.data?.members ?? [])),
+    // channelDetailQueries is a fresh array every render (useQueries), so its
+    // .map(q => q.dataUpdatedAt) fingerprint is the actual "did any of these
+    // channels' data change" signal — comparing the array reference itself
+    // would recompute every render for no reason.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [channelDetailQueries.map((q) => q.dataUpdatedAt).join(',')]
+  );
 
   const { mutate: assignConversation } = useMutation({
     mutationFn: ({ id, assignedTo }: { id: string; assignedTo: string }) =>
