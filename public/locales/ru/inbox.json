@@ -30,8 +30,10 @@
   },
   "connectionError": {
     "connectionFailed": "Realtime не подключился",
-    "joinChannelFailed": "Realtime канала не подключился"
+    "joinChannelFailed": "Realtime канала не подключился",
+    "channelsFailed": "Список каналов не загрузился"
   },
+  "retryChannels": "Повторить загрузку каналов",
   "contact": "Клиент",
   "channelsTitle": "Каналы",
   "manageMembers": "Управление участниками",
