@@ -81,6 +81,10 @@ export function Composer({ conversation }: ComposerProps) {
   const recordingStreamRef = useRef<MediaStream | null>(null);
   const recordingTimerRef = useRef<number | null>(null);
   const shouldSendRecordingRef = useRef(false);
+  // getUserMedia is async (the permission prompt alone can take a while) —
+  // guards against a second tap starting a second recording/getUserMedia
+  // call before `recording` has flipped true.
+  const startingRecordingRef = useRef(false);
   // Flips true only on a 409 mid-send — the render-time `windowOpen` check
   // already covers the common case (window already closed before typing).
   const [windowClosedDuringSend, setWindowClosedDuringSend] = useState(false);
@@ -202,11 +206,14 @@ export function Composer({ conversation }: ComposerProps) {
   }
 
   async function startVoiceRecording() {
+    if (startingRecordingRef.current || recording) return;
+
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
       setRecordError(t('voiceUnsupported'));
       return;
     }
 
+    startingRecordingRef.current = true;
     try {
       setRecordError(null);
       setRecordElapsed(0);
@@ -243,6 +250,8 @@ export function Composer({ conversation }: ComposerProps) {
       recordingTimerRef.current = window.setInterval(() => setRecordElapsed((value) => value + 1), 1000);
     } catch {
       setRecordError(t('voicePermissionDenied'));
+    } finally {
+      startingRecordingRef.current = false;
     }
   }
 
@@ -318,6 +327,7 @@ export function Composer({ conversation }: ComposerProps) {
           type="button"
           variant={recording ? 'default' : 'outline'}
           size="icon"
+          className="touch-manipulation"
           disabled={isPending || isUploading || isUploadingVoiceNote}
           onClick={() => (recording ? stopVoiceRecording(true) : startVoiceRecording())}>
           {recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}

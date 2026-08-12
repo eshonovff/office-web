@@ -102,4 +102,54 @@ describe('Composer', () => {
 
     await waitFor(() => expect(screen.getByText('windowClosedDuringSend')).toBeInTheDocument());
   });
+
+  describe('voice recording', () => {
+    let resolveGetUserMedia: (stream: MediaStream) => void;
+
+    beforeEach(() => {
+      let recorderState: 'inactive' | 'recording' = 'inactive';
+      const fakeRecorder = {
+        ondataavailable: null as ((e: { data: { size: number } }) => void) | null,
+        onstop: null as (() => void) | null,
+        get state() {
+          return recorderState;
+        },
+        start: vi.fn(() => {
+          recorderState = 'recording';
+        }),
+        stop: vi.fn(() => {
+          recorderState = 'inactive';
+          fakeRecorder.onstop?.();
+        }),
+      };
+
+      vi.stubGlobal('MediaRecorder', function MediaRecorder() {
+        return fakeRecorder;
+      });
+      (globalThis.MediaRecorder as unknown as { isTypeSupported: () => boolean }).isTypeSupported = () => true;
+
+      const getUserMedia = vi.fn(
+        () =>
+          new Promise<MediaStream>((resolve) => {
+            resolveGetUserMedia = resolve;
+          })
+      );
+      vi.stubGlobal('navigator', {
+        ...navigator,
+        mediaDevices: { getUserMedia },
+      });
+    });
+
+    it('does not start a second recording from a rapid double tap while getUserMedia is still pending', async () => {
+      const user = userEvent.setup();
+      renderComposer(makeConversation({ windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+      const micButton = screen.getAllByRole('button')[1];
+
+      await user.click(micButton);
+      await user.click(micButton);
+      resolveGetUserMedia!({ getTracks: () => [] } as unknown as MediaStream);
+
+      await waitFor(() => expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledTimes(1));
+    });
+  });
 });
