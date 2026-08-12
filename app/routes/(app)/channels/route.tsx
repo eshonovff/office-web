@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pencil, Plus, PowerOff, Users } from 'lucide-react';
+import { Pencil, Plus, PowerOff, Users, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -10,6 +10,8 @@ import { Panel } from '~/components/layout/Panel';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Skeleton } from '~/components/ui/skeleton';
+import { Permissions } from '~/config/permissions';
+import { useCan } from '~/hooks/useCan';
 import type { ChannelListItem, CreateChannelRequest, UpdateChannelRequest } from '~/types/channel';
 import { ChannelMembersModal } from './components/ChannelMembersModal';
 import { CreateChannelModal } from './components/CreateChannelModal';
@@ -18,6 +20,8 @@ import { EditChannelModal } from './components/EditChannelModal';
 export default function ChannelsPage() {
   const { t } = useTranslation(['inbox', 'common']);
   const queryClient = useQueryClient();
+  const { can } = useCan();
+  const canTestWhatsApp = can(Permissions.Inbox.Reply);
   const [managingChannelId, setManagingChannelId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [editingChannel, setEditingChannel] = useState<ChannelListItem | null>(null);
@@ -52,6 +56,26 @@ export default function ChannelsPage() {
       void queryClient.invalidateQueries({ queryKey: ['channels'] });
       toast.success(t('channelDeactivated'));
       setDeactivatingChannel(null);
+    },
+  });
+
+  // GET /whatsapp-templates is the only real signal of whether a channel's
+  // stored credentials still work — a bad token isn't caught until Meta
+  // rejects an actual API call, so this is what "Санҷиш" hits. A broken
+  // token fails with EnsureSuccessStatusCode inside the provider, which
+  // surfaces as a generic 500 (not a clean 401), so the failure toast can't
+  // repeat Meta's specific reason — only that something did.
+  const {
+    mutate: testChannel,
+    isPending: isTesting,
+    variables: testingChannelId,
+  } = useMutation({
+    mutationFn: (id: string) => channelsApi.listWhatsAppTemplates(id),
+    onSuccess: (templates) => {
+      toast.success(t('channelTestSuccess', { count: templates.length }), { id: 'channel-test' });
+    },
+    onError: () => {
+      toast.error(t('channelTestFailed'), { id: 'channel-test' });
     },
   });
 
@@ -97,6 +121,21 @@ export default function ChannelsPage() {
                   <Users className="h-3.5 w-3.5" />
                   {t('manageMembers')}
                 </Button>
+                {channel.type === 'WhatsApp' && canTestWhatsApp && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={isTesting && testingChannelId === channel.id}
+                    onClick={() => testChannel(channel.id)}>
+                    {isTesting && testingChannelId === channel.id ? (
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <Zap className="h-3.5 w-3.5" />
+                    )}
+                    {t('testChannel')}
+                  </Button>
+                )}
                 {channel.isActive && (
                   <Button
                     variant="outline"
