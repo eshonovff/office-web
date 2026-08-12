@@ -119,7 +119,7 @@ export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false,
             aria-valuemax={effectiveDuration ?? 0}
             aria-valuenow={Math.floor(currentTime)}
             tabIndex={disabled || !src ? -1 : 0}
-            className={cn('flex h-8 items-center gap-0.5', !disabled && src && 'cursor-pointer')}
+            className={cn('flex h-8 touch-none items-center gap-0.5', !disabled && src && 'cursor-pointer')}
             onPointerDown={(event) => {
               draggingRef.current = true;
               event.currentTarget.setPointerCapture(event.pointerId);
@@ -154,7 +154,7 @@ export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false,
             aria-valuenow={Math.floor(currentTime)}
             tabIndex={disabled || !src ? -1 : 0}
             data-testid="audio-progress-track"
-            className={cn('flex h-8 items-center', !disabled && src && 'cursor-pointer')}
+            className={cn('flex h-8 touch-none items-center', !disabled && src && 'cursor-pointer')}
             onPointerDown={(event) => {
               draggingRef.current = true;
               event.currentTarget.setPointerCapture(event.pointerId);
