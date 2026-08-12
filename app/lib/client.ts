@@ -26,10 +26,24 @@ export const originClient = axios.create({
 
 const refreshClient = axios.create({ baseURL, withCredentials: true });
 
-export async function refreshAccessToken(): Promise<string> {
-  const { data } = await refreshClient.post<RefreshResponse>("/auth/refresh");
-  useAuthStore.getState().setAccessToken(data.accessToken);
-  return data.accessToken;
+// Concurrent callers (the bootstrap loader and, moments later, the 401
+// interceptor below) share this one in-flight call instead of each firing
+// their own /auth/refresh.
+let refreshPromise: Promise<string> | null = null;
+
+export function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = refreshClient
+      .post<RefreshResponse>("/auth/refresh")
+      .then(({ data }) => {
+        useAuthStore.getState().setAccessToken(data.accessToken);
+        return data.accessToken;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
 }
 
 const ERROR_MESSAGES: Record<number, string> = {
@@ -135,7 +149,10 @@ apiClient.interceptors.response.use(
 
     const message = translatedMessage || serverMessage || i18next.t("errors.unknown", { ns: "common" });
 
-    toast.error(message);
+    // Keyed by request so retries of the same failing endpoint (TanStack
+    // Query's automatic retry, or several queries hitting it at once) update
+    // one toast in place instead of stacking a new one per attempt.
+    toast.error(message, { id: requestUrl ?? message });
 
     return Promise.reject(error);
   },

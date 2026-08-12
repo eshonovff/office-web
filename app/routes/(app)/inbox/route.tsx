@@ -11,7 +11,7 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertCircle, Settings, Wifi } from 'lucide-react';
+import { AlertCircle, RefreshCw, Settings, Wifi } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { channelsApi } from '~/api/channels';
@@ -23,6 +23,7 @@ import { useCan } from '~/hooks/useCan';
 import { cn } from '~/lib/utils';
 import { useAuthStore } from '~/store/useAuthStore';
 import { useInboxHub } from '~/store/useInboxHub';
+import type { HubStatus } from '~/store/createHubStore';
 import type { MyChannelListItem } from '~/types/channel';
 import type { ConversationStatus } from '~/types/conversation';
 import { ASSIGNEE_DROP_PREFIX, AssigneeAvatar } from './components/AssigneeAvatar';
@@ -56,6 +57,24 @@ export function getRealtimeChannelIds(channels: MyChannelListItem[] | undefined)
     .filter((channel) => channel.isActive)
     .filter((channel) => channel.joinable ?? true)
     .map((channel) => channel.id);
+}
+
+interface HubStatusInputs {
+  channelsFailed: boolean;
+  channelsLoading: boolean;
+  hubError: string | null;
+  hubStatus: HubStatus;
+}
+
+// Don't claim "online" until the channel list has loaded and the joins it
+// drives have had a chance to succeed — otherwise a failed or still-loading
+// GET /channels/mine leaves the filter empty and nothing joined while the
+// badge would otherwise show a healthy, connected hub.
+export function getEffectiveHubStatus({ channelsFailed, channelsLoading, hubError, hubStatus }: HubStatusInputs): HubStatus {
+  if (channelsFailed) return 'disconnected';
+  if (channelsLoading) return 'connecting';
+  if (hubError) return 'disconnected';
+  return hubStatus;
 }
 
 export default function InboxPage() {
@@ -93,7 +112,12 @@ export default function InboxPage() {
     staleTime: 5 * 60_000,
   });
 
-  const { data: myChannels } = useQuery({
+  const {
+    data: myChannels,
+    isLoading: channelsLoading,
+    isError: channelsFailed,
+    refetch: refetchChannels,
+  } = useQuery({
     queryKey: ['channels', 'mine'],
     queryFn: channelsApi.mine,
     staleTime: 5 * 60_000,
@@ -104,14 +128,12 @@ export default function InboxPage() {
   }, [myChannels]);
 
   const realtimeChannelIds = useMemo(() => {
-    // TODO: When /channels/mine starts returning joinable=false for filter-only
-    // channels, join only the channels with joinable=true while still showing
-    // every returned channel in the filter dropdown.
     return getRealtimeChannelIds(myChannels);
   }, [myChannels]);
 
   const hubStatus = useInboxRealtime(realtimeChannelIds, selectedId);
-  const effectiveHubStatus = hubError ? 'disconnected' : hubStatus;
+  const effectiveHubStatus = getEffectiveHubStatus({ channelsFailed, channelsLoading, hubError, hubStatus });
+  const statusLabel = channelsFailed ? t('connectionError.channelsFailed') : hubError ? t(`connectionError.${hubError}`) : t(`connection.${effectiveHubStatus}`);
 
   // GET /channels/{id} (real channel membership) is gated on channels.manage,
   // which neither seeded inbox role has (see docs/PROGRESS.md #6) — so the
@@ -189,11 +211,22 @@ export default function InboxPage() {
                 'flex items-center gap-1.5 rounded-md border px-2 py-1 text-2xs font-medium',
                 CONNECTION_BADGE_CLASS[effectiveHubStatus]
               )}
-              title={hubError ? t(`connectionError.${hubError}`) : t(`connection.${hubStatus}`)}>
+              title={statusLabel}>
               {effectiveHubStatus === 'disconnected' ? <AlertCircle className="h-3.5 w-3.5" /> : <Wifi className="h-3.5 w-3.5" />}
-              <span>{hubError ? t(`connectionError.${hubError}`) : t(`connection.${hubStatus}`)}</span>
+              <span>{statusLabel}</span>
               <span className={cn('h-2 w-2 shrink-0 rounded-full', CONNECTION_DOT_CLASS[effectiveHubStatus])} />
             </div>
+            {channelsFailed && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label={t('retryChannels')}
+                title={t('retryChannels')}
+                onClick={() => void refetchChannels()}>
+                <RefreshCw className="h-3.5 w-3.5" />
+              </Button>
+            )}
           </div>
         </div>
 

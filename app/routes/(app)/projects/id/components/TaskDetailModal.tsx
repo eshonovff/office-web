@@ -29,18 +29,6 @@ import { TaskActivitySection } from './TaskActivitySection';
 import { TaskAttachmentsSection } from './TaskAttachmentsSection';
 import { TaskCommentsSection } from './TaskCommentsSection';
 
-// office-api's DateTimeOffset? binder 500s on a bare 'YYYY-MM-DD' (no
-// time/offset) — the exact format DateInputField produces — so a full ISO
-// instant is required instead (see office-api/docs/bug-task-duedate-date-only.md).
-// Built by string concatenation, NOT `new Date(value).toISOString()`: routing
-// through a local Date would convert "local midnight" to UTC, and for any
-// timezone ahead of UTC (e.g. Asia/Dushanbe, UTC+5 — this app's own users)
-// that lands on the PREVIOUS calendar day.
-function toDueDatePayload(value: string | null | undefined): string | null {
-  if (!value) return null;
-  return `${value}T00:00:00.000Z`;
-}
-
 const PRIORITIES: TaskPriority[] = ['Low', 'Medium', 'High', 'Urgent'];
 
 interface TaskDetailModalProps {
@@ -87,7 +75,7 @@ export function TaskDetailModal({ projectId, taskId, members, onClose }: TaskDet
         title: data.title,
         description: data.description || null,
         priority: data.priority,
-        dueDate: toDueDatePayload(data.dueDate),
+        dueDate: data.dueDate || null,
         labelIds: task?.labels.map((l) => l.id) ?? [],
       }),
     onSuccess: () => {

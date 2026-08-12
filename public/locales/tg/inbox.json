@@ -30,8 +30,10 @@
   },
   "connectionError": {
     "connectionFailed": "Realtime пайваст нашуд",
-    "joinChannelFailed": "Realtime-и канал пайваст нашуд"
+    "joinChannelFailed": "Realtime-и канал пайваст нашуд",
+    "channelsFailed": "Рӯйхати каналҳо бор нашуд"
   },
+  "retryChannels": "Такрор кардани боркунии каналҳо",
   "contact": "Мижоз",
   "channelsTitle": "Каналҳо",
   "manageMembers": "Идораи аъзоён",
