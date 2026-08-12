@@ -50,4 +50,15 @@ describe('conversationsApi media paths', () => {
     expect(originClient.get).toHaveBeenCalledWith('/api/messages/m1/media', { responseType: 'blob' });
     expect(instances[0].get).not.toHaveBeenCalled();
   });
+
+  it('fetches assignable users scoped to the conversation', async () => {
+    const { conversationsApi } = await import('~/api/conversations');
+    const [apiClient] = instances;
+    apiClient.get.mockResolvedValue({ data: [{ userId: 'u1', fullName: 'Далер', username: 'daler' }] });
+
+    const result = await conversationsApi.listAssignableUsers('c1');
+
+    expect(apiClient.get).toHaveBeenCalledWith('/conversations/c1/assignable-users');
+    expect(result).toEqual([{ userId: 'u1', fullName: 'Далер', username: 'daler' }]);
+  });
 });

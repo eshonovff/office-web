@@ -1,6 +1,7 @@
 import type { AxiosProgressEvent } from 'axios';
 import { apiClient, originClient } from '~/lib/client';
 import type {
+  AssignableUser,
   ConversationDetail,
   ConversationListItem,
   ConversationsListParams,
@@ -57,6 +58,10 @@ export const conversationsApi = {
   },
   update: async (id: string, payload: UpdateConversationRequest): Promise<ConversationDetail> => {
     const { data } = await apiClient.patch<ConversationDetail>(`/conversations/${id}`, payload);
+    return data;
+  },
+  listAssignableUsers: async (id: string): Promise<AssignableUser[]> => {
+    const { data } = await apiClient.get<AssignableUser[]>(`/conversations/${id}/assignable-users`);
     return data;
   },
 };

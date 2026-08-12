@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getEffectiveHubStatus, getInboxChannelOptions, getInboxMobileView, getRealtimeChannelIds, mergeChannelMembers } from './route';
+import { getEffectiveHubStatus, getInboxChannelOptions, getInboxMobileView, getRealtimeChannelIds } from './route';
 import type { MyChannelListItem } from '~/types/channel';
 
 const channels: MyChannelListItem[] = [
@@ -60,31 +60,5 @@ describe('getInboxMobileView', () => {
 
   it('shows info only when a conversation is selected and info was explicitly opened', () => {
     expect(getInboxMobileView({ selectedId: 'c1', infoOpen: true })).toBe('info');
-  });
-});
-
-describe('mergeChannelMembers', () => {
-  it('unions members from every channel', () => {
-    const result = mergeChannelMembers([
-      [{ userId: 'u1', fullName: 'Далер' }],
-      [{ userId: 'u2', fullName: 'Нигина' }],
-    ]);
-    expect(result).toEqual([
-      { userId: 'u1', fullName: 'Далер' },
-      { userId: 'u2', fullName: 'Нигина' },
-    ]);
-  });
-
-  it('dedupes a staff member who is on more than one channel', () => {
-    const result = mergeChannelMembers([
-      [{ userId: 'u1', fullName: 'Далер' }],
-      [{ userId: 'u1', fullName: 'Далер' }, { userId: 'u2', fullName: 'Нигина' }],
-    ]);
-    expect(result).toHaveLength(2);
-  });
-
-  it('returns an empty list when no channel has loaded any members yet', () => {
-    expect(mergeChannelMembers([])).toEqual([]);
-    expect(mergeChannelMembers([[], []])).toEqual([]);
   });
 });

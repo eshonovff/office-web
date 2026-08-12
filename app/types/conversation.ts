@@ -41,3 +41,12 @@ export interface UpdateConversationRequest {
   status?: ConversationStatus;
   assignedTo?: string | null;
 }
+
+// GET /conversations/{id}/assignable-users — members of that conversation's
+// channel. Doesn't include Owner/Admin unless they're also a channel member,
+// even though PATCH .assignedTo accepts them too.
+export interface AssignableUser {
+  userId: string;
+  fullName: string;
+  username: string;
+}

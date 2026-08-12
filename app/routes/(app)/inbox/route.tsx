@@ -8,7 +8,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, RefreshCw, Settings, Wifi } from 'lucide-react';
@@ -76,23 +76,6 @@ export function getEffectiveHubStatus({ channelsFailed, channelsLoading, hubErro
   if (channelsLoading) return 'connecting';
   if (hubError) return 'disconnected';
   return hubStatus;
-}
-
-interface AssigneeOption {
-  userId: string;
-  fullName: string;
-}
-
-// Union of every channel's members, deduped by userId (a staff member on
-// more than one channel only needs one avatar in the strip).
-export function mergeChannelMembers(memberLists: AssigneeOption[][]): AssigneeOption[] {
-  const seen = new Map<string, string>();
-  for (const members of memberLists) {
-    for (const member of members) {
-      seen.set(member.userId, member.fullName);
-    }
-  }
-  return [...seen.entries()].map(([userId, fullName]) => ({ userId, fullName }));
 }
 
 export type InboxMobileView = 'list' | 'thread' | 'info';
@@ -213,31 +196,24 @@ export default function InboxPage() {
   const effectiveHubStatus = getEffectiveHubStatus({ channelsFailed, channelsLoading, hubError, hubStatus });
   const statusLabel = channelsFailed ? t('connectionError.channelsFailed') : hubError ? t(`connectionError.${hubError}`) : t(`connection.${effectiveHubStatus}`);
 
-  // GET /channels/{id} now requires inbox.assign (was channels.manage — see
-  // docs/PROGRESS.md #7, closed) specifically so the assign-by-drag target
-  // list can be the real membership of every channel the user has access
-  // to, not a heuristic. Fetch each /channels/mine entry's full detail and
-  // union their `members`, deduped by userId — a channel's set of members
-  // rarely changes, so this is cheap and stays correct as staff are added.
-  const channelDetailQueries = useQueries({
-    queries: (myChannels ?? []).map((channel) => ({
-      queryKey: ['channels', channel.id],
-      queryFn: () => channelsApi.get(channel.id),
-      enabled: canAssign,
-      staleTime: 5 * 60_000,
-    })),
+  // GET /conversations/{id}/assignable-users requires inbox.assign and
+  // returns the real membership of THAT conversation's channel (see
+  // docs/PROGRESS.md #7) — so who's draggable-onto depends on whichever
+  // conversation is currently open, not a cross-channel union. Dragging a
+  // different conversation (a different channel) onto one of these avatars
+  // can still 409; assignConversation's onError below surfaces exactly why.
+  const { data: assignableUsers } = useQuery({
+    queryKey: ['conversations', selectedId, 'assignable-users'],
+    queryFn: () => conversationsApi.listAssignableUsers(selectedId!),
+    enabled: canAssign && !!selectedId,
+    staleTime: 5 * 60_000,
   });
+  const assigneeOptions = assignableUsers ?? [];
 
-  const assigneeOptions = useMemo(
-    () => mergeChannelMembers(channelDetailQueries.map((query) => query.data?.members ?? [])),
-    // channelDetailQueries is a fresh array every render (useQueries), so its
-    // .map(q => q.dataUpdatedAt) fingerprint is the actual "did any of these
-    // channels' data change" signal — comparing the array reference itself
-    // would recompute every render for no reason.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [channelDetailQueries.map((q) => q.dataUpdatedAt).join(',')]
-  );
-
+  // 409s (assigning someone outside the conversation's channel) already
+  // surface with their specific backend reason via the apiClient interceptor
+  // — see client.ts, which now prefers the backend's own detail/title over
+  // the generic "conflict" translation.
   const { mutate: assignConversation } = useMutation({
     mutationFn: ({ id, assignedTo }: { id: string; assignedTo: string }) =>
       conversationsApi.update(id, { assignedTo }),
