@@ -40,6 +40,15 @@
   "membersSaved": "Аъзоён нав шуданд",
   "noUsers": "Корманд нест",
   "createdAt": "Сохта шуд",
+  "assignmentHistory": "Таърихи таъинот",
+  "assignmentHistoryEmpty": "Таърих ҳанӯз нест",
+  "assignmentHistoryLoadOlder": "Кӯҳнаро нишон додан",
+  "assignmentReason": {
+    "ClaimedOnReply": "Аввалин ҷавоб",
+    "Takeover": "Гирифтан",
+    "Reassigned": "Таъини дастӣ",
+    "AutoReleased": "Худкор озод шуд"
+  },
   "loadingMessages": "Боркунии паёмҳо...",
   "noMessages": "Ҳанӯз паём нест",
   "loadOlder": "Паёмҳои кӯҳна",

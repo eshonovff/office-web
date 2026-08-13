@@ -40,6 +40,15 @@
   "membersSaved": "Участники обновлены",
   "noUsers": "Нет сотрудников",
   "createdAt": "Создано",
+  "assignmentHistory": "История назначений",
+  "assignmentHistoryEmpty": "Истории пока нет",
+  "assignmentHistoryLoadOlder": "Показать раньше",
+  "assignmentReason": {
+    "ClaimedOnReply": "Первый ответ",
+    "Takeover": "Перехват",
+    "Reassigned": "Назначено вручную",
+    "AutoReleased": "Авто-освобождение"
+  },
   "loadingMessages": "Загрузка сообщений...",
   "noMessages": "Пока нет сообщений",
   "loadOlder": "Старые сообщения",
