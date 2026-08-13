@@ -41,4 +41,9 @@ export interface SendMessageRequest {
   templateName?: string;
   templateLanguage?: string;
   templateParameters?: string[];
+  // Stored in the thread, never dispatched to the customer — mutually
+  // exclusive with a template on the backend. Never claims an unassigned
+  // conversation either (it isn't a "reply"), and doesn't touch unread
+  // counts or the 24h window (both only ever move on the inbound path).
+  isInternalNote?: boolean;
 }

@@ -55,6 +55,9 @@
   "cancelTooLate": "Сообщение уже отправлено — отменить не удалось.",
   "cancelFailed": "Не удалось отменить сообщение.",
   "messageCancelled": "Отменено",
+  "internalNoteToggleLabel": "Внутренняя заметка (клиент не увидит)",
+  "internalNotePlaceholder": "Заметка для команды...",
+  "sendNote": "Добавить заметку",
   "messageType": {
     "Image": "Изображение",
     "Video": "Видео",

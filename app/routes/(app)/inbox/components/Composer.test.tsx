@@ -64,7 +64,7 @@ describe('Composer', () => {
     await user.click(screen.getByText('send'));
 
     await waitFor(() => {
-      expect(conversationsApi.sendMessage).toHaveBeenCalledWith('c1', { body: 'Салом!' });
+      expect(conversationsApi.sendMessage).toHaveBeenCalledWith('c1', { body: 'Салом!', isInternalNote: false });
     });
   });
 
@@ -192,6 +192,62 @@ describe('Composer', () => {
 
       await waitFor(() => expect(toast.error).toHaveBeenCalledWith('takeoverFailed'));
       expect(screen.getByText('readOnlyTitle')).toBeInTheDocument();
+    });
+  });
+
+  describe('internal notes (item 4)', () => {
+    it('sends as a normal reply when the toggle is off', async () => {
+      vi.mocked(conversationsApi.sendMessage).mockResolvedValue({} as any);
+      const user = userEvent.setup();
+
+      renderComposer(makeConversation({ windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+      await user.type(screen.getByPlaceholderText('composerPlaceholder'), 'Салом!');
+      await user.click(screen.getByRole('button', { name: 'send' }));
+
+      await waitFor(() =>
+        expect(conversationsApi.sendMessage).toHaveBeenCalledWith('c1', { body: 'Салом!', isInternalNote: false })
+      );
+    });
+
+    it('sends isInternalNote: true and swaps in the note placeholder/send label once toggled on', async () => {
+      vi.mocked(conversationsApi.sendMessage).mockResolvedValue({} as any);
+      const user = userEvent.setup();
+
+      renderComposer(makeConversation({ windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+      await user.click(screen.getByRole('switch'));
+
+      expect(screen.getByPlaceholderText('internalNotePlaceholder')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'sendNote' })).toBeInTheDocument();
+
+      await user.type(screen.getByPlaceholderText('internalNotePlaceholder'), 'Позвонить завтра');
+      await user.click(screen.getByRole('button', { name: 'sendNote' }));
+
+      await waitFor(() =>
+        expect(conversationsApi.sendMessage).toHaveBeenCalledWith('c1', { body: 'Позвонить завтра', isInternalNote: true })
+      );
+    });
+
+    it('hides attach and voice-record while in note mode — notes are text-only on the backend', async () => {
+      const user = userEvent.setup();
+      renderComposer(makeConversation({ windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+
+      // Before: paperclip, mic, send. After: send only.
+      expect(screen.getAllByRole('button')).toHaveLength(3);
+
+      await user.click(screen.getByRole('switch'));
+
+      expect(screen.getAllByRole('button')).toHaveLength(1);
+    });
+
+    it('lets you write a note even when the WhatsApp window is closed, bypassing the template requirement', async () => {
+      renderComposer(makeConversation({ windowExpiresAt: dayjs().subtract(1, 'hour').toISOString() }));
+      expect(screen.getByText('windowClosedTitle')).toBeInTheDocument();
+
+      const user = userEvent.setup();
+      await user.click(screen.getByRole('switch'));
+
+      expect(screen.queryByText('windowClosedTitle')).not.toBeInTheDocument();
+      expect(screen.getByPlaceholderText('internalNotePlaceholder')).toBeInTheDocument();
     });
   });
 });

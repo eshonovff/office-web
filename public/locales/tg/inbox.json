@@ -55,6 +55,9 @@
   "cancelTooLate": "Паём аллакай фиристода шудааст — бекор карда нашуд.",
   "cancelFailed": "Паём бекор карда нашуд.",
   "messageCancelled": "Бекор шуд",
+  "internalNoteToggleLabel": "Ёддошти дохилӣ (мижоз намебинад)",
+  "internalNotePlaceholder": "Ёддошт барои даста нависед...",
+  "sendNote": "Илова кардани ёддошт",
   "messageType": {
     "Image": "Расм",
     "Video": "Видео",
