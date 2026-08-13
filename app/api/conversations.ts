@@ -59,4 +59,8 @@ export const conversationsApi = {
     const { data } = await apiClient.patch<ConversationDetail>(`/conversations/${id}`, payload);
     return data;
   },
+  takeover: async (id: string): Promise<ConversationDetail> => {
+    const { data } = await apiClient.post<ConversationDetail>(`/conversations/${id}/takeover`);
+    return data;
+  },
 };

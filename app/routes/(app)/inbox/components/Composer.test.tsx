@@ -2,6 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import dayjs from 'dayjs';
+import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { channelsApi } from '~/api/channels';
 import { conversationsApi } from '~/api/conversations';
@@ -11,11 +12,12 @@ import type { ConversationDetail } from '~/types/conversation';
 import { Composer } from './Composer';
 
 vi.mock('~/api/conversations', () => ({
-  conversationsApi: { sendMessage: vi.fn() },
+  conversationsApi: { sendMessage: vi.fn(), takeover: vi.fn() },
 }));
 vi.mock('~/api/channels', () => ({
   channelsApi: { listWhatsAppTemplates: vi.fn() },
 }));
+vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 function makeConversation(overrides: Partial<ConversationDetail> = {}): ConversationDetail {
   return {
@@ -101,5 +103,72 @@ describe('Composer', () => {
     await user.click(screen.getByText('send'));
 
     await waitFor(() => expect(screen.getByText('windowClosedDuringSend')).toBeInTheDocument());
+  });
+
+  describe('read-only when not the assignee', () => {
+    it('disables the composer and offers takeover when assigned to someone else', () => {
+      useAuthStore.setState({ user: { id: 'me' } as any, roles: [] });
+      renderComposer(makeConversation({ assignedTo: 'other-user', assignedToName: 'Далер' }));
+
+      expect(screen.queryByPlaceholderText('composerPlaceholder')).not.toBeInTheDocument();
+      expect(screen.getByText('readOnlyTitle')).toBeInTheDocument();
+      expect(screen.getByText('readOnlyOwnedBy')).toBeInTheDocument();
+      expect(screen.getByText('takeOver')).toBeInTheDocument();
+    });
+
+    it('stays usable when the conversation is unassigned', () => {
+      useAuthStore.setState({ user: { id: 'me' } as any, roles: [] });
+      renderComposer(makeConversation({ assignedTo: null, windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+
+      expect(screen.getByPlaceholderText('composerPlaceholder')).toBeInTheDocument();
+    });
+
+    it('stays usable when the caller is the assignee', () => {
+      useAuthStore.setState({ user: { id: 'me' } as any, roles: [] });
+      renderComposer(
+        makeConversation({ assignedTo: 'me', windowExpiresAt: dayjs().add(6, 'hour').toISOString() })
+      );
+
+      expect(screen.getByPlaceholderText('composerPlaceholder')).toBeInTheDocument();
+    });
+
+    it('lets Owner/Admin send on a chat assigned to someone else', () => {
+      useAuthStore.setState({ user: { id: 'me' } as any, roles: ['owner'] });
+      renderComposer(
+        makeConversation({
+          assignedTo: 'other-user',
+          assignedToName: 'Далер',
+          windowExpiresAt: dayjs().add(6, 'hour').toISOString(),
+        })
+      );
+
+      expect(screen.getByPlaceholderText('composerPlaceholder')).toBeInTheDocument();
+    });
+
+    it('takes over the conversation and reports success', async () => {
+      useAuthStore.setState({ user: { id: 'me' } as any, roles: [] });
+      vi.mocked(conversationsApi.takeover).mockResolvedValue(
+        makeConversation({ assignedTo: 'me', assignedToName: 'Me' })
+      );
+      const user = userEvent.setup();
+
+      renderComposer(makeConversation({ assignedTo: 'other-user', assignedToName: 'Далер' }));
+      await user.click(screen.getByText('takeOver'));
+
+      await waitFor(() => expect(conversationsApi.takeover).toHaveBeenCalledWith('c1'));
+      await waitFor(() => expect(toast.success).toHaveBeenCalledWith('takeoverSuccess'));
+    });
+
+    it('reports takeover failure honestly instead of pretending it worked', async () => {
+      useAuthStore.setState({ user: { id: 'me' } as any, roles: [] });
+      vi.mocked(conversationsApi.takeover).mockRejectedValue(new Error('boom'));
+      const user = userEvent.setup();
+
+      renderComposer(makeConversation({ assignedTo: 'other-user', assignedToName: 'Далер' }));
+      await user.click(screen.getByText('takeOver'));
+
+      await waitFor(() => expect(toast.error).toHaveBeenCalledWith('takeoverFailed'));
+      expect(screen.getByText('readOnlyTitle')).toBeInTheDocument();
+    });
   });
 });

@@ -3,15 +3,17 @@ import dayjs from 'dayjs';
 import { Mic, Paperclip, Send, Square, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { channelsApi } from '~/api/channels';
 import { conversationsApi } from '~/api/conversations';
 import { CustomSelect } from '~/components/shared/CustomSelect';
 import { Button } from '~/components/ui/button';
 import { Progress } from '~/components/ui/progress';
 import { Textarea } from '~/components/ui/textarea';
-import { Permissions } from '~/config/permissions';
+import { isOwnerOrAdmin, Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
 import { formatWindowRemaining } from '~/lib/format';
+import { useAuthStore } from '~/store/useAuthStore';
 import type { ConversationDetail } from '~/types/conversation';
 import type { Message } from '~/types/message';
 
@@ -60,11 +62,54 @@ function appendPendingMessage(queryClient: ReturnType<typeof useQueryClient>, co
   });
 }
 
+/**
+ * Sending (text, media, voice note, notes) is gated to the assignee on the
+ * backend — ConversationAssignmentPolicy.CanSend — so a non-assignee's POST
+ * always 403s. Rather than let the composer look usable and fail on submit,
+ * this mirrors that same rule client-side and swaps in a disabled state with
+ * an explicit "who owns this" message and a takeover escape hatch.
+ */
+function ReadOnlyComposer({ conversation }: ComposerProps) {
+  const { t } = useTranslation('inbox');
+  const queryClient = useQueryClient();
+
+  const { mutate: takeover, isPending } = useMutation({
+    mutationFn: () => conversationsApi.takeover(conversation.id),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['conversations', updated.id], updated);
+      void queryClient.invalidateQueries({ queryKey: ['conversations'], exact: false });
+      toast.success(t('takeoverSuccess'));
+    },
+    onError: () => toast.error(t('takeoverFailed')),
+  });
+
+  return (
+    <div className="border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="bg-muted/50 flex items-center justify-between gap-3 rounded-lg border p-2.5">
+        <div className="min-w-0">
+          <p className="text-sm font-medium">{t('readOnlyTitle')}</p>
+          <p className="text-muted-foreground mt-0.5 text-2xs">
+            {t('readOnlyOwnedBy', { name: conversation.assignedToName })}
+          </p>
+        </div>
+        <Button type="button" size="sm" disabled={isPending} onClick={() => takeover()} className="shrink-0">
+          {t('takeOver')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function Composer({ conversation }: ComposerProps) {
   const { t } = useTranslation('inbox');
   const { can } = useCan();
   const canManageChannels = can(Permissions.Channels.Manage);
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const roles = useAuthStore((s) => s.roles);
   const queryClient = useQueryClient();
+
+  // Same formula as the backend's ConversationAssignmentPolicy.CanSend.
+  const canSend = isOwnerOrAdmin(roles) || !conversation.assignedTo || conversation.assignedTo === currentUserId;
 
   const [body, setBody] = useState('');
   const [templateName, setTemplateName] = useState<string | null>(null);
@@ -110,6 +155,11 @@ export function Composer({ conversation }: ComposerProps) {
       const status = (error as { response?: { status?: number } })?.response?.status;
       if (status === 409) {
         setWindowClosedDuringSend(true);
+        void queryClient.invalidateQueries({ queryKey: ['conversations', conversation.id] });
+      }
+      // Someone else took over between this render and the request landing —
+      // refetch so `canSend` recomputes false and the read-only view takes over.
+      if (status === 403) {
         void queryClient.invalidateQueries({ queryKey: ['conversations', conversation.id] });
       }
     },
@@ -270,6 +320,13 @@ export function Composer({ conversation }: ComposerProps) {
       e.preventDefault();
       handleSendText();
     }
+  }
+
+  // Checked after every hook above (rules-of-hooks) but before any markup —
+  // a stale `canSend` (e.g. someone else just took over) still gets caught
+  // server-side by the same 403, handled in sendMessage's onError below.
+  if (!canSend) {
+    return <ReadOnlyComposer conversation={conversation} />;
   }
 
   if (showTemplates) {

@@ -44,6 +44,11 @@
   "noMessages": "Ҳанӯз паём нест",
   "loadOlder": "Паёмҳои кӯҳна",
   "internalNote": "Ёддошти дохилӣ",
+  "readOnlyTitle": "Чат ба корманди дигар таъин шудааст",
+  "readOnlyOwnedBy": "Танҳо {{name}} метавонад ҷавоб диҳад. Шумо метавонед чатро ба худ гиред.",
+  "takeOver": "Ба худ гирифтан",
+  "takeoverSuccess": "Шумо чатро ба худ гирифтед",
+  "takeoverFailed": "Чат гирифта нашуд",
   "messageType": {
     "Image": "Расм",
     "Video": "Видео",
