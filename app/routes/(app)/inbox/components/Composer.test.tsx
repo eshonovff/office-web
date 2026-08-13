@@ -105,6 +105,29 @@ describe('Composer', () => {
     await waitFor(() => expect(screen.getByText('windowClosedDuringSend')).toBeInTheDocument());
   });
 
+  it('invalidates conversation queries broadly on a successful send, so a claim-on-reply shows up without a manual refresh (item 2)', async () => {
+    vi.mocked(conversationsApi.sendMessage).mockResolvedValue({} as any);
+    const user = userEvent.setup();
+    const queryClient = makeQueryClient();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Composer conversation={makeConversation({ assignedTo: null, windowExpiresAt: dayjs().add(6, 'hour').toISOString() })} />
+      </QueryClientProvider>
+    );
+
+    await user.type(screen.getByPlaceholderText('composerPlaceholder'), 'Салом!');
+    await user.click(screen.getByText('send'));
+
+    // The backend claims an unassigned conversation on its first reply before
+    // returning — this broad invalidation (not just the messages list) is what
+    // makes the new assignee reach the conversation list row and context panel
+    // for the sender's own tab; other operators' tabs get it via the
+    // ConversationAssigned realtime event instead (see useInboxRealtime.test.tsx).
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['conversations'], exact: false }));
+  });
+
   describe('read-only when not the assignee', () => {
     it('disables the composer and offers takeover when assigned to someone else', () => {
       useAuthStore.setState({ user: { id: 'me' } as any, roles: [] });

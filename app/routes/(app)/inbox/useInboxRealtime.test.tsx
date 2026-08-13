@@ -143,4 +143,39 @@ describe('useInboxRealtime', () => {
     });
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['conversations'], exact: false });
   });
+
+  describe('ConversationAssigned', () => {
+    // One handler backs claim-on-reply, takeover, manual reassignment, and the
+    // auto-release job (item 6) alike — the backend always publishes the same
+    // event name with the full ConversationDetail, so a single "upsert the
+    // detail cache directly + invalidate the list broadly" path is enough for
+    // every case to show up without a manual refresh. Direct setQueryData (not
+    // just invalidate) is what makes the update appear immediately rather than
+    // waiting on a refetch.
+    it('immediately reflects a claim-on-reply — first assignee, no name to display previously', () => {
+      const conversation = {
+        id: 'conversation-1',
+        assignedTo: 'user-1',
+        assignedToName: 'Далер',
+      };
+
+      renderHook(() => useInboxRealtime(['channel-1'], 'conversation-1'));
+      const handlers = vi.mocked(useSignalR).mock.calls.at(-1)?.[1];
+      handlers?.ConversationAssigned(conversation);
+
+      expect(setQueryData).toHaveBeenCalledWith(['conversations', 'conversation-1'], conversation);
+      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['conversations'], exact: false });
+    });
+
+    it('reflects an auto-release the same way — assignedTo goes back to null', () => {
+      const released = { id: 'conversation-1', assignedTo: null, assignedToName: null };
+
+      renderHook(() => useInboxRealtime(['channel-1'], 'conversation-1'));
+      const handlers = vi.mocked(useSignalR).mock.calls.at(-1)?.[1];
+      handlers?.ConversationAssigned(released);
+
+      expect(setQueryData).toHaveBeenCalledWith(['conversations', 'conversation-1'], released);
+      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['conversations'], exact: false });
+    });
+  });
 });
