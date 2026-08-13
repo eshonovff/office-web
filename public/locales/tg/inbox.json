@@ -49,6 +49,12 @@
   "takeOver": "Ба худ гирифтан",
   "takeoverSuccess": "Шумо чатро ба худ гирифтед",
   "takeoverFailed": "Чат гирифта нашуд",
+  "pendingCountdown": "Боз {{seconds}} сония бекор карда мешавад",
+  "pendingDispatching": "Фиристода истодааст...",
+  "cancelSend": "Бекор кардан",
+  "cancelTooLate": "Паём аллакай фиристода шудааст — бекор карда нашуд.",
+  "cancelFailed": "Паём бекор карда нашуд.",
+  "messageCancelled": "Бекор шуд",
   "messageType": {
     "Image": "Расм",
     "Video": "Видео",

@@ -26,6 +26,10 @@ export const conversationsApi = {
     const { data } = await apiClient.post<Message>(`/conversations/${id}/messages`, payload);
     return data;
   },
+  cancelMessage: async (id: string, messageId: string): Promise<Message> => {
+    const { data } = await apiClient.post<Message>(`/conversations/${id}/messages/${messageId}/cancel`);
+    return data;
+  },
   uploadMedia: async (id: string, file: File, onUploadProgress?: (event: AxiosProgressEvent) => void): Promise<Message> => {
     const formData = new FormData();
     formData.append('file', file);

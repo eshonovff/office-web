@@ -1,6 +1,9 @@
 export type MessageDirection = 'Inbound' | 'Outbound';
 export type MessageType = 'Text' | 'Image' | 'Video' | 'Audio' | 'File' | 'StoryReply' | 'Location' | 'Contact';
-export type MessageDeliveryStatus = 'Pending' | 'Sent' | 'Delivered' | 'Read' | 'Failed';
+// Cancelled = pulled back during the delayed-send window (item 5 on the
+// backend) — never reached the provider, distinct from Failed (reached the
+// dispatch job but the provider/window check rejected it).
+export type MessageDeliveryStatus = 'Pending' | 'Sent' | 'Delivered' | 'Read' | 'Failed' | 'Cancelled';
 
 export interface Message {
   id: string;
@@ -23,6 +26,9 @@ export interface Message {
   mediaDeletedAt: string | null;
   mediaDownloadError: string | null;
   waveformPeaks: number[] | null;
+  // Set when dispatch fails after the delay (e.g. the 24h window closed
+  // during the wait) — only meaningful when deliveryStatus is Failed.
+  failureReason: string | null;
 }
 
 export interface MessagesListParams {

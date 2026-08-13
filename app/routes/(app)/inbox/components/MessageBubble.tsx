@@ -1,6 +1,10 @@
-import { AlertCircle, Check, CheckCheck, Clock, Contact, Download, FileText, Image, MapPin, Paperclip } from 'lucide-react';
-import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import dayjs from 'dayjs';
+import { AlertCircle, Ban, Check, CheckCheck, Clock, Contact, Download, FileText, Image, MapPin, Paperclip } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { conversationsApi } from '~/api/conversations';
 import { Button } from '~/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '~/components/ui/dialog';
 import { formatDate } from '~/lib/format';
@@ -20,6 +24,12 @@ const MEDIA_ICON: Partial<Record<MessageType, typeof Image>> = {
   Contact: Contact,
 };
 
+// Mirrors the backend default (Inbox:DelayedSendSeconds) — no endpoint
+// exposes the configured value, so the countdown is best-effort display only.
+// The actual deadline is enforced server-side; this just gives the operator a
+// sense of how long the Cancel button is likely to still work.
+const DELAYED_SEND_SECONDS = 45;
+
 function DeliveryStatusIcon({ status }: { status: Message['deliveryStatus'] }) {
   switch (status) {
     case 'Pending':
@@ -32,7 +42,64 @@ function DeliveryStatusIcon({ status }: { status: Message['deliveryStatus'] }) {
       return <CheckCheck className="text-primary h-3 w-3" />;
     case 'Failed':
       return <AlertCircle className="text-destructive h-3 w-3" />;
+    case 'Cancelled':
+      return <Ban className="h-3 w-3 opacity-70" />;
   }
+}
+
+function usePendingCountdown(createdAt: string): number {
+  const target = useMemo(() => dayjs(createdAt).add(DELAYED_SEND_SECONDS, 'second'), [createdAt]);
+  const [remaining, setRemaining] = useState(() => Math.max(0, target.diff(dayjs(), 'second')));
+
+  useEffect(() => {
+    setRemaining(Math.max(0, target.diff(dayjs(), 'second')));
+    const interval = window.setInterval(() => setRemaining(Math.max(0, target.diff(dayjs(), 'second'))), 1000);
+    return () => window.clearInterval(interval);
+  }, [target]);
+
+  return remaining;
+}
+
+/**
+ * The two honest failure cases from item 5 on the backend: cancelling after
+ * the send job already ran gets a 409 here (never a fake success — both
+ * sides of that race check the same "still Pending" condition), and once
+ * dispatch itself fails the reason is surfaced directly on the message
+ * (see the `message.failureReason` block in MessageBubble) rather than here.
+ */
+function PendingSendControls({ message }: { message: Message }) {
+  const { t } = useTranslation('inbox');
+  const queryClient = useQueryClient();
+  const remaining = usePendingCountdown(message.createdAt);
+
+  const { mutate: cancelSend, isPending: isCancelling } = useMutation({
+    mutationFn: () => conversationsApi.cancelMessage(message.conversationId, message.id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['conversations', message.conversationId, 'messages'] });
+    },
+    onError: (error: unknown) => {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      toast.error(status === 409 ? t('cancelTooLate') : t('cancelFailed'));
+      // The job may have already run and changed the real status (Sent/Failed)
+      // — refetch so the UI reflects what actually happened, not a stale Pending.
+      void queryClient.invalidateQueries({ queryKey: ['conversations', message.conversationId, 'messages'] });
+    },
+  });
+
+  return (
+    <div className="flex items-center gap-1.5 pt-0.5">
+      <span className="text-2xs opacity-70">{remaining > 0 ? t('pendingCountdown', { seconds: remaining }) : t('pendingDispatching')}</span>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="h-5 px-1.5 text-2xs opacity-80"
+        disabled={isCancelling}
+        onClick={() => cancelSend()}>
+        {t('cancelSend')}
+      </Button>
+    </div>
+  );
 }
 
 function formatBytes(bytes: number | null | undefined) {
@@ -193,6 +260,14 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         {MediaIcon && <MessageMedia message={message} isOutbound={isOutbound} />}
 
         {message.type === 'Text' && message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
+
+        {message.deliveryStatus === 'Failed' && message.failureReason && (
+          <p className="text-destructive text-2xs">{message.failureReason}</p>
+        )}
+        {message.deliveryStatus === 'Cancelled' && <p className="text-2xs italic opacity-70">{t('messageCancelled')}</p>}
+        {isOutbound && message.deliveryStatus === 'Pending' && !message.isInternalNote && (
+          <PendingSendControls message={message} />
+        )}
 
         <div className={cn('flex items-center gap-1 text-2xs', isOutbound ? 'justify-end opacity-70' : 'text-muted-foreground')}>
           <span>{formatDate(message.createdAt, true)}</span>
