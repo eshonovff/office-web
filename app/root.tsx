@@ -17,7 +17,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <html lang="tg" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* interactive-widget=resizes-content: on Android/Chrome, the layout
+            viewport (and dvh units) shrinks when the on-screen keyboard
+            opens instead of the keyboard just overlaying fixed content —
+            keeps the inbox composer visible above it. Ignored harmlessly by
+            browsers that don't recognize it. */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content" />
         <Meta />
         <Links />
       </head>

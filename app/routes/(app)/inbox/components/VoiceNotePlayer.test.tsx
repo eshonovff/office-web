@@ -74,4 +74,14 @@ describe('VoiceNotePlayer', () => {
     expect(screen.getByTestId('audio-progress-track')).toBeInTheDocument();
     expect(screen.queryByTestId('voice-wave-bar')).not.toBeInTheDocument();
   });
+
+  it('opts the waveform track out of touch scrolling so dragging to seek does not also scroll the thread', () => {
+    render(<VoiceNotePlayer src="blob:voice-1" durationSeconds={12} peaks={[0.2, 0.4]} />);
+    expect(screen.getByRole('slider')).toHaveClass('touch-none');
+  });
+
+  it('opts the flat progress track out of touch scrolling too', () => {
+    render(<VoiceNotePlayer src="blob:audio-1" durationSeconds={30} peaks={[]} />);
+    expect(screen.getByTestId('audio-progress-track')).toHaveClass('touch-none');
+  });
 });

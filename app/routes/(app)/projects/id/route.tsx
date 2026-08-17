@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Settings } from 'lucide-react';
+import { Settings, Tag } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router';
@@ -16,6 +16,7 @@ import { Board } from './components/Board';
 import { BoardFilterBar } from './components/BoardFilterBar';
 import { CreateTaskModal } from './components/CreateTaskModal';
 import { ManageColumnsModal } from './components/ManageColumnsModal';
+import { ManageLabelsModal } from './components/ManageLabelsModal';
 import { TaskDetailModal } from './components/TaskDetailModal';
 
 export default function ProjectBoardPage() {
@@ -26,6 +27,7 @@ export default function ProjectBoardPage() {
   const queryClient = useQueryClient();
 
   const [managingColumns, setManagingColumns] = useState(false);
+  const [managingLabels, setManagingLabels] = useState(false);
   const [creatingInColumn, setCreatingInColumn] = useState<string | null>(null);
   const [filters, setFilters] = useState<BoardFilters>(emptyBoardFilters);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -80,10 +82,16 @@ export default function ProjectBoardPage() {
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-xl font-semibold tracking-tight">{project?.name ?? <Skeleton className="h-6 w-40" />}</h1>
         {canManage && project && (
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setManagingColumns(true)}>
-            <Settings className="h-3.5 w-3.5" />
-            {t('manageColumns')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setManagingLabels(true)}>
+              <Tag className="h-3.5 w-3.5" />
+              {t('manageLabels')}
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setManagingColumns(true)}>
+              <Settings className="h-3.5 w-3.5" />
+              {t('manageColumns')}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -119,6 +127,10 @@ export default function ProjectBoardPage() {
           open={managingColumns}
           onClose={() => setManagingColumns(false)}
         />
+      )}
+
+      {project && (
+        <ManageLabelsModal projectId={id!} open={managingLabels} onClose={() => setManagingLabels(false)} />
       )}
 
       {openTaskId && (

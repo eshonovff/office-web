@@ -2,6 +2,7 @@ import { Outlet, redirect } from "react-router";
 import { authApi } from "~/api/auth";
 import { AppSidebar } from "~/components/layout/Sidebar";
 import Header from "~/components/layout/Header";
+import { useRealtimeConnection } from "~/hooks/useRealtimeConnection";
 import { refreshAccessToken } from "~/lib/client";
 import { SidebarProvider } from "~/components/ui/sidebar";
 import { canAccessRoute } from "~/config/permissions";
@@ -50,6 +51,8 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
 }
 
 export default function AppLayout() {
+  useRealtimeConnection();
+
   return (
     <SidebarProvider className="bg-sidebar h-dvh">
       <AppSidebar />

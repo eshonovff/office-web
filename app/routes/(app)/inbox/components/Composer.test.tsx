@@ -9,7 +9,8 @@ import { conversationsApi } from '~/api/conversations';
 import { makeQueryClient } from '~/lib/query-client';
 import { useAuthStore } from '~/store/useAuthStore';
 import type { ConversationDetail } from '~/types/conversation';
-import { Composer } from './Composer';
+import { useInboxBreakpoint } from '../useInboxBreakpoint';
+import { autoResizeTextarea, Composer, computeTextareaMaxHeight } from './Composer';
 
 vi.mock('~/api/conversations', () => ({
   conversationsApi: { sendMessage: vi.fn(), takeover: vi.fn() },
@@ -18,6 +19,7 @@ vi.mock('~/api/channels', () => ({
   channelsApi: { listWhatsAppTemplates: vi.fn() },
 }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock('../useInboxBreakpoint', () => ({ useInboxBreakpoint: vi.fn().mockReturnValue('desktop') }));
 
 function makeConversation(overrides: Partial<ConversationDetail> = {}): ConversationDetail {
   return {
@@ -51,6 +53,10 @@ function renderComposer(conversation: ConversationDetail) {
 describe('Composer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // clearAllMocks resets call history but not a prior mockReturnValue — the
+    // 'send button label' tests below switch this to 'mobile'; without
+    // resetting it here that leaks into every test that runs after them.
+    vi.mocked(useInboxBreakpoint).mockReturnValue('desktop');
     useAuthStore.setState({ accessToken: null, user: null, roles: [], permissions: [] });
   });
 
@@ -249,5 +255,113 @@ describe('Composer', () => {
       expect(screen.queryByText('windowClosedTitle')).not.toBeInTheDocument();
       expect(screen.getByPlaceholderText('internalNotePlaceholder')).toBeInTheDocument();
     });
+  });
+
+  describe('voice recording', () => {
+    let resolveGetUserMedia: (stream: MediaStream) => void;
+
+    beforeEach(() => {
+      let recorderState: 'inactive' | 'recording' = 'inactive';
+      const fakeRecorder = {
+        ondataavailable: null as ((e: { data: { size: number } }) => void) | null,
+        onstop: null as (() => void) | null,
+        get state() {
+          return recorderState;
+        },
+        start: vi.fn(() => {
+          recorderState = 'recording';
+        }),
+        stop: vi.fn(() => {
+          recorderState = 'inactive';
+          fakeRecorder.onstop?.();
+        }),
+      };
+
+      vi.stubGlobal('MediaRecorder', function MediaRecorder() {
+        return fakeRecorder;
+      });
+      (globalThis.MediaRecorder as unknown as { isTypeSupported: () => boolean }).isTypeSupported = () => true;
+
+      const getUserMedia = vi.fn(
+        () =>
+          new Promise<MediaStream>((resolve) => {
+            resolveGetUserMedia = resolve;
+          })
+      );
+      vi.stubGlobal('navigator', {
+        ...navigator,
+        mediaDevices: { getUserMedia },
+      });
+    });
+
+    it('does not start a second recording from a rapid double tap while getUserMedia is still pending', async () => {
+      const user = userEvent.setup();
+      renderComposer(makeConversation({ windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+      const micButton = screen.getAllByRole('button')[1];
+
+      await user.click(micButton);
+      await user.click(micButton);
+      resolveGetUserMedia!({ getTracks: () => [] } as unknown as MediaStream);
+
+      await waitFor(() => expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledTimes(1));
+    });
+  });
+
+  describe('send button label', () => {
+    it('shows the text label alongside the icon on tablet/desktop', () => {
+      vi.mocked(useInboxBreakpoint).mockReturnValue('desktop');
+      renderComposer(makeConversation({ windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+
+      expect(screen.getByText('send')).toBeInTheDocument();
+    });
+
+    it('is icon-only (with an accessible label) on mobile', () => {
+      vi.mocked(useInboxBreakpoint).mockReturnValue('mobile');
+      renderComposer(makeConversation({ windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+
+      expect(screen.queryByText('send')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'send' })).toBeInTheDocument();
+    });
+  });
+});
+
+describe('computeTextareaMaxHeight', () => {
+  it('is line height times max lines plus vertical padding and border', () => {
+    expect(computeTextareaMaxHeight(20, 16, 2, 4)).toBe(20 * 4 + 16 + 2);
+  });
+});
+
+describe('autoResizeTextarea', () => {
+  function makeTextarea(scrollHeight: number) {
+    const el = document.createElement('textarea');
+    document.body.appendChild(el);
+    Object.defineProperty(el, 'scrollHeight', { configurable: true, value: scrollHeight });
+    return el;
+  }
+
+  it('grows to fit content up to the max-lines cap, hiding overflow while under it', () => {
+    const el = makeTextarea(40);
+    autoResizeTextarea(el, 6);
+    expect(el.style.height).toBe('40px');
+    expect(el.style.overflowY).toBe('hidden');
+  });
+
+  it('caps the height and scrolls once content exceeds the max-lines cap', () => {
+    const el = makeTextarea(500);
+    autoResizeTextarea(el, 4);
+    expect(parseFloat(el.style.height)).toBeLessThan(500);
+    expect(el.style.overflowY).toBe('auto');
+  });
+
+  it('shrinks back down when content is cleared (e.g. right after sending)', () => {
+    const el = makeTextarea(500);
+    autoResizeTextarea(el, 4);
+    const grownHeight = parseFloat(el.style.height);
+
+    Object.defineProperty(el, 'scrollHeight', { configurable: true, value: 20 });
+    autoResizeTextarea(el, 4);
+
+    expect(parseFloat(el.style.height)).toBeLessThan(grownHeight);
+    expect(el.style.overflowY).toBe('hidden');
   });
 });

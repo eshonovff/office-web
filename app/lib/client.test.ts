@@ -62,6 +62,13 @@ function makeUnauthorizedError(url: string) {
   };
 }
 
+function makeConflictError(url: string, detail: string) {
+  return {
+    response: { status: 409, data: { title: "Конфликт", detail } },
+    config: { url, headers: {} },
+  };
+}
+
 describe("apiClient refresh queue", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -121,6 +128,29 @@ describe("apiClient refresh queue", () => {
 
     expect(toast.error).toHaveBeenCalledTimes(1);
     expect(toast.error).toHaveBeenCalledWith(expect.any(String), { id: "/tasks/123" });
+  });
+
+  it("prefers the backend's specific detail over the generic per-status translation", async () => {
+    const { apiClient } = await import("~/lib/client");
+    const { toast } = await import("sonner");
+    void apiClient;
+    const [apiClientMock] = instances;
+    const detail = "Корманди таъиншуда узви канали ин чат нест — баъд аз таъин чатро намебинад.";
+
+    await expect(apiClientMock._resRejected!(makeConflictError("/conversations/c1", detail))).rejects.toBeTruthy();
+
+    expect(toast.error).toHaveBeenCalledWith(detail, { id: "/conversations/c1" });
+  });
+
+  it("falls back to the generic per-status translation when the backend sent no detail/title", async () => {
+    const { apiClient } = await import("~/lib/client");
+    const { toast } = await import("sonner");
+    void apiClient;
+    const [apiClientMock] = instances;
+
+    await expect(apiClientMock._resRejected!(makeNotFoundError("/tasks/123"))).rejects.toBeTruthy();
+
+    expect(toast.error).toHaveBeenCalledWith("errors.notFound", { id: "/tasks/123" });
   });
 
   it("does not attempt a refresh for a failed /auth/login", async () => {

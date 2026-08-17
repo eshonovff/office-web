@@ -22,5 +22,11 @@
   "createColumnSuccess": "Колонка сохта шуд",
   "deleteColumnConfirmTitle": "Колонка нест карда шавад?",
   "deleteColumnConfirmDescription": "Танҳо колонкаи холӣ нест карда мешавад.",
-  "deleteColumnSuccess": "Колонка нест шуд"
+  "deleteColumnSuccess": "Колонка нест шуд",
+  "manageLabels": "Идораи тегҳо",
+  "addLabel": "Илова кардани тег",
+  "createLabelSuccess": "Тег сохта шуд",
+  "deleteLabelConfirmTitle": "Тег нест карда шавад?",
+  "deleteLabelConfirmDescription": "Тег аз ҳамаи вазифаҳое, ки ба он гузошта шудааст, нест мешавад.",
+  "deleteLabelSuccess": "Тег нест шуд"
 }

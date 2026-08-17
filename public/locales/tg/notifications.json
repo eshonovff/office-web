@@ -1,0 +1,11 @@
+{
+  "title": "Огоҳиномаҳо",
+  "empty": "Огоҳинома нест",
+  "markAllRead": "Ҳама хонда шуд",
+  "messages": {
+    "taskAssigned": "Ба шумо вазифа таъин карда шуд: «{{title}}»",
+    "deadlineTomorrow": "Мӯҳлати вазифа фардо тамом мешавад: «{{title}}»",
+    "mention": "Шуморо дар як шарҳ зикр карданд",
+    "whatsappError": "Хатои пайвасти WhatsApp"
+  }
+}

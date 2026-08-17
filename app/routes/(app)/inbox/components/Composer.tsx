@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { Mic, Paperclip, Send, Square, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { channelsApi } from '~/api/channels';
@@ -19,6 +19,7 @@ import { cn } from '~/lib/utils';
 import { useAuthStore } from '~/store/useAuthStore';
 import type { ConversationDetail } from '~/types/conversation';
 import type { Message } from '~/types/message';
+import { useInboxBreakpoint } from '../useInboxBreakpoint';
 
 interface ComposerProps {
   conversation: ConversationDetail;
@@ -26,6 +27,38 @@ interface ComposerProps {
 
 function isWindowOpen(windowExpiresAt: string | null): boolean {
   return !!windowExpiresAt && dayjs(windowExpiresAt).isAfter(dayjs());
+}
+
+// Caps how tall the composer's textarea grows before it scrolls internally
+// instead of pushing the rest of the layout around — fewer lines on mobile,
+// where the on-screen keyboard already eats most of the vertical space.
+const COMPOSER_MAX_LINES = { mobile: 4, tablet: 5, desktop: 6 } as const;
+
+export function computeTextareaMaxHeight(
+  lineHeight: number,
+  verticalPadding: number,
+  verticalBorder: number,
+  maxLines: number
+): number {
+  return lineHeight * maxLines + verticalPadding + verticalBorder;
+}
+
+// CSS `field-sizing: content` (used for auto-grow-with-content in the base
+// Textarea component) is Chrome-only — Safari/Firefox just render a
+// fixed-size box that never grows. Rather than depend on that, this
+// textarea gets `field-sizing: fixed` (via inline style, so it always wins
+// regardless of class merge order) and its height is driven entirely by
+// this handler, giving identical behavior in every browser.
+export function autoResizeTextarea(el: HTMLTextAreaElement, maxLines: number) {
+  const style = window.getComputedStyle(el);
+  const lineHeight = parseFloat(style.lineHeight) || 20;
+  const verticalPadding = (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0);
+  const verticalBorder = (parseFloat(style.borderTopWidth) || 0) + (parseFloat(style.borderBottomWidth) || 0);
+  const maxHeight = computeTextareaMaxHeight(lineHeight, verticalPadding, verticalBorder, maxLines);
+
+  el.style.height = 'auto';
+  el.style.height = `${Math.min(el.scrollHeight, maxHeight)}px`;
+  el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
 }
 
 const MEDIA_LIMITS = {
@@ -110,6 +143,8 @@ export function Composer({ conversation }: ComposerProps) {
   const currentUserId = useAuthStore((s) => s.user?.id);
   const roles = useAuthStore((s) => s.roles);
   const queryClient = useQueryClient();
+  const breakpoint = useInboxBreakpoint();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Same formula as the backend's ConversationAssignmentPolicy.CanSend.
   const canSend = isOwnerOrAdmin(roles) || !conversation.assignedTo || conversation.assignedTo === currentUserId;
@@ -129,6 +164,10 @@ export function Composer({ conversation }: ComposerProps) {
   const recordingStreamRef = useRef<MediaStream | null>(null);
   const recordingTimerRef = useRef<number | null>(null);
   const shouldSendRecordingRef = useRef(false);
+  // getUserMedia is async (the permission prompt alone can take a while) —
+  // guards against a second tap starting a second recording/getUserMedia
+  // call before `recording` has flipped true.
+  const startingRecordingRef = useRef(false);
   // Flips true only on a 409 mid-send — the render-time `windowOpen` check
   // already covers the common case (window already closed before typing).
   const [windowClosedDuringSend, setWindowClosedDuringSend] = useState(false);
@@ -225,6 +264,13 @@ export function Composer({ conversation }: ComposerProps) {
     };
   }, []);
 
+  // Runs before paint so the grown/shrunk height never flashes the old size
+  // — in particular, clearing `body` after a send snaps the box back down
+  // to its one-line height in the same frame instead of visibly collapsing.
+  useLayoutEffect(() => {
+    if (textareaRef.current) autoResizeTextarea(textareaRef.current, COMPOSER_MAX_LINES[breakpoint]);
+  }, [body, breakpoint]);
+
   function stopRecordingTimer() {
     if (recordingTimerRef.current !== null) {
       window.clearInterval(recordingTimerRef.current);
@@ -265,11 +311,14 @@ export function Composer({ conversation }: ComposerProps) {
   }
 
   async function startVoiceRecording() {
+    if (startingRecordingRef.current || recording) return;
+
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
       setRecordError(t('voiceUnsupported'));
       return;
     }
 
+    startingRecordingRef.current = true;
     try {
       setRecordError(null);
       setRecordElapsed(0);
@@ -306,6 +355,8 @@ export function Composer({ conversation }: ComposerProps) {
       recordingTimerRef.current = window.setInterval(() => setRecordElapsed((value) => value + 1), 1000);
     } catch {
       setRecordError(t('voicePermissionDenied'));
+    } finally {
+      startingRecordingRef.current = false;
     }
   }
 
@@ -409,6 +460,7 @@ export function Composer({ conversation }: ComposerProps) {
                   type="button"
                   variant={recording ? 'default' : 'outline'}
                   size="icon"
+                  className="touch-manipulation"
                   disabled={isPending || isUploading || isUploadingVoiceNote}
                   onClick={() => (recording ? stopVoiceRecording(true) : startVoiceRecording())}>
                   {recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
@@ -416,21 +468,24 @@ export function Composer({ conversation }: ComposerProps) {
               </>
             )}
             <Textarea
+              ref={textareaRef}
               value={body}
               onChange={(e) => setBody(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={isNoteMode ? t('internalNotePlaceholder') : t('composerPlaceholder')}
               rows={2}
-              className={cn('flex-1', isNoteMode && 'bg-warning/10 border-warning/30')}
+              className={cn('scrollbar-thin flex-1 resize-none', isNoteMode && 'bg-warning/10 border-warning/30')}
+              style={{ fieldSizing: 'fixed' } as React.CSSProperties}
             />
             <Button
               type="button"
+              size={breakpoint === 'mobile' ? 'icon' : 'default'}
               disabled={!body.trim() || isPending}
               onClick={handleSendText}
               aria-label={isNoteMode ? t('sendNote') : t('send')}
               className="gap-1.5">
               <Send className="h-3.5 w-3.5" />
-              {isNoteMode ? t('sendNote') : t('send')}
+              {breakpoint !== 'mobile' && (isNoteMode ? t('sendNote') : t('send'))}
             </Button>
           </div>
           {!isNoteMode && (selectedFile || fileError) && (

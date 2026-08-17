@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, Info } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { conversationsApi } from '~/api/conversations';
@@ -14,18 +15,33 @@ import { MessageBubble } from './MessageBubble';
 import { revokeMessageBlobCache } from '../useMessageBlobUrl';
 
 const PAGE_SIZE = 30;
+const NEAR_BOTTOM_THRESHOLD_PX = 120;
+
+export function isScrolledNearBottom(scrollHeight: number, scrollTop: number, clientHeight: number): boolean {
+  return scrollHeight - scrollTop - clientHeight < NEAR_BOTTOM_THRESHOLD_PX;
+}
 
 interface MessageThreadProps {
   conversationId: string;
   conversation: ConversationDetail | null;
+  /** Shown as a back arrow — mobile only, where the thread replaces the list on screen. */
+  onBack?: () => void;
+  /** Shown as an info button — mobile/tablet only, where ContextPanel isn't a permanent column. */
+  onOpenInfo?: () => void;
 }
 
-export function MessageThread({ conversationId, conversation }: MessageThreadProps) {
+export function MessageThread({ conversationId, conversation, onBack, onOpenInfo }: MessageThreadProps) {
   const { t } = useTranslation('inbox');
   const { can } = useCan();
   const canReply = can(Permissions.Inbox.Reply);
   const queryClient = useQueryClient();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // Which conversation we last force-scrolled to the bottom for — lets the
+  // scroll effect tell "just opened this conversation" apart from "revisited
+  // it" (mobile keeps this component mounted when you go back to the list
+  // and return) or "new messages/older page arrived while already reading".
+  const scrolledForConversation = useRef<string | null>(null);
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['conversations', conversationId, 'messages'],
@@ -57,27 +73,52 @@ export function MessageThread({ conversationId, conversation }: MessageThreadPro
   }, [conversationId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ block: 'end' });
-  }, [messages.length]);
+    if (messages.length === 0) return;
+
+    const isFreshOpen = scrolledForConversation.current !== conversationId;
+    const container = scrollContainerRef.current;
+    const nearBottom = !container || isScrolledNearBottom(container.scrollHeight, container.scrollTop, container.clientHeight);
+
+    // Force the jump on first open of this conversation (or a switch to a
+    // different one); after that, only follow along if the user was already
+    // near the bottom — otherwise "load older" or a new realtime message
+    // would yank someone reading history back down.
+    if (isFreshOpen || nearBottom) {
+      bottomRef.current?.scrollIntoView({ block: 'end' });
+      scrolledForConversation.current = conversationId;
+    }
+  }, [messages.length, conversationId]);
 
   useEffect(() => revokeMessageBlobCache, []);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center justify-between gap-2 border-b px-3 py-2.5">
-        {conversation ? (
-          <>
-            <span className="text-sm font-semibold">{conversation.contactName || conversation.externalId}</span>
-            <Badge variant="outline" className="text-2xs">
-              {t(`status.${conversation.status}`)}
-            </Badge>
-          </>
-        ) : (
-          <Skeleton className="h-5 w-40" />
+      <div className="flex items-center gap-2 border-b px-3 py-2.5">
+        {onBack && (
+          <Button type="button" variant="ghost" size="icon-sm" aria-label={t('back')} onClick={onBack} className="-ml-1 shrink-0">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        )}
+        <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          {conversation ? (
+            <>
+              <span className="truncate text-sm font-semibold">{conversation.contactName || conversation.externalId}</span>
+              <Badge variant="outline" className="text-2xs shrink-0">
+                {t(`status.${conversation.status}`)}
+              </Badge>
+            </>
+          ) : (
+            <Skeleton className="h-5 w-40" />
+          )}
+        </div>
+        {onOpenInfo && (
+          <Button type="button" variant="ghost" size="icon-sm" aria-label={t('conversationInfo')} onClick={onOpenInfo} className="shrink-0">
+            <Info className="h-4 w-4" />
+          </Button>
         )}
       </div>
 
-      <div className="scrollbar-thin flex-1 space-y-2 overflow-y-auto p-3">
+      <div ref={scrollContainerRef} className="scrollbar-thin flex-1 space-y-2 overflow-y-auto p-3">
         {isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 4 }).map((_, i) => (

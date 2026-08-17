@@ -17,26 +17,15 @@ interface MessagesCache {
   pageParams: unknown[];
 }
 
-/** Joins the /hubs/inbox channel groups for `channelIds` and keeps the inbox's queries live. */
+/**
+ * Joins the /hubs/inbox channel groups for `channelIds` and keeps the inbox's
+ * queries live. The connection itself is started/stopped once for the whole
+ * shell by useRealtimeConnection (app layout) — this hook only subscribes.
+ */
 export function useInboxRealtime(channelIds: string[], openConversationId?: string | null) {
   const queryClient = useQueryClient();
-  const { connection, status, reconnectCount, start, stop } = useInboxHub();
+  const { connection, status, reconnectCount } = useInboxHub();
   const setHubError = useInboxHub((s) => s.setError);
-
-  useEffect(() => {
-    // React StrictMode mounts, cleans up, and mounts effects again in development.
-    // Deferring one tick lets that synthetic cleanup cancel the first start before
-    // SignalR begins negotiation and logs a misleading connection failure.
-    const startTimer = window.setTimeout(() => void start(), 0);
-    return () => {
-      window.clearTimeout(startTimer);
-      void stop();
-    };
-    // Mount/unmount only — start/stop are idempotent, and re-running this on
-    // every render (start/stop are stable store actions but re-created per
-    // createHubStore call) would just churn the same connection.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     if (!connection || connection.state !== HubConnectionState.Connected) return;

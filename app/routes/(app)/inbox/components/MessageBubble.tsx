@@ -6,11 +6,11 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { conversationsApi } from '~/api/conversations';
 import { Button } from '~/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '~/components/ui/dialog';
 import { formatDate } from '~/lib/format';
 import { cn } from '~/lib/utils';
 import type { Message, MessageType } from '~/types/message';
 import { getMessageObjectUrl, useMessageBlobUrl } from '../useMessageBlobUrl';
+import { ImageLightbox } from './ImageLightbox';
 import { VideoMessage } from './VideoMessage';
 import { VoiceNotePlayer } from './VoiceNotePlayer';
 
@@ -165,12 +165,7 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
         )}
         <MediaStatus message={message} status={media.status === 'idle' ? thumbnail.status : media.status} />
         {message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
-        <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-          <DialogContent className="max-w-4xl p-2" showCloseButton>
-            <DialogTitle className="sr-only">{fileName}</DialogTitle>
-            {media.objectUrl && <img src={media.objectUrl} alt={fileName} className="max-h-[80vh] w-full rounded-md object-contain" />}
-          </DialogContent>
-        </Dialog>
+        <ImageLightbox open={lightboxOpen} onOpenChange={setLightboxOpen} src={media.objectUrl} alt={fileName} />
       </div>
     );
   }
