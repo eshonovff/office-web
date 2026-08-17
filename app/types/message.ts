@@ -1,6 +1,9 @@
 export type MessageDirection = 'Inbound' | 'Outbound';
 export type MessageType = 'Text' | 'Image' | 'Video' | 'Audio' | 'File' | 'StoryReply' | 'Location' | 'Contact';
-export type MessageDeliveryStatus = 'Pending' | 'Sent' | 'Delivered' | 'Read' | 'Failed';
+// Cancelled = pulled back during the delayed-send window (item 5 on the
+// backend) — never reached the provider, distinct from Failed (reached the
+// dispatch job but the provider/window check rejected it).
+export type MessageDeliveryStatus = 'Pending' | 'Sent' | 'Delivered' | 'Read' | 'Failed' | 'Cancelled';
 
 export interface Message {
   id: string;
@@ -23,6 +26,9 @@ export interface Message {
   mediaDeletedAt: string | null;
   mediaDownloadError: string | null;
   waveformPeaks: number[] | null;
+  // Set when dispatch fails after the delay (e.g. the 24h window closed
+  // during the wait) — only meaningful when deliveryStatus is Failed.
+  failureReason: string | null;
 }
 
 export interface MessagesListParams {
@@ -35,4 +41,9 @@ export interface SendMessageRequest {
   templateName?: string;
   templateLanguage?: string;
   templateParameters?: string[];
+  // Stored in the thread, never dispatched to the customer — mutually
+  // exclusive with a template on the backend. Never claims an unassigned
+  // conversation either (it isn't a "reply"), and doesn't touch unread
+  // counts or the 24h window (both only ever move on the inbound path).
+  isInternalNote?: boolean;
 }

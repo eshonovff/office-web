@@ -2,6 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import dayjs from 'dayjs';
+import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { channelsApi } from '~/api/channels';
 import { conversationsApi } from '~/api/conversations';
@@ -11,11 +12,12 @@ import type { ConversationDetail } from '~/types/conversation';
 import { Composer } from './Composer';
 
 vi.mock('~/api/conversations', () => ({
-  conversationsApi: { sendMessage: vi.fn() },
+  conversationsApi: { sendMessage: vi.fn(), takeover: vi.fn() },
 }));
 vi.mock('~/api/channels', () => ({
   channelsApi: { listWhatsAppTemplates: vi.fn() },
 }));
+vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 function makeConversation(overrides: Partial<ConversationDetail> = {}): ConversationDetail {
   return {
@@ -62,7 +64,7 @@ describe('Composer', () => {
     await user.click(screen.getByText('send'));
 
     await waitFor(() => {
-      expect(conversationsApi.sendMessage).toHaveBeenCalledWith('c1', { body: 'Салом!' });
+      expect(conversationsApi.sendMessage).toHaveBeenCalledWith('c1', { body: 'Салом!', isInternalNote: false });
     });
   });
 
@@ -101,5 +103,151 @@ describe('Composer', () => {
     await user.click(screen.getByText('send'));
 
     await waitFor(() => expect(screen.getByText('windowClosedDuringSend')).toBeInTheDocument());
+  });
+
+  it('invalidates conversation queries broadly on a successful send, so a claim-on-reply shows up without a manual refresh (item 2)', async () => {
+    vi.mocked(conversationsApi.sendMessage).mockResolvedValue({} as any);
+    const user = userEvent.setup();
+    const queryClient = makeQueryClient();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Composer conversation={makeConversation({ assignedTo: null, windowExpiresAt: dayjs().add(6, 'hour').toISOString() })} />
+      </QueryClientProvider>
+    );
+
+    await user.type(screen.getByPlaceholderText('composerPlaceholder'), 'Салом!');
+    await user.click(screen.getByText('send'));
+
+    // The backend claims an unassigned conversation on its first reply before
+    // returning — this broad invalidation (not just the messages list) is what
+    // makes the new assignee reach the conversation list row and context panel
+    // for the sender's own tab; other operators' tabs get it via the
+    // ConversationAssigned realtime event instead (see useInboxRealtime.test.tsx).
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['conversations'], exact: false }));
+  });
+
+  describe('read-only when not the assignee', () => {
+    it('disables the composer and offers takeover when assigned to someone else', () => {
+      useAuthStore.setState({ user: { id: 'me' } as any, roles: [] });
+      renderComposer(makeConversation({ assignedTo: 'other-user', assignedToName: 'Далер' }));
+
+      expect(screen.queryByPlaceholderText('composerPlaceholder')).not.toBeInTheDocument();
+      expect(screen.getByText('readOnlyTitle')).toBeInTheDocument();
+      expect(screen.getByText('readOnlyOwnedBy')).toBeInTheDocument();
+      expect(screen.getByText('takeOver')).toBeInTheDocument();
+    });
+
+    it('stays usable when the conversation is unassigned', () => {
+      useAuthStore.setState({ user: { id: 'me' } as any, roles: [] });
+      renderComposer(makeConversation({ assignedTo: null, windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+
+      expect(screen.getByPlaceholderText('composerPlaceholder')).toBeInTheDocument();
+    });
+
+    it('stays usable when the caller is the assignee', () => {
+      useAuthStore.setState({ user: { id: 'me' } as any, roles: [] });
+      renderComposer(
+        makeConversation({ assignedTo: 'me', windowExpiresAt: dayjs().add(6, 'hour').toISOString() })
+      );
+
+      expect(screen.getByPlaceholderText('composerPlaceholder')).toBeInTheDocument();
+    });
+
+    it('lets Owner/Admin send on a chat assigned to someone else', () => {
+      useAuthStore.setState({ user: { id: 'me' } as any, roles: ['owner'] });
+      renderComposer(
+        makeConversation({
+          assignedTo: 'other-user',
+          assignedToName: 'Далер',
+          windowExpiresAt: dayjs().add(6, 'hour').toISOString(),
+        })
+      );
+
+      expect(screen.getByPlaceholderText('composerPlaceholder')).toBeInTheDocument();
+    });
+
+    it('takes over the conversation and reports success', async () => {
+      useAuthStore.setState({ user: { id: 'me' } as any, roles: [] });
+      vi.mocked(conversationsApi.takeover).mockResolvedValue(
+        makeConversation({ assignedTo: 'me', assignedToName: 'Me' })
+      );
+      const user = userEvent.setup();
+
+      renderComposer(makeConversation({ assignedTo: 'other-user', assignedToName: 'Далер' }));
+      await user.click(screen.getByText('takeOver'));
+
+      await waitFor(() => expect(conversationsApi.takeover).toHaveBeenCalledWith('c1'));
+      await waitFor(() => expect(toast.success).toHaveBeenCalledWith('takeoverSuccess'));
+    });
+
+    it('reports takeover failure honestly instead of pretending it worked', async () => {
+      useAuthStore.setState({ user: { id: 'me' } as any, roles: [] });
+      vi.mocked(conversationsApi.takeover).mockRejectedValue(new Error('boom'));
+      const user = userEvent.setup();
+
+      renderComposer(makeConversation({ assignedTo: 'other-user', assignedToName: 'Далер' }));
+      await user.click(screen.getByText('takeOver'));
+
+      await waitFor(() => expect(toast.error).toHaveBeenCalledWith('takeoverFailed'));
+      expect(screen.getByText('readOnlyTitle')).toBeInTheDocument();
+    });
+  });
+
+  describe('internal notes (item 4)', () => {
+    it('sends as a normal reply when the toggle is off', async () => {
+      vi.mocked(conversationsApi.sendMessage).mockResolvedValue({} as any);
+      const user = userEvent.setup();
+
+      renderComposer(makeConversation({ windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+      await user.type(screen.getByPlaceholderText('composerPlaceholder'), 'Салом!');
+      await user.click(screen.getByRole('button', { name: 'send' }));
+
+      await waitFor(() =>
+        expect(conversationsApi.sendMessage).toHaveBeenCalledWith('c1', { body: 'Салом!', isInternalNote: false })
+      );
+    });
+
+    it('sends isInternalNote: true and swaps in the note placeholder/send label once toggled on', async () => {
+      vi.mocked(conversationsApi.sendMessage).mockResolvedValue({} as any);
+      const user = userEvent.setup();
+
+      renderComposer(makeConversation({ windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+      await user.click(screen.getByRole('switch'));
+
+      expect(screen.getByPlaceholderText('internalNotePlaceholder')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'sendNote' })).toBeInTheDocument();
+
+      await user.type(screen.getByPlaceholderText('internalNotePlaceholder'), 'Позвонить завтра');
+      await user.click(screen.getByRole('button', { name: 'sendNote' }));
+
+      await waitFor(() =>
+        expect(conversationsApi.sendMessage).toHaveBeenCalledWith('c1', { body: 'Позвонить завтра', isInternalNote: true })
+      );
+    });
+
+    it('hides attach and voice-record while in note mode — notes are text-only on the backend', async () => {
+      const user = userEvent.setup();
+      renderComposer(makeConversation({ windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+
+      // Before: paperclip, mic, send. After: send only.
+      expect(screen.getAllByRole('button')).toHaveLength(3);
+
+      await user.click(screen.getByRole('switch'));
+
+      expect(screen.getAllByRole('button')).toHaveLength(1);
+    });
+
+    it('lets you write a note even when the WhatsApp window is closed, bypassing the template requirement', async () => {
+      renderComposer(makeConversation({ windowExpiresAt: dayjs().subtract(1, 'hour').toISOString() }));
+      expect(screen.getByText('windowClosedTitle')).toBeInTheDocument();
+
+      const user = userEvent.setup();
+      await user.click(screen.getByRole('switch'));
+
+      expect(screen.queryByText('windowClosedTitle')).not.toBeInTheDocument();
+      expect(screen.getByPlaceholderText('internalNotePlaceholder')).toBeInTheDocument();
+    });
   });
 });

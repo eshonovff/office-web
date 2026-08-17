@@ -1,6 +1,8 @@
 import type { AxiosProgressEvent } from 'axios';
 import { apiClient, originClient } from '~/lib/client';
 import type {
+  AssignmentHistoryListParams,
+  ConversationAssignmentEvent,
   ConversationDetail,
   ConversationListItem,
   ConversationsListParams,
@@ -24,6 +26,10 @@ export const conversationsApi = {
   },
   sendMessage: async (id: string, payload: SendMessageRequest): Promise<Message> => {
     const { data } = await apiClient.post<Message>(`/conversations/${id}/messages`, payload);
+    return data;
+  },
+  cancelMessage: async (id: string, messageId: string): Promise<Message> => {
+    const { data } = await apiClient.post<Message>(`/conversations/${id}/messages/${messageId}/cancel`);
     return data;
   },
   uploadMedia: async (id: string, file: File, onUploadProgress?: (event: AxiosProgressEvent) => void): Promise<Message> => {
@@ -57,6 +63,19 @@ export const conversationsApi = {
   },
   update: async (id: string, payload: UpdateConversationRequest): Promise<ConversationDetail> => {
     const { data } = await apiClient.patch<ConversationDetail>(`/conversations/${id}`, payload);
+    return data;
+  },
+  takeover: async (id: string): Promise<ConversationDetail> => {
+    const { data } = await apiClient.post<ConversationDetail>(`/conversations/${id}/takeover`);
+    return data;
+  },
+  listAssignmentHistory: async (
+    id: string,
+    params?: AssignmentHistoryListParams
+  ): Promise<PagedResult<ConversationAssignmentEvent>> => {
+    const { data } = await apiClient.get<PagedResult<ConversationAssignmentEvent>>(`/conversations/${id}/assignment-history`, {
+      params,
+    });
     return data;
   },
 };

@@ -7,6 +7,7 @@ import { Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
 import { formatDate } from '~/lib/format';
 import type { ConversationDetail, ConversationStatus } from '~/types/conversation';
+import { AssignmentHistory } from './AssignmentHistory';
 
 const ALL_STATUSES: ConversationStatus[] = ['New', 'InProgress', 'Waiting', 'Closed'];
 
@@ -77,6 +78,8 @@ export function ContextPanel({ conversation, onStatusChange, isChangingStatus }:
         <Label className="text-muted-foreground text-2xs">{t('createdAt')}</Label>
         <p className="text-sm">{formatDate(conversation.createdAt, true)}</p>
       </div>
+
+      <AssignmentHistory conversationId={conversation.id} />
     </div>
   );
 }

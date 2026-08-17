@@ -41,3 +41,23 @@ export interface UpdateConversationRequest {
   status?: ConversationStatus;
   assignedTo?: string | null;
 }
+
+export type ConversationAssignmentReason = 'ClaimedOnReply' | 'Takeover' | 'Reassigned' | 'AutoReleased';
+
+// GET /conversations/{id}/assignment-history — fromUserId/toUserId null on
+// the edges: ClaimedOnReply has no `from` (conversation was unassigned),
+// AutoReleased has no `to` (released back to the pool, not to a person).
+export interface ConversationAssignmentEvent {
+  id: string;
+  fromUserId: string | null;
+  fromUserName: string | null;
+  toUserId: string | null;
+  toUserName: string | null;
+  reason: ConversationAssignmentReason;
+  createdAt: string;
+}
+
+export interface AssignmentHistoryListParams {
+  page?: number;
+  pageSize?: number;
+}
