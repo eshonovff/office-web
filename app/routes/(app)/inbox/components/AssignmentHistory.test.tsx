@@ -78,6 +78,16 @@ describe('AssignmentHistory', () => {
     expect(screen.getByText('Азиз → unassigned')).toBeInTheDocument();
   });
 
+  it('hides the whole section on a 404 instead of showing it as empty or as an error', async () => {
+    vi.mocked(conversationsApi.listAssignmentHistory).mockRejectedValue({ response: { status: 404 } });
+
+    const { container } = renderHistory();
+
+    await waitFor(() => expect(container).toBeEmptyDOMElement());
+    expect(screen.queryByText('assignmentHistory')).not.toBeInTheDocument();
+    expect(screen.queryByText('assignmentHistoryEmpty')).not.toBeInTheDocument();
+  });
+
   it('fetches the next page on demand and hides the button once exhausted', async () => {
     vi.mocked(conversationsApi.listAssignmentHistory).mockResolvedValueOnce({
       items: [makeEvent({ id: 'e1' })],

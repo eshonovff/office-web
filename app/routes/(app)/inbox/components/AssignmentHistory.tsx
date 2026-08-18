@@ -18,11 +18,19 @@ interface AssignmentHistoryProps {
  * page/pageSize shape as /{id}/messages. fromUserId/toUserId can each be
  * null at the edges (ClaimedOnReply has no `from`, AutoReleased has no
  * `to`) — rendered as `unassigned` rather than left blank.
+ *
+ * The endpoint 404s both when the conversation truly doesn't exist and
+ * when IChannelAccessGuard denies access (ConversationsEndpoints.cs
+ * deliberately doesn't distinguish the two, to avoid leaking existence to a
+ * caller who lacks access). Either way there's nothing meaningful to show,
+ * and treating it as a loud error would be misleading — so on any query
+ * error the whole section just disappears instead of showing an empty or
+ * error state.
  */
 export function AssignmentHistory({ conversationId }: AssignmentHistoryProps) {
   const { t } = useTranslation('inbox');
 
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['conversations', conversationId, 'assignment-history'],
     queryFn: ({ pageParam }) =>
       conversationsApi.listAssignmentHistory(conversationId, { page: pageParam, pageSize: PAGE_SIZE }),
@@ -30,6 +38,8 @@ export function AssignmentHistory({ conversationId }: AssignmentHistoryProps) {
     getNextPageParam: (lastPage) =>
       lastPage.page * lastPage.pageSize < lastPage.totalCount ? lastPage.page + 1 : undefined,
   });
+
+  if (isError) return null;
 
   const events = data?.pages.flatMap((page) => page.items) ?? [];
 
