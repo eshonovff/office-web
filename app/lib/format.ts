@@ -40,6 +40,23 @@ export function formatRelativeTime(date: string | Date | null | undefined): stri
   return formatDate(date);
 }
 
+/**
+ * Formats a WhatsApp conversation's externalId for display — the WhatsApp
+ * Cloud API sends the customer's number as raw E.164 digits with no `+`
+ * (see office-api's WhatsAppPayloadParser.cs, the webhook's `from` field).
+ * Tajik numbers (992 + 9 digits) get the local grouping (+992 XX XXX XX XX);
+ * any other length/prefix — a foreign customer's number — just gets a
+ * leading `+`, since there's no general phone-number library on the
+ * frontend to group it correctly.
+ */
+export function formatPhoneNumber(raw: string): string {
+  const digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('992') && digits.length === 12) {
+    return `+992 ${digits.slice(3, 5)} ${digits.slice(5, 8)} ${digits.slice(8, 10)} ${digits.slice(10, 12)}`;
+  }
+  return raw.startsWith('+') ? raw : `+${digits || raw}`;
+}
+
 /** Null when the window is already closed (or never opened) — nothing to count down. */
 export function formatWindowRemaining(windowExpiresAt: string | null | undefined): string | null {
   if (!windowExpiresAt) return null;

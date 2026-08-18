@@ -1,11 +1,14 @@
+import { Check, Copy } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
 import { Badge } from '~/components/ui/badge';
+import { Button } from '~/components/ui/button';
 import { CustomSelect } from '~/components/shared/CustomSelect';
 import { Label } from '~/components/ui/label';
 import { Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
-import { formatDate } from '~/lib/format';
+import { formatDate, formatPhoneNumber } from '~/lib/format';
 import type { ConversationDetail, ConversationStatus } from '~/types/conversation';
 import { AssignmentHistory } from './AssignmentHistory';
 
@@ -22,9 +25,22 @@ export function ContextPanel({ conversation, onStatusChange, isChangingStatus }:
   const { can } = useCan();
   const canAssign = can(Permissions.Inbox.Assign);
   const canClose = can(Permissions.Inbox.Close);
+  const [handleCopied, setHandleCopied] = useState(false);
 
   const displayName = conversation.contactName || conversation.externalId;
   const initials = displayName.slice(0, 2).toUpperCase();
+
+  // Only WhatsApp's externalId is a phone number — Instagram/Facebook use a
+  // platform-scoped user id there, which would be actively misleading under
+  // a "phone" label or run through phone grouping.
+  const isPhoneHandle = conversation.channelType === 'WhatsApp';
+  const contactHandle = isPhoneHandle ? formatPhoneNumber(conversation.externalId) : conversation.externalId;
+
+  async function copyContactHandle() {
+    await navigator.clipboard.writeText(contactHandle);
+    setHandleCopied(true);
+    setTimeout(() => setHandleCopied(false), 1500);
+  }
 
   // PATCH requires inbox.assign as a base, and an additional inbox.close
   // check specifically when the new status is Closed — so a user with
@@ -43,6 +59,19 @@ export function ContextPanel({ conversation, onStatusChange, isChangingStatus }:
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
         <span className="font-semibold">{displayName}</span>
+        <div className="text-muted-foreground flex items-center gap-1 text-2xs">
+          <span>{t(`contactHandleLabel.${conversation.channelType}`)}:</span>
+          <span className="font-mono">{contactHandle}</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => void copyContactHandle()}
+            title={t('copy')}
+            aria-label={t('copy')}>
+            {handleCopied ? <Check className="text-success h-3 w-3" /> : <Copy className="h-3 w-3" />}
+          </Button>
+        </div>
         <Badge variant="outline" className="text-2xs">
           {t(`channelType.${conversation.channelType}`)}
         </Badge>

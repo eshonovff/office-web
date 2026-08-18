@@ -11,6 +11,12 @@
     "Instagram": "Instagram",
     "Facebook": "Facebook"
   },
+  "contactHandleLabel": {
+    "WhatsApp": "Телефон",
+    "Instagram": "ID",
+    "Facebook": "ID"
+  },
+  "copy": "Скопировать",
   "filters": "Фильтры",
   "allChannels": "Все каналы",
   "allStatuses": "Все статусы",
