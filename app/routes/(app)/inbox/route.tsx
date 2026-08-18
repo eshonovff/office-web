@@ -22,6 +22,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '~/components/ui/sh
 import { Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
 import { cn } from '~/lib/utils';
+import { useAuthStore } from '~/store/useAuthStore';
 import { useInboxHub } from '~/store/useInboxHub';
 import type { HubStatus } from '~/store/createHubStore';
 import type { MyChannelListItem } from '~/types/channel';
@@ -293,6 +294,25 @@ export default function InboxPage() {
     [selectedId, conversationAssignableUsers, filterChannelId, filterChannelUsers, allChannelsQueries.map((q) => q.dataUpdatedAt).join(',')]
   );
 
+  // The list's "by employee" filter (ConversationList) reuses the same
+  // channel-scoped tiers as the assignee strip above, but always at tier
+  // 2/3 (selectedId forced null) — it stays scoped to the list's own
+  // channel filter regardless of whether a conversation happens to be open.
+  const assigneeFilterOptions = useMemo(
+    () =>
+      getAssigneeOptions({
+        selectedId: null,
+        conversationAssignableUsers: undefined,
+        filterChannelId,
+        filterChannelMembers: filterChannelUsers,
+        allChannelsMembers: allChannelsQueries.map((query) => query.data ?? []),
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filterChannelId, filterChannelUsers, allChannelsQueries.map((q) => q.dataUpdatedAt).join(',')]
+  );
+
+  const currentUserId = useAuthStore((s) => s.user?.id);
+
   // 409s (assigning someone outside the conversation's channel) already
   // surface with their specific backend reason via the apiClient interceptor
   // — see client.ts, which now prefers the backend's own detail/title over
@@ -392,6 +412,9 @@ export default function InboxPage() {
               selectedId={selectedId}
               draggable={canAssign}
               onSelect={selectConversation}
+              assigneeFilterOptions={assigneeFilterOptions}
+              canFilterByAssignee={canAssign}
+              currentUserId={currentUserId}
             />
           </div>
 

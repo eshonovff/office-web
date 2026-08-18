@@ -19,6 +19,8 @@
   "selectConversation": "Мукотибаеро аз рӯйхат интихоб кунед",
   "unassigned": "Таъин нашуда",
   "assignee": "Масъул",
+  "allAssignees": "Ҳама кормандон",
+  "assignedToMe": "Ман",
   "back": "Бозгашт",
   "conversationInfo": "Маълумоти мукотиба",
   "channel": "Канал",

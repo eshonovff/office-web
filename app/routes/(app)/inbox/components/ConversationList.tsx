@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Filter } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { conversationsApi } from '~/api/conversations';
 import { EmptyState } from '~/components/shared/EmptyState';
@@ -10,33 +10,61 @@ import { CustomSelect } from '~/components/shared/CustomSelect';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '~/components/ui/sheet';
 import { Skeleton } from '~/components/ui/skeleton';
 import type { ConversationStatus } from '~/types/conversation';
-import { useInboxStore } from '../store';
+import { ASSIGNEE_FILTER_ME, ASSIGNEE_FILTER_UNASSIGNED, useInboxStore } from '../store';
 import { useInboxBreakpoint } from '../useInboxBreakpoint';
 import { ConversationListItem } from './ConversationListItem';
 
 const PAGE_SIZE = 20;
 const STATUSES: ConversationStatus[] = ['New', 'InProgress', 'Waiting', 'Closed'];
 
+interface ConversationAssignee {
+  userId: string;
+  fullName: string;
+}
+
 interface ConversationListProps {
   channelOptions: { value: string; label: string }[];
   selectedId: string | null;
   draggable: boolean;
   onSelect: (id: string) => void;
+  /** Same channel-scoped roster as the "Ответственный" strip (route.tsx's getAssigneeOptions, tiers 2/3). */
+  assigneeFilterOptions: ConversationAssignee[];
+  canFilterByAssignee: boolean;
+  currentUserId: string | undefined;
 }
 
-export function ConversationList({ channelOptions, selectedId, draggable, onSelect }: ConversationListProps) {
+export function ConversationList({
+  channelOptions,
+  selectedId,
+  draggable,
+  onSelect,
+  assigneeFilterOptions,
+  canFilterByAssignee,
+  currentUserId,
+}: ConversationListProps) {
   const { t } = useTranslation('inbox');
-  const { channelId, status, setChannelId, setStatus } = useInboxStore();
+  const { channelId, status, assigneeFilter, setChannelId, setStatus, setAssigneeFilter } = useInboxStore();
   const breakpoint = useInboxBreakpoint();
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const activeFilterCount = (channelId ? 1 : 0) + (status ? 1 : 0);
+  const activeFilterCount = (channelId ? 1 : 0) + (status ? 1 : 0) + (assigneeFilter ? 1 : 0);
+
+  // "Unassigned" has no backend query param (see store.ts) — resolved to
+  // `undefined` here so the request is identical to "no assignee filter",
+  // and filtered client-side below instead.
+  const resolvedAssignedUserId =
+    assigneeFilter === ASSIGNEE_FILTER_ME
+      ? currentUserId
+      : assigneeFilter === ASSIGNEE_FILTER_UNASSIGNED
+        ? undefined
+        : (assigneeFilter ?? undefined);
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ['conversations', { channelId, status }],
+    queryKey: ['conversations', { channelId, status, assignedUserId: resolvedAssignedUserId }],
     queryFn: ({ pageParam }) =>
       conversationsApi.list({
         channelId: channelId ?? undefined,
         status: status ?? undefined,
+        assignedUserId: resolvedAssignedUserId,
         page: pageParam,
         pageSize: PAGE_SIZE,
       }),
@@ -44,9 +72,23 @@ export function ConversationList({ channelOptions, selectedId, draggable, onSele
     getNextPageParam: (lastPage) => (lastPage.page * lastPage.pageSize < lastPage.totalCount ? lastPage.page + 1 : undefined),
   });
 
-  const conversations = data?.pages.flatMap((page) => page.items) ?? [];
+  const conversations = (data?.pages.flatMap((page) => page.items) ?? []).filter(
+    (c) => assigneeFilter !== ASSIGNEE_FILTER_UNASSIGNED || c.assignedTo === null
+  );
 
   const statusOptions = STATUSES.map((s) => ({ value: s, label: t(`status.${s}`) }));
+
+  const assigneeOptions = useMemo(() => {
+    if (!canFilterByAssignee) return [];
+    const employees = assigneeFilterOptions
+      .filter((member) => member.userId !== currentUserId)
+      .map((member) => ({ value: member.userId, label: member.fullName }));
+    return [
+      { value: ASSIGNEE_FILTER_ME, label: t('assignedToMe') },
+      { value: ASSIGNEE_FILTER_UNASSIGNED, label: t('unassigned') },
+      ...employees,
+    ];
+  }, [assigneeFilterOptions, canFilterByAssignee, currentUserId, t]);
 
   return (
     <div className="flex h-full min-w-0 flex-col gap-2">
@@ -81,6 +123,15 @@ export function ConversationList({ channelOptions, selectedId, draggable, onSele
                   isClearable
                   placeholder={t('allStatuses')}
                 />
+                {canFilterByAssignee && (
+                  <CustomSelect
+                    options={assigneeOptions}
+                    value={assigneeFilter}
+                    onChange={(value) => setAssigneeFilter((value as string) ?? null)}
+                    isClearable
+                    placeholder={t('allAssignees')}
+                  />
+                )}
               </div>
             </SheetContent>
           </Sheet>
@@ -103,6 +154,16 @@ export function ConversationList({ channelOptions, selectedId, draggable, onSele
             placeholder={t('allStatuses')}
             className="min-w-0 flex-1"
           />
+          {canFilterByAssignee && (
+            <CustomSelect
+              options={assigneeOptions}
+              value={assigneeFilter}
+              onChange={(value) => setAssigneeFilter((value as string) ?? null)}
+              isClearable
+              placeholder={t('allAssignees')}
+              className="min-w-0 flex-1"
+            />
+          )}
         </div>
       )}
 

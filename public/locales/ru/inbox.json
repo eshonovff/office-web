@@ -19,6 +19,8 @@
   "selectConversation": "Выберите переписку из списка",
   "unassigned": "Не назначено",
   "assignee": "Ответственный",
+  "allAssignees": "Все сотрудники",
+  "assignedToMe": "Я",
   "back": "Назад",
   "conversationInfo": "Информация о переписке",
   "channel": "Канал",
