@@ -24,11 +24,12 @@ const MEDIA_ICON: Partial<Record<MessageType, typeof Image>> = {
   Contact: Contact,
 };
 
-// Mirrors the backend default (Inbox:DelayedSendSeconds) — no endpoint
-// exposes the configured value, so the countdown is best-effort display only.
-// The actual deadline is enforced server-side; this just gives the operator a
-// sense of how long the Cancel button is likely to still work.
-const DELAYED_SEND_SECONDS = 45;
+// Mirrors the backend config (Inbox:DelayedSendSeconds, appsettings.json) —
+// no endpoint exposes the configured value, so the countdown is best-effort
+// display only. The actual deadline is enforced server-side; this just
+// gives the operator a sense of how long the Cancel button is likely to
+// still work.
+const DELAYED_SEND_SECONDS = 15;
 
 function DeliveryStatusIcon({ status }: { status: Message['deliveryStatus'] }) {
   switch (status) {
