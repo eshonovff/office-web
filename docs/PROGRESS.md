@@ -1,8 +1,31 @@
 # PROGRESS — Frontend
 
+## Ҳолати имрӯза (2026-08-18)
+
+**Тамом:** Фазаи 0–4 (setup, auth, users/роли, projects+Kanban, inbox+realtime) — ҳама дар `dev`. Илова бар нақша: блоки 2-и коллаборатсияи инбокс (read-only composer+takeover, auto-claim, фиристодани таъхирӣ бо cancel/failure-reason, ёддошти дохилӣ, таърихи таъинот), responsive (mobile/tablet/desktop), `/channels` CRUD, notifications bell, Board realtime (`/hubs/board`) — ҳамаи ин низ дар `dev`. 214 тест, `tsc`/`build` тоза.
+
+**Дар куҷо ҳастем:** байни Фазаи 4 ва Фазаи 5. Фазаи 5 (Сайқал ва deploy) расман сар нашудааст — корҳои болозикр дархости мустақими корбар буданд, беруназ нақшаи фазавӣ.
+
+**Ду қадами навбатӣ:**
+1. Dashboard-и воқеӣ (`/`) — ҳозир танҳо салом; `00-overview.md` "таскҳои ман, чатҳои ҷавобнадода" мехоҳад, вале backend ҳам чунин endpoint надорад — аввал бо backend ҳамоҳанг кардан лозим.
+2. Фазаи 5: санҷиши accessibility/error-boundary, тайёр кардани build/deploy config-и frontend (ҳанӯз набудааст).
+
+## Холигиҳо: backend ↔ frontend
+
+**Backend дорад, frontend истифода намебарад:**
+- `GET /privacy` — сиёсати махфиятро backend сабт кардааст (шояд барои Meta app review лозим), frontend ҳеҷ ҷо linked намекунад.
+
+**Норасоии payload-и `/hubs/board` (санҷида ҳангоми пайваст кардани frontend, 2026-08-18):**
+- `TaskUpdated` ду шакли гуногуни payload дорад: аз `PUT /tasks/{id}` — `TaskDetail`-и пурра; аз `POST /tasks/{id}/assign` — танҳо `{taskId, assigneeId}` (бе `assigneeName`). Frontend наметавонад ин дуро як хел patch кунад, бинобар ин ба ҷои cache-patch аниқ, оддӣ invalidate-и board мекунад (`useBoardRealtime.ts`) — коргар, вале барзиёд фетч мекунад.
+- `CommentAdded` (`TaskCommentDto`, `Contracts.cs`) `taskId` надорад — frontend наметавонад муайян кунад коммент ба кадом таск тааллуқ дорад, бинобар ин танҳо ҳангоме invalidate мекунад, ки ҳамон лаҳза `TaskDetailModal` кушода бошад (тахмин, на далел).
+
+**Frontend дорад, backend надорад:** ҳеҷ — ҳамаи `apiClient` call-ҳо (auth, users, roles, projects/columns/labels, tasks/comments/attachments/activity, channels, conversations/messages, notifications) ба endpoint-и воқеии backend мувофиқанд (санҷида бо муқоисаи мустақими ду репо, 2026-08-18).
+
+---
+
 **Фазаи ҷорӣ:** `fe-phase-5-polish-deploy` (ҳанӯз сар нашуда — дархостҳои беруназнақшавии зерин пеш аз он иҷро шуданд)
 **Ветка:** `dev`
-**Сана:** 2026-08-17
+**Сана:** 2026-08-18
 
 | Фаза | Ном | Ҳолат |
 |---|---|---|
@@ -48,6 +71,7 @@
 | 2026-08-13 | Блоки 2-и инбокс (collaboration, аз backend-и office-api, 229 тест): read-only composer барои ғайри-таъиншуда + тугмаи "гирифтан" (`POST /takeover`), auto-claim дар аввалин ҷавоб (тестпиннинг — плагини мавҷуда аллакай кофӣ буд), фиристодани таъхирӣ бо lock кардан (Pending countdown + Cancel + FailureReason), toggle-и ёддошти дохилӣ дар composer. Азбаски ин кор дар аввал хато ба бранчи `feat/fe-inbox-responsive` рафта буд (ду кори бемасн дар як бранч), 4 коммит ҷудо ва ба бранчи нав `feat/fe-inbox-block-2` (аз `dev`-и кӯҳна) кӯчонида шуд | дархости корбар — ҳар кадоми ду кор бояд мустақил санҷида ва merge шаванд |
 | 2026-08-13 | Таърихи таъинот (item 5): `GET /conversations/{id}/assignment-history` (саҳифабандишуда, аз нав ба кӯҳна, шакли `/messages`) дар `ContextPanel` нишон дода шуд — `AssignmentHistory.tsx`, ҳар сатр «аз кӣ → ба кӣ» + бейҷи сабаб (claim/takeover/reassign/auto-release) + вақти нисбӣ, бо тугмаи "Кӯҳнаро нишон додан". Ба ҳамон бранчи `feat/fe-inbox-block-2` илова шуд | дархости корбар — endpoint тайёр шуд |
 | 2026-08-17 | `feat/fe-inbox-block-2` ва `feat/fe-inbox-responsive` ҳарду ба `dev` merge шуданд (бе PR, мустақим — воситаи `gh` то ҳол насб нест). `feat/fe-inbox-block-2` бе конфликт даромад; `feat/fe-inbox-responsive` дар 6 файл конфликт дод (`Composer.tsx`/`.test.tsx`, `app/api/conversations.ts`, `app/types/conversation.ts`, `app/test/setup.ts`, `docs/PROGRESS.md`) — ҳама дастӣ ҳал шуд, аз ҷумла ду ҷои дар масъалаи №9-и кӯҳна қайдшуда (тугмаи sendNote-и мобилӣ бо `breakpoint !== 'mobile'`, хатти `failureReason: null` дар `MessageThread.test.tsx`) бозгардонида шуданд. Баъд аз merge: 198 тест, `tsc --noEmit` ва `npm run build` тоза | посух ба дархости корбар «ҳарду-ро merge кун» |
+| 2026-08-18 | `Board`-ро ба `/hubs/board` пайваст кард: `useBoardRealtime.ts` (пайвасти алоҳида ба ин пае, зеро `BoardHub.OnConnectedAsync` `projectId`-ро аз query string дар вақти пайваст мехонад — фарқ аз `useInboxHub`-и умумӣ, ки group-ҳоро баъд аз пайваст бо invoke ҳамроҳ мекунад). `TaskCreated`/`TaskMoved`/`TaskDeleted` бо cache-patch-и аниқ (`applyTaskMoved`/`upsertTaskInBoard`/`removeTaskFromBoard` дар `lib/position.ts`); `TaskUpdated`/`CommentAdded` бо invalidate (сабаб дар боло, "Норасоии payload"). 16 тест илова шуд (214 ҳамагӣ), `tsc`/`lint`/`build` тоза | се қадами навбатии қайдшуда — қадами 1 |
 
 ## Масъалаҳои кушода
 

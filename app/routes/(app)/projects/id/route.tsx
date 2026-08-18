@@ -18,6 +18,7 @@ import { CreateTaskModal } from './components/CreateTaskModal';
 import { ManageColumnsModal } from './components/ManageColumnsModal';
 import { ManageLabelsModal } from './components/ManageLabelsModal';
 import { TaskDetailModal } from './components/TaskDetailModal';
+import { useBoardRealtime } from './useBoardRealtime';
 
 export default function ProjectBoardPage() {
   const { id } = useParams<{ id: string }>();
@@ -66,6 +67,8 @@ export default function ProjectBoardPage() {
     queryFn: () => tasksApi.board(id!),
     enabled: !!id,
   });
+
+  useBoardRealtime(id, openTaskId);
 
   const { mutate: createTask, isPending: isCreatingTask } = useMutation({
     mutationFn: (data: CreateTaskForm) =>
