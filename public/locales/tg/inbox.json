@@ -61,7 +61,6 @@
   "oauthAccountsHint": "Account-е, ки мехоҳед пайваст кунед, интихоб кунед:",
   "oauthAlreadyConnected": "Аллакай пайваст — навсозӣ мешавад",
   "oauthPopupBlocked": "Браузер равзанаи pop-up-ро манъ кард — барои ин сайт иҷозат диҳед ва аз нав кӯшиш кунед.",
-  "oauthResultUnreadable": "Натиҷаи пайвастшавӣ хонда нашуд — аз нав кӯшиш кунед.",
   "testChannel": "Санҷиш",
   "channelTestSuccess": "Credentials кор мекунанд ({{count}} шаблон ёфт шуд)",
   "channelTestFailed": "Санҷиш ноком шуд — Access Token ё WABA ID-ро санҷед",

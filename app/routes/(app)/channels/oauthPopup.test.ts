@@ -1,49 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { OAuthPopupClosedError, OAuthPopupParseError, waitForOAuthPopupResult, type PopupLike } from './oauthPopup';
+import { OAuthPopupClosedError, waitForOAuthPopupResult, type PopupLike } from './oauthPopup';
 
-/**
- * Mimics a real popup: while `crossOrigin` is true, reading `.location` or
- * `.document` throws — exactly what happens when the popup is still on
- * Meta's domain and the opener (a different origin) tries to read it.
- */
 class FakePopup implements PopupLike {
   closed = false;
+  location = { href: 'about:blank' };
   close = vi.fn(() => {
     this.closed = true;
   });
-
-  private crossOrigin = false;
-  private _location = { href: 'about:blank' };
-  private _document: PopupLike['document'] = { readyState: 'loading', body: { textContent: '' } };
-
-  get location(): { href: string } {
-    if (this.crossOrigin) throw new DOMException('cross-origin');
-    return this._location;
-  }
-
-  get document(): PopupLike['document'] {
-    if (this.crossOrigin) throw new DOMException('cross-origin');
-    return this._document;
-  }
-
-  navigateCrossOrigin() {
-    this.crossOrigin = true;
-  }
-
-  navigateToCallback(href: string, body: string, readyState: DocumentReadyState = 'complete') {
-    this.crossOrigin = false;
-    this._location = { href };
-    this._document = { readyState, body: { textContent: body } };
-  }
-
-  /** about:blank finishing its (instant) load — still shouldn't be mistaken for the callback. */
-  markBlankPageLoaded() {
-    this._document = { readyState: 'complete', body: { textContent: '' } };
-  }
 }
 
-function makeFakePopup(): FakePopup {
-  return new FakePopup();
+function postMessageFrom(source: unknown, data: unknown) {
+  window.dispatchEvent(new MessageEvent('message', { data, source } as MessageEventInit));
 }
 
 describe('waitForOAuthPopupResult', () => {
@@ -55,69 +22,43 @@ describe('waitForOAuthPopupResult', () => {
     vi.useRealTimers();
   });
 
-  it('keeps waiting while the popup is still cross-origin on Meta', async () => {
-    const popup = makeFakePopup();
-    popup.navigateCrossOrigin();
+  it('resolves with the message payload once the popup itself posts an office-oauth-callback message', async () => {
+    const popup = new FakePopup();
 
-    const promise = waitForOAuthPopupResult(popup, '/channels/oauth/');
-    await vi.advanceTimersByTimeAsync(2000);
-
-    // Still pending — resolve it now so the test can finish cleanly.
-    popup.navigateToCallback('https://app.test/api/channels/oauth/instagram/callback?code=1', '{"connectionId":"c1","accounts":[]}');
-    await vi.advanceTimersByTimeAsync(400);
+    const promise = waitForOAuthPopupResult(popup);
+    postMessageFrom(popup, { source: 'office-oauth-callback', payload: { connectionId: 'c1', accounts: [] } });
 
     await expect(promise).resolves.toEqual({ connectionId: 'c1', accounts: [] });
-  });
-
-  it('ignores about:blank before the popup has navigated anywhere', async () => {
-    const popup = makeFakePopup();
-    popup.markBlankPageLoaded();
-
-    const promise = waitForOAuthPopupResult(popup, '/channels/oauth/');
-    await vi.advanceTimersByTimeAsync(400);
-
-    popup.navigateToCallback('https://app.test/api/channels/oauth/instagram/callback?code=1', '{"connectionId":"c1","accounts":[]}');
-    await vi.advanceTimersByTimeAsync(400);
-
-    await expect(promise).resolves.toEqual({ connectionId: 'c1', accounts: [] });
-  });
-
-  it('resolves with the parsed JSON once the callback URL is reached and fully loaded, and closes the popup', async () => {
-    const popup = makeFakePopup();
-    popup.navigateToCallback(
-      'https://app.test/api/channels/oauth/facebook/callback?code=1&state=2',
-      '{"connectionId":"c1","accounts":[{"externalId":"p1","name":"My Page"}]}'
-    );
-
-    const promise = waitForOAuthPopupResult(popup, '/channels/oauth/');
-    await vi.advanceTimersByTimeAsync(400);
-
-    await expect(promise).resolves.toEqual({ connectionId: 'c1', accounts: [{ externalId: 'p1', name: 'My Page' }] });
     expect(popup.close).toHaveBeenCalledTimes(1);
   });
 
-  it('waits for the document to finish loading before reading it', async () => {
-    const popup = makeFakePopup();
-    popup.navigateToCallback('https://app.test/api/channels/oauth/instagram/callback?code=1', '', 'loading');
+  it('ignores a message from a window other than the popup it was told to watch', async () => {
+    const popup = new FakePopup();
+    const someOtherWindow = {};
 
-    const promise = waitForOAuthPopupResult(popup, '/channels/oauth/');
-    await vi.advanceTimersByTimeAsync(800);
-    expect(popup.close).not.toHaveBeenCalled();
+    const promise = waitForOAuthPopupResult(popup);
+    postMessageFrom(someOtherWindow, { source: 'office-oauth-callback', payload: { ok: true } });
 
-    popup.navigateToCallback('https://app.test/api/channels/oauth/instagram/callback?code=1', '{"connectionId":"c1","accounts":[]}');
-    await vi.advanceTimersByTimeAsync(400);
-
-    await expect(promise).resolves.toEqual({ connectionId: 'c1', accounts: [] });
+    // Still pending — resolve it for real now so the test can finish cleanly.
+    postMessageFrom(popup, { source: 'office-oauth-callback', payload: { done: true } });
+    await expect(promise).resolves.toEqual({ done: true });
   });
 
-  it('rejects with OAuthPopupClosedError when the user closes the popup before completing', async () => {
-    const popup = makeFakePopup();
-    popup.navigateCrossOrigin();
+  it('ignores a same-source message that is not shaped like an OAuth callback message', async () => {
+    const popup = new FakePopup();
 
-    const promise = waitForOAuthPopupResult(popup, '/channels/oauth/');
-    // Attach the rejection assertion before advancing timers, so the rejection
-    // (fired synchronously inside the timer callback below) is never briefly
-    // unhandled between the reject() call and this assertion picking it up.
+    const promise = waitForOAuthPopupResult(popup);
+    postMessageFrom(popup, { source: 'some-unrelated-thing', payload: { ok: true } });
+    postMessageFrom(popup, 'not even an object');
+
+    postMessageFrom(popup, { source: 'office-oauth-callback', payload: { done: true } });
+    await expect(promise).resolves.toEqual({ done: true });
+  });
+
+  it('rejects with OAuthPopupClosedError once the popup closes without ever posting a message', async () => {
+    const popup = new FakePopup();
+
+    const promise = waitForOAuthPopupResult(popup);
     const assertion = expect(promise).rejects.toBeInstanceOf(OAuthPopupClosedError);
     popup.closed = true;
     await vi.advanceTimersByTimeAsync(400);
@@ -125,28 +66,14 @@ describe('waitForOAuthPopupResult', () => {
     await assertion;
   });
 
-  it('rejects with OAuthPopupParseError and still closes the popup when the body is not valid JSON', async () => {
-    const popup = makeFakePopup();
-    popup.navigateToCallback('https://app.test/api/channels/oauth/instagram/callback?code=1', 'not json');
+  it('stops listening after resolving, so a late message from the same popup is a no-op', async () => {
+    const popup = new FakePopup();
 
-    const promise = waitForOAuthPopupResult(popup, '/channels/oauth/');
-    const assertion = expect(promise).rejects.toBeInstanceOf(OAuthPopupParseError);
-    await vi.advanceTimersByTimeAsync(400);
+    const promise = waitForOAuthPopupResult(popup);
+    postMessageFrom(popup, { source: 'office-oauth-callback', payload: { first: true } });
+    await expect(promise).resolves.toEqual({ first: true });
 
-    await assertion;
-    expect(popup.close).toHaveBeenCalledTimes(1);
-  });
-
-  it('resolves a ProblemDetails-shaped error body just as readily as a success body — the caller distinguishes them', async () => {
-    const popup = makeFakePopup();
-    popup.navigateToCallback(
-      'https://app.test/api/channels/oauth/instagram/callback?error=access_denied',
-      '{"title":"Корбар авторизатсияро рад кард","detail":"user denied","status":400}'
-    );
-
-    const promise = waitForOAuthPopupResult(popup, '/channels/oauth/');
-    await vi.advanceTimersByTimeAsync(400);
-
-    await expect(promise).resolves.toEqual({ title: 'Корбар авторизатсияро рад кард', detail: 'user denied', status: 400 });
+    // Should not throw, warn, or resolve/reject anything a second time.
+    expect(() => postMessageFrom(popup, { source: 'office-oauth-callback', payload: { second: true } })).not.toThrow();
   });
 });

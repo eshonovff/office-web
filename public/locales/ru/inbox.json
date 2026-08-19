@@ -61,7 +61,6 @@
   "oauthAccountsHint": "Выберите аккаунт, который хотите подключить:",
   "oauthAlreadyConnected": "Уже подключён — будет обновлён",
   "oauthPopupBlocked": "Браузер заблокировал всплывающее окно — разрешите его для этого сайта и попробуйте снова.",
-  "oauthResultUnreadable": "Не удалось прочитать результат подключения — попробуйте снова.",
   "testChannel": "Проверить",
   "channelTestSuccess": "Credentials работают (найдено шаблонов: {{count}})",
   "channelTestFailed": "Проверка не удалась — проверьте Access Token или WABA ID",

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { channelsApi } from '~/api/channels';
 import type { ChannelDetail, ChannelListItem, OAuthAccountOption, OAuthCallbackResponse, OAuthProvider } from '~/types/channel';
-import { OAuthPopupClosedError, OAuthPopupParseError, waitForOAuthPopupResult, type PopupLike } from './oauthPopup';
+import { waitForOAuthPopupResult, type PopupLike } from './oauthPopup';
 
 export type OAuthConnectPhase = 'idle' | 'waiting' | 'accounts' | 'connecting';
 
@@ -32,10 +32,11 @@ function isProblemDetails(value: unknown): value is ProblemDetailsLike {
 
 /**
  * Drives one provider's OAuth-connect popup end to end: opens it, waits for
- * Meta's round-trip (see oauthPopup.ts for why that's a same-origin DOM read
- * rather than a second request), and hands back the account list for the
- * caller to render as a confirmation step. One instance per provider — the
- * page-level "Пайваст кардани Instagram/Facebook" button and any per-channel
+ * Meta's round-trip (see oauthPopup.ts for how the result actually gets back
+ * out of the popup — a postMessage, not a second request), and hands back
+ * the account list for the caller to render as a confirmation step. One
+ * instance per provider — the page-level "Пайваст кардани
+ * Instagram/Facebook" button and any per-channel
  * "Пайваст аз нав" (reconnect) button for that same provider all call the
  * same instance's `begin()`, so they share one modal instead of each needing
  * their own.
@@ -86,14 +87,12 @@ export function useOAuthConnectFlow(provider: OAuthProvider, existingChannels: C
 
     let result: unknown;
     try {
-      result = await waitForOAuthPopupResult(popup, '/channels/oauth/');
-    } catch (error) {
-      if (error instanceof OAuthPopupClosedError) {
-        // Deliberate user action (closed the window, or backed out of Meta's
-        // dialog until it closed itself) — not a failure, nothing to toast.
-      } else if (error instanceof OAuthPopupParseError) {
-        toast.error(t('oauthResultUnreadable', { ns: 'inbox' }));
-      }
+      result = await waitForOAuthPopupResult(popup);
+    } catch {
+      // Only failure mode left is OAuthPopupClosedError — the user closed the
+      // window, or backed out of Meta's own dialog until it closed itself
+      // (e.g. an app-restricted account that never gets redirected back at
+      // all). Deliberate, not a failure — nothing to toast.
       reset();
       return;
     }

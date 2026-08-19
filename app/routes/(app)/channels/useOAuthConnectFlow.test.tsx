@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { channelsApi } from '~/api/channels';
 import { makeQueryClient } from '~/lib/query-client';
 import type { ChannelListItem } from '~/types/channel';
-import { OAuthPopupClosedError, OAuthPopupParseError } from './oauthPopup';
+import { OAuthPopupClosedError } from './oauthPopup';
 import { useOAuthConnectFlow } from './useOAuthConnectFlow';
 
 vi.mock('~/api/channels', () => ({
@@ -83,17 +83,6 @@ describe('useOAuthConnectFlow', () => {
 
     expect(result.current.phase).toBe('idle');
     expect(toastError).not.toHaveBeenCalled();
-  });
-
-  it('toasts a distinct message when the popup body could not be parsed', async () => {
-    vi.mocked(channelsApi.startOAuth).mockResolvedValue({ url: 'https://meta.example/auth' });
-    waitForOAuthPopupResult.mockRejectedValue(new OAuthPopupParseError());
-
-    const { result } = renderFlow();
-    await act(() => result.current.begin());
-
-    expect(toastError).toHaveBeenCalledWith('oauthResultUnreadable');
-    expect(result.current.phase).toBe('idle');
   });
 
   it('surfaces the callback ProblemDetails detail/title when Meta or the state check fails', async () => {
