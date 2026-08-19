@@ -56,4 +56,25 @@ describe('channelsApi', () => {
 
     expect(instances[0].get).toHaveBeenCalledWith('/channels/ch1/assignable-users');
   });
+
+  it('requests the OAuth authorization URL with a lowercase provider segment', async () => {
+    const { channelsApi } = await import('~/api/channels');
+
+    await channelsApi.startOAuth('Instagram');
+
+    expect(instances[0].get).toHaveBeenCalledWith('/channels/oauth/instagram/start');
+  });
+
+  it('posts the picked account to the lowercase-provider connect endpoint', async () => {
+    const { channelsApi } = await import('~/api/channels');
+    instances[0].post.mockResolvedValue({ data: {} });
+
+    await channelsApi.connectOAuth('Facebook', { connectionId: 'c1', externalId: 'page1', name: 'My Page' });
+
+    expect(instances[0].post).toHaveBeenCalledWith('/channels/oauth/facebook/connect', {
+      connectionId: 'c1',
+      externalId: 'page1',
+      name: 'My Page',
+    });
+  });
 });

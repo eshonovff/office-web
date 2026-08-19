@@ -50,3 +50,27 @@ export interface WhatsAppTemplate {
   status: string;
   bodyText: string | null;
 }
+
+/** WhatsApp keeps the manual-credentials flow — only these two support OAuth. */
+export type OAuthProvider = 'Instagram' | 'Facebook';
+
+export interface OAuthStartResponse {
+  url: string;
+}
+
+/** A Page (Facebook) or business account (Instagram) the operator can connect — never carries a token. */
+export interface OAuthAccountOption {
+  externalId: string;
+  name: string;
+}
+
+export interface OAuthCallbackResponse {
+  connectionId: string;
+  accounts: OAuthAccountOption[];
+}
+
+export interface ConnectChannelOAuthRequest {
+  connectionId: string;
+  externalId: string;
+  name: string;
+}

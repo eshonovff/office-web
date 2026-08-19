@@ -2,8 +2,11 @@ import { apiClient } from '~/lib/client';
 import type {
   ChannelDetail,
   ChannelListItem,
+  ConnectChannelOAuthRequest,
   CreateChannelRequest,
   MyChannelListItem,
+  OAuthProvider,
+  OAuthStartResponse,
   SetChannelMembersRequest,
   UpdateChannelRequest,
   WhatsAppTemplate,
@@ -43,6 +46,17 @@ export const channelsApi = {
   },
   listAssignableUsers: async (id: string): Promise<AssignableUser[]> => {
     const { data } = await apiClient.get<AssignableUser[]>(`/channels/${id}/assignable-users`);
+    return data;
+  },
+  startOAuth: async (provider: OAuthProvider): Promise<OAuthStartResponse> => {
+    const { data } = await apiClient.get<OAuthStartResponse>(`/channels/oauth/${provider.toLowerCase()}/start`);
+    return data;
+  },
+  // The callback itself (GET /channels/oauth/{provider}/callback) is a Meta browser
+  // redirect, not something this app calls directly — see oauthPopup.ts for how its
+  // JSON response is read out of the popup that navigates there instead.
+  connectOAuth: async (provider: OAuthProvider, payload: ConnectChannelOAuthRequest): Promise<ChannelDetail> => {
+    const { data } = await apiClient.post<ChannelDetail>(`/channels/oauth/${provider.toLowerCase()}/connect`, payload);
     return data;
   },
 };
