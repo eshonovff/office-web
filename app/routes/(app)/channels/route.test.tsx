@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { channelsApi } from '~/api/channels';
 import { makeQueryClient } from '~/lib/query-client';
 import { useAuthStore } from '~/store/useAuthStore';
@@ -15,6 +15,8 @@ vi.mock('~/api/channels', () => ({
     update: vi.fn(),
     deactivate: vi.fn(),
     listWhatsAppTemplates: vi.fn(),
+    startOAuth: vi.fn(),
+    connectOAuth: vi.fn(),
   },
 }));
 
@@ -139,5 +141,59 @@ describe('ChannelsPage WhatsApp test button', () => {
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('channelTestFailed', { id: 'channel-test' }));
     expect(toast.success).not.toHaveBeenCalled();
+  });
+});
+
+describe('ChannelsPage OAuth connect', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubGlobal('open', vi.fn().mockReturnValue(null)); // popup-blocked path — simplest to assert against without a live popup
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('always offers both provider connect buttons, alongside the manual-create flow', async () => {
+    vi.mocked(channelsApi.list).mockResolvedValue([]);
+    renderPage();
+
+    await waitFor(() => screen.getByText('connectInstagram'));
+    expect(screen.getByText('connectFacebook')).toBeInTheDocument();
+    expect(screen.getByText('create')).toBeInTheDocument();
+  });
+
+  it('starts the Instagram OAuth flow (blocked-popup path) when its button is clicked', async () => {
+    vi.mocked(channelsApi.list).mockResolvedValue([]);
+    const user = userEvent.setup();
+    renderPage();
+
+    await waitFor(() => screen.getByText('connectInstagram'));
+    await user.click(screen.getByText('connectInstagram'));
+
+    expect(window.open).toHaveBeenCalledTimes(1);
+    // Popup blocked -> never reaches /start.
+    expect(channelsApi.startOAuth).not.toHaveBeenCalled();
+  });
+
+  it('offers "Пайваст аз нав" only on Instagram/Facebook channels, not WhatsApp', async () => {
+    vi.mocked(channelsApi.list).mockResolvedValue([
+      makeChannel({ id: 'wa', type: 'WhatsApp' }),
+      makeChannel({ id: 'ig', type: 'Instagram', externalId: 'ig1' }),
+    ]);
+    renderPage();
+
+    await waitFor(() => expect(screen.getAllByText('reconnect')).toHaveLength(1));
+  });
+
+  it('reconnecting an Instagram channel drives the same Instagram flow as the page-level connect button', async () => {
+    vi.mocked(channelsApi.list).mockResolvedValue([makeChannel({ id: 'ig', type: 'Instagram', externalId: 'ig1' })]);
+    const user = userEvent.setup();
+    renderPage();
+
+    await waitFor(() => screen.getByText('reconnect'));
+    await user.click(screen.getByText('reconnect'));
+
+    expect(window.open).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pencil, Plus, PowerOff, Users, Zap } from 'lucide-react';
+import { Link2, Pencil, Plus, PowerOff, RotateCw, Users, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -16,6 +16,8 @@ import type { ChannelListItem, CreateChannelRequest, UpdateChannelRequest } from
 import { ChannelMembersModal } from './components/ChannelMembersModal';
 import { CreateChannelModal } from './components/CreateChannelModal';
 import { EditChannelModal } from './components/EditChannelModal';
+import { OAuthAccountPickerModal } from './components/OAuthAccountPickerModal';
+import { useOAuthConnectFlow } from './useOAuthConnectFlow';
 
 export default function ChannelsPage() {
   const { t } = useTranslation(['inbox', 'common']);
@@ -31,6 +33,9 @@ export default function ChannelsPage() {
     queryKey: ['channels'],
     queryFn: channelsApi.list,
   });
+
+  const instagramOAuth = useOAuthConnectFlow('Instagram', channels);
+  const facebookOAuth = useOAuthConnectFlow('Facebook', channels);
 
   const { mutate: createChannel, isPending: isCreating } = useMutation({
     mutationFn: (payload: CreateChannelRequest) => channelsApi.create(payload),
@@ -81,13 +86,25 @@ export default function ChannelsPage() {
 
   return (
     <div className="flex-1 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-semibold tracking-tight">{t('channelsTitle')}</h1>
-        <Button onClick={() => setCreating(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          {t('create')}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => void instagramOAuth.begin()}>
+            <Link2 className="h-4 w-4" />
+            {t('connectInstagram')}
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={() => void facebookOAuth.begin()}>
+            <Link2 className="h-4 w-4" />
+            {t('connectFacebook')}
+          </Button>
+          <Button onClick={() => setCreating(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            {t('create')}
+          </Button>
+        </div>
       </div>
+
+      <p className="text-muted-foreground text-2xs">{t('oauthTesterNotice')}</p>
 
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -121,6 +138,16 @@ export default function ChannelsPage() {
                   <Users className="h-3.5 w-3.5" />
                   {t('manageMembers')}
                 </Button>
+                {(channel.type === 'Instagram' || channel.type === 'Facebook') && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => void (channel.type === 'Instagram' ? instagramOAuth : facebookOAuth).begin()}>
+                    <RotateCw className="h-3.5 w-3.5" />
+                    {t('reconnect')}
+                  </Button>
+                )}
                 {channel.type === 'WhatsApp' && canTestWhatsApp && (
                   <Button
                     variant="outline"
@@ -187,6 +214,9 @@ export default function ChannelsPage() {
         confirmText={t('deactivate')}
         isLoading={isDeactivating}
       />
+
+      <OAuthAccountPickerModal provider="Instagram" flow={instagramOAuth} />
+      <OAuthAccountPickerModal provider="Facebook" flow={facebookOAuth} />
     </div>
   );
 }
