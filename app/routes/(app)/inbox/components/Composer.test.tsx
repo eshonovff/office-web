@@ -21,6 +21,11 @@ vi.mock('~/api/channels', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('../useInboxBreakpoint', () => ({ useInboxBreakpoint: vi.fn().mockReturnValue('desktop') }));
 
+// jsdom has no real object-URL support — only needed for the accepted-file
+// path (handleFileChange builds a local preview for image/video/audio).
+URL.createObjectURL = vi.fn(() => 'blob:mock');
+URL.revokeObjectURL = vi.fn();
+
 function makeConversation(overrides: Partial<ConversationDetail> = {}): ConversationDetail {
   return {
     id: 'c1',
@@ -37,6 +42,11 @@ function makeConversation(overrides: Partial<ConversationDetail> = {}): Conversa
     unreadCount: 0,
     windowExpiresAt: null,
     createdAt: new Date().toISOString(),
+    mediaLimits: [
+      { category: 'image', maxSizeBytes: 5 * 1024 * 1024 },
+      { category: 'audioVideo', maxSizeBytes: 16 * 1024 * 1024 },
+      { category: 'document', maxSizeBytes: 100 * 1024 * 1024 },
+    ],
     ...overrides,
   };
 }
@@ -321,6 +331,48 @@ describe('Composer', () => {
 
       expect(screen.queryByText('send')).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'send' })).toBeInTheDocument();
+    });
+  });
+
+  describe('file size limits, read from the conversation instead of a hardcoded copy (item 4)', () => {
+    function fileInput(container: HTMLElement) {
+      return container.querySelector('input[type="file"]') as HTMLInputElement;
+    }
+
+    it('rejects a file over WhatsApp\'s 5MB image limit', async () => {
+      const user = userEvent.setup();
+      const { container } = renderComposer(
+        makeConversation({
+          channelType: 'WhatsApp',
+          windowExpiresAt: dayjs().add(6, 'hour').toISOString(),
+          mediaLimits: [{ category: 'image', maxSizeBytes: 5 * 1024 * 1024 }],
+        })
+      );
+      const oversized = new File([new Uint8Array(6 * 1024 * 1024)], 'photo.jpg', { type: 'image/jpeg' });
+
+      await user.upload(fileInput(container), oversized);
+
+      expect(screen.getByText('fileTooLarge')).toBeInTheDocument();
+    });
+
+    it('accepts the same file size on Instagram, since Messenger Platform allows up to 25MB per attachment', async () => {
+      const user = userEvent.setup();
+      const { container } = renderComposer(
+        makeConversation({
+          channelType: 'Instagram',
+          windowExpiresAt: dayjs().add(6, 'hour').toISOString(),
+          mediaLimits: [
+            { category: 'image', maxSizeBytes: 25 * 1024 * 1024 },
+            { category: 'audioVideo', maxSizeBytes: 25 * 1024 * 1024 },
+            { category: 'document', maxSizeBytes: 25 * 1024 * 1024 },
+          ],
+        })
+      );
+      const sixMb = new File([new Uint8Array(6 * 1024 * 1024)], 'photo.jpg', { type: 'image/jpeg' });
+
+      await user.upload(fileInput(container), sixMb);
+
+      expect(screen.queryByText('fileTooLarge')).not.toBeInTheDocument();
     });
   });
 });

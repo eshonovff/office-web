@@ -133,7 +133,7 @@
   "sendFile": "Файл",
   "uploading": "Загрузка...",
   "uploadFailed": "Не удалось отправить файл.",
-  "fileTooLarge": "Файл слишком большой. Максимум: {{max}}.",
+  "fileTooLarge": "Файл слишком большой. Для {{channel}} максимум: {{max}}.",
   "voiceNote": "Голосовое сообщение",
   "recordingVoice": "Идёт запись {{duration}}",
   "voiceUnsupported": "Браузер не поддерживает запись голоса.",

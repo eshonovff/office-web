@@ -18,9 +18,19 @@ export interface ConversationListItem {
   createdAt: string;
 }
 
-// Backend's ConversationDetail record has the exact same fields as
-// ConversationListItem — no embedded messages or channel object.
-export type ConversationDetail = ConversationListItem;
+/** GET /conversations returns this per category — WhatsApp has three distinct limits, Instagram/Facebook one flat limit repeated across all three (see MediaUploadValidator.LimitsFor on the backend). */
+export interface MediaTypeLimit {
+  category: 'image' | 'audioVideo' | 'document';
+  maxSizeBytes: number;
+}
+
+// Backend's ConversationDetail record has the same fields as
+// ConversationListItem plus mediaLimits — the list response stays lean
+// (fetched in bulk), the single-conversation one carries the numbers the
+// Composer needs to pre-validate an upload (see lib/mediaLimits.ts).
+export interface ConversationDetail extends ConversationListItem {
+  mediaLimits: MediaTypeLimit[];
+}
 
 export interface PagedResult<T> {
   items: T[];

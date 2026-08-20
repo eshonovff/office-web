@@ -133,7 +133,7 @@
   "sendFile": "Файл",
   "uploading": "Бор мешавад...",
   "uploadFailed": "Файл фиристода нашуд.",
-  "fileTooLarge": "Файл аз ҳад калон аст. Ҳадди аксар: {{max}}.",
+  "fileTooLarge": "Файл аз ҳад калон аст. Барои {{channel}} ҳадди аксар: {{max}}.",
   "voiceNote": "Voice note",
   "recordingVoice": "Сабт мешавад {{duration}}",
   "voiceUnsupported": "Браузер сабти овозро дастгирӣ намекунад.",

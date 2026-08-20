@@ -19,6 +19,7 @@ import { cn } from '~/lib/utils';
 import { useAuthStore } from '~/store/useAuthStore';
 import type { ConversationDetail } from '~/types/conversation';
 import type { Message } from '~/types/message';
+import { formatMaxSize, maxBytesFor } from '../mediaLimits';
 import { getMessengerSendMode } from '../messengerWindow';
 import { useInboxBreakpoint } from '../useInboxBreakpoint';
 
@@ -62,12 +63,6 @@ export function autoResizeTextarea(el: HTMLTextAreaElement, maxLines: number) {
   el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
 }
 
-const MEDIA_LIMITS = {
-  image: 5 * 1024 * 1024,
-  audioVideo: 16 * 1024 * 1024,
-  document: 100 * 1024 * 1024,
-} as const;
-
 interface MessagesPage {
   items: Message[];
   totalCount: number;
@@ -78,16 +73,6 @@ interface MessagesPage {
 interface MessagesCache {
   pages: MessagesPage[];
   pageParams: unknown[];
-}
-
-function classifyFile(file: File) {
-  if (file.type.startsWith('image/')) return { type: 'image', maxBytes: MEDIA_LIMITS.image };
-  if (file.type.startsWith('audio/') || file.type.startsWith('video/')) return { type: 'audioVideo', maxBytes: MEDIA_LIMITS.audioVideo };
-  return { type: 'document', maxBytes: MEDIA_LIMITS.document };
-}
-
-function formatLimit(bytes: number) {
-  return `${bytes / (1024 * 1024)} MB`;
 }
 
 function appendPendingMessage(queryClient: ReturnType<typeof useQueryClient>, conversationId: string, message: Message) {
@@ -304,9 +289,9 @@ export function Composer({ conversation }: ComposerProps) {
     clearSelectedFile();
     if (!file) return;
 
-    const { maxBytes } = classifyFile(file);
+    const maxBytes = maxBytesFor(conversation.mediaLimits, file.type);
     if (file.size > maxBytes) {
-      setFileError(t('fileTooLarge', { max: formatLimit(maxBytes) }));
+      setFileError(t('fileTooLarge', { channel: conversation.channelType, max: formatMaxSize(maxBytes) }));
       return;
     }
 
@@ -353,8 +338,9 @@ export function Composer({ conversation }: ComposerProps) {
 
         if (!shouldSendRecordingRef.current) return;
         const blob = new Blob(recordingChunksRef.current, { type: mimeType });
-        if (blob.size > MEDIA_LIMITS.audioVideo) {
-          setRecordError(t('fileTooLarge', { max: formatLimit(MEDIA_LIMITS.audioVideo) }));
+        const maxBytes = maxBytesFor(conversation.mediaLimits, 'audio/webm');
+        if (blob.size > maxBytes) {
+          setRecordError(t('fileTooLarge', { channel: conversation.channelType, max: formatMaxSize(maxBytes) }));
           return;
         }
         const file = new File([blob], `voice-note-${Date.now()}.webm`, { type: mimeType });

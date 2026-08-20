@@ -59,6 +59,7 @@ function makeConversation(overrides: Partial<ConversationDetail> = {}): Conversa
     unreadCount: 0,
     windowExpiresAt: null,
     createdAt: new Date().toISOString(),
+    mediaLimits: [],
     ...overrides,
   };
 }
