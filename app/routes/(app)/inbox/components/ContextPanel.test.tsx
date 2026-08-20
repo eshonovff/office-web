@@ -55,26 +55,41 @@ describe('ContextPanel contact handle', () => {
     expect(screen.getByText('+992 50 988 65 88')).toBeInTheDocument();
   });
 
-  it('shows an Instagram externalId as-is, under a generic "ID" label — not as a phone', () => {
-    renderPanel(makeConversation({ channelType: 'Instagram', externalId: 'ig_scoped_id_123' }));
+  it('never shows the platform-scoped externalId for Instagram/Facebook — there is no separate username field to show it as', () => {
+    renderPanel(makeConversation({ channelType: 'Instagram', externalId: 'ig_scoped_id_123', contactName: 'daler_ig' }));
 
-    expect(screen.getByText('contactHandleLabel.Instagram:')).toBeInTheDocument();
-    expect(screen.getByText('ig_scoped_id_123')).toBeInTheDocument();
+    expect(screen.queryByText('ig_scoped_id_123')).not.toBeInTheDocument();
+    expect(screen.queryByText('contactHandleLabel.Instagram:')).not.toBeInTheDocument();
   });
 
-  it('shows a Facebook externalId as-is, under a generic "ID" label', () => {
-    renderPanel(makeConversation({ channelType: 'Facebook', externalId: 'fb_psid_456' }));
+  it('shows the resolved contactName for Instagram/Facebook — it already falls back to the username server-side', () => {
+    renderPanel(makeConversation({ channelType: 'Facebook', externalId: 'fb_psid_456', contactName: 'daler_fb' }));
 
-    expect(screen.getByText('contactHandleLabel.Facebook:')).toBeInTheDocument();
-    expect(screen.getByText('fb_psid_456')).toBeInTheDocument();
+    expect(screen.getByText('daler_fb')).toBeInTheDocument();
   });
 
-  it('copies the displayed (formatted) value to the clipboard', async () => {
+  it('copies the phone number for WhatsApp', async () => {
     const user = userEvent.setup();
     renderPanel(makeConversation({ channelType: 'WhatsApp', externalId: '992509886588' }));
 
     await user.click(screen.getByTitle('copy'));
 
     await expect(navigator.clipboard.readText()).resolves.toBe('+992 50 988 65 88');
+  });
+
+  it('copies the resolved name/username for Instagram/Facebook, since there is nothing else to copy', async () => {
+    const user = userEvent.setup();
+    renderPanel(makeConversation({ channelType: 'Instagram', externalId: 'ig_scoped_id_123', contactName: 'daler_ig' }));
+
+    await user.click(screen.getByTitle('copy'));
+
+    await expect(navigator.clipboard.readText()).resolves.toBe('daler_ig');
+  });
+
+  it('falls back to externalId (with a copy button) when Instagram has not resolved a contact name yet', () => {
+    renderPanel(makeConversation({ channelType: 'Instagram', externalId: 'ig_scoped_id_123', contactName: null }));
+
+    expect(screen.getByText('ig_scoped_id_123')).toBeInTheDocument();
+    expect(screen.getByTitle('copy')).toBeInTheDocument();
   });
 });

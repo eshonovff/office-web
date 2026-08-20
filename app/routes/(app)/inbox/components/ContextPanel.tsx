@@ -31,13 +31,21 @@ export function ContextPanel({ conversation, onStatusChange, isChangingStatus }:
   const initials = displayName.slice(0, 2).toUpperCase();
 
   // Only WhatsApp's externalId is a phone number — Instagram/Facebook use a
-  // platform-scoped user id there, which would be actively misleading under
-  // a "phone" label or run through phone grouping.
-  const isPhoneHandle = conversation.channelType === 'WhatsApp';
-  const contactHandle = isPhoneHandle ? formatPhoneNumber(conversation.externalId) : conversation.externalId;
+  // platform-scoped user id there (IGSID/PSID), meaningless to a human, not
+  // a username. There's no separate username field from the backend either:
+  // Conversation.ContactName already falls back to the Instagram username
+  // server-side when the real name is empty (InstagramProvider.
+  // GetContactProfileAsync) — the two are indistinguishable once they reach
+  // here, so displayName above is already the best available identity for
+  // Instagram/Facebook. This copies whichever value is actually the
+  // displayed identity: the phone for WhatsApp, that resolved name/username
+  // otherwise.
+  const isWhatsApp = conversation.channelType === 'WhatsApp';
+  const phoneNumber = isWhatsApp ? formatPhoneNumber(conversation.externalId) : null;
+  const copyValue = phoneNumber ?? displayName;
 
   async function copyContactHandle() {
-    await navigator.clipboard.writeText(contactHandle);
+    await navigator.clipboard.writeText(copyValue);
     setHandleCopied(true);
     setTimeout(() => setHandleCopied(false), 1500);
   }
@@ -58,20 +66,35 @@ export function ContextPanel({ conversation, onStatusChange, isChangingStatus }:
           {conversation.contactAvatarUrl && <AvatarImage src={conversation.contactAvatarUrl} />}
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
-        <span className="font-semibold">{displayName}</span>
-        <div className="text-muted-foreground flex items-center gap-1 text-2xs">
-          <span>{t(`contactHandleLabel.${conversation.channelType}`)}:</span>
-          <span className="font-mono">{contactHandle}</span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => void copyContactHandle()}
-            title={t('copy')}
-            aria-label={t('copy')}>
-            {handleCopied ? <Check className="text-success h-3 w-3" /> : <Copy className="h-3 w-3" />}
-          </Button>
+        <div className="flex items-center gap-1">
+          <span className="font-semibold">{displayName}</span>
+          {!phoneNumber && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => void copyContactHandle()}
+              title={t('copy')}
+              aria-label={t('copy')}>
+              {handleCopied ? <Check className="text-success h-3 w-3" /> : <Copy className="h-3 w-3" />}
+            </Button>
+          )}
         </div>
+        {phoneNumber && (
+          <div className="text-muted-foreground flex items-center gap-1 text-2xs">
+            <span>{t('contactHandleLabel.WhatsApp')}:</span>
+            <span className="font-mono">{phoneNumber}</span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => void copyContactHandle()}
+              title={t('copy')}
+              aria-label={t('copy')}>
+              {handleCopied ? <Check className="text-success h-3 w-3" /> : <Copy className="h-3 w-3" />}
+            </Button>
+          </div>
+        )}
         <Badge variant="outline" className="text-2xs">
           {t(`channelType.${conversation.channelType}`)}
         </Badge>
