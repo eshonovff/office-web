@@ -325,6 +325,61 @@ describe('Composer', () => {
   });
 });
 
+describe('Composer Messenger Platform window (item 3)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAuthStore.setState({ accessToken: null, user: null, roles: [], permissions: [] });
+  });
+
+  it('shows the normal composer and no special note while the 24h window is still open', () => {
+    renderComposer(makeConversation({ channelType: 'Instagram', windowExpiresAt: dayjs().add(6, 'hour').toISOString() }));
+
+    expect(screen.getByPlaceholderText('composerPlaceholder')).toBeInTheDocument();
+    expect(screen.queryByText('messengerTagActive')).not.toBeInTheDocument();
+    expect(screen.queryByText('windowClosedTitle')).not.toBeInTheDocument();
+  });
+
+  it('never shows the WhatsApp template picker for Instagram/Facebook — they have no templates', () => {
+    renderComposer(makeConversation({ channelType: 'Instagram', windowExpiresAt: dayjs().subtract(1, 'hour').toISOString() }));
+
+    expect(screen.queryByText('windowClosedTitle')).not.toBeInTheDocument();
+    expect(screen.queryByText('selectTemplate')).not.toBeInTheDocument();
+  });
+
+  it('stays fully usable and explains the HUMAN_AGENT tag once the 24h window has closed but is within 7 days', () => {
+    renderComposer(makeConversation({ channelType: 'Instagram', windowExpiresAt: dayjs().subtract(1, 'hour').toISOString() }));
+
+    expect(screen.getByText('messengerTagActive')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('composerPlaceholder')).toBeInTheDocument();
+  });
+
+  it('blocks sending outright once more than 7 days have passed since the last inbound message', () => {
+    renderComposer(makeConversation({ channelType: 'Facebook', windowExpiresAt: dayjs().subtract(8, 'day').toISOString() }));
+
+    expect(screen.getByText('messengerWindowClosedTitle')).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('composerPlaceholder')).not.toBeInTheDocument();
+  });
+
+  it('lets an internal note through even when replying to the customer would be blocked', async () => {
+    const user = userEvent.setup();
+    renderComposer(makeConversation({ channelType: 'Facebook', windowExpiresAt: dayjs().subtract(8, 'day').toISOString() }));
+
+    expect(screen.getByText('messengerWindowClosedTitle')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('switch'));
+
+    expect(screen.queryByText('messengerWindowClosedTitle')).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText('internalNotePlaceholder')).toBeInTheDocument();
+  });
+
+  it('does not apply the Messenger 7-day block to WhatsApp — that channel always keeps the template option instead', () => {
+    renderComposer(makeConversation({ channelType: 'WhatsApp', windowExpiresAt: dayjs().subtract(8, 'day').toISOString() }));
+
+    expect(screen.queryByText('messengerWindowClosedTitle')).not.toBeInTheDocument();
+    expect(screen.getByText('windowClosedTitle')).toBeInTheDocument();
+  });
+});
+
 describe('computeTextareaMaxHeight', () => {
   it('is line height times max lines plus vertical padding and border', () => {
     expect(computeTextareaMaxHeight(20, 16, 2, 4)).toBe(20 * 4 + 16 + 2);

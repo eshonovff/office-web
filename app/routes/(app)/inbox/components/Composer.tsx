@@ -19,6 +19,7 @@ import { cn } from '~/lib/utils';
 import { useAuthStore } from '~/store/useAuthStore';
 import type { ConversationDetail } from '~/types/conversation';
 import type { Message } from '~/types/message';
+import { getMessengerSendMode } from '../messengerWindow';
 import { useInboxBreakpoint } from '../useInboxBreakpoint';
 
 interface ComposerProps {
@@ -185,6 +186,17 @@ export function Composer({ conversation }: ComposerProps) {
   const windowOpen = isWindowOpen(conversation.windowExpiresAt);
   const isWhatsApp = conversation.channelType === 'WhatsApp';
   const showTemplates = !isNoteMode && (!windowOpen || windowClosedDuringSend) && isWhatsApp;
+
+  // Facebook/Instagram have no templates — outside the normal 24h window the
+  // HUMAN_AGENT tag lets a reply through automatically for up to 7 days from
+  // the customer's last message (Office.Api's MessengerSendModePlanner),
+  // with no operator choice involved. 'plain' behaves exactly like WhatsApp's
+  // open window; 'tag' still sends normally but deserves a note explaining
+  // why; 'reject' genuinely can't send at all, unlike WhatsApp where a
+  // template always remains an option.
+  const isMessengerChannel = conversation.channelType === 'Instagram' || conversation.channelType === 'Facebook';
+  const messengerSendMode = isMessengerChannel ? getMessengerSendMode(conversation.windowExpiresAt) : 'plain';
+  const messengerBlocked = !isNoteMode && isMessengerChannel && messengerSendMode === 'reject';
 
   const { data: templates = [], isLoading: isLoadingTemplates } = useQuery({
     queryKey: ['channels', conversation.channelId, 'whatsapp-templates'],
@@ -444,9 +456,17 @@ export function Composer({ conversation }: ComposerProps) {
             </div>
           )}
         </div>
+      ) : messengerBlocked ? (
+        <div className="bg-destructive/10 border-destructive/30 rounded-lg border p-2.5">
+          <p className="text-destructive text-sm font-medium">{t('messengerWindowClosedTitle')}</p>
+          <p className="text-muted-foreground mt-0.5 text-2xs">{t('messengerWindowClosedExplanation')}</p>
+        </div>
       ) : (
         <div className="space-y-1.5">
-          {!isNoteMode && windowOpen && conversation.windowExpiresAt && isWhatsApp && (
+          {!isNoteMode && isMessengerChannel && messengerSendMode === 'tag' && (
+            <p className="text-warning text-2xs">{t('messengerTagActive')}</p>
+          )}
+          {!isNoteMode && windowOpen && conversation.windowExpiresAt && (
             <p className="text-muted-foreground text-2xs">{formatWindowRemaining(conversation.windowExpiresAt)}</p>
           )}
           <div className="flex items-end gap-2">
