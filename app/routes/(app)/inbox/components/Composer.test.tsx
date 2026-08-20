@@ -374,6 +374,27 @@ describe('Composer', () => {
 
       expect(screen.queryByText('fileTooLarge')).not.toBeInTheDocument();
     });
+
+    // Regression: an office-api backend not yet running the commit that added
+    // mediaLimits (or a stale conversation cached from before it existed)
+    // leaves mediaLimits empty — maxBytesFor used to resolve that to a 0-byte
+    // limit (Math.max(0, ...[]) === 0), which rejected every attachment,
+    // voice notes included, before the request ever reached the server.
+    it('does not reject a normal-sized photo when the conversation carries no mediaLimits at all', async () => {
+      const user = userEvent.setup();
+      const { container } = renderComposer(
+        makeConversation({
+          channelType: 'WhatsApp',
+          windowExpiresAt: dayjs().add(6, 'hour').toISOString(),
+          mediaLimits: [],
+        })
+      );
+      const normalPhoto = new File([new Uint8Array(2 * 1024 * 1024)], 'photo.jpg', { type: 'image/jpeg' });
+
+      await user.upload(fileInput(container), normalPhoto);
+
+      expect(screen.queryByText('fileTooLarge')).not.toBeInTheDocument();
+    });
   });
 });
 
