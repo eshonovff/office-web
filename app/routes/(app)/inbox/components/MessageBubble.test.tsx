@@ -175,3 +175,68 @@ describe('MessageBubble delivery status (item 3)', () => {
     expect(screen.queryByText('cancelSend')).not.toBeInTheDocument();
   });
 });
+
+describe('MessageBubble Instagram/Facebook content (item 2)', () => {
+  it('badges a Reel distinctly from a regular video, and shows its title as a caption', () => {
+    renderBubble({ ...baseMessage, type: 'Video', body: '[Reel] Cool clip', waveformPeaks: null });
+
+    expect(screen.getByText('messengerContent.reel')).toBeInTheDocument();
+    expect(screen.getByText('Cool clip')).toBeInTheDocument();
+  });
+
+  it('badges a titleless Reel without trying to render an empty caption', () => {
+    renderBubble({ ...baseMessage, type: 'Video', body: '[Reel]', waveformPeaks: null });
+
+    expect(screen.getByText('messengerContent.reel')).toBeInTheDocument();
+  });
+
+  it('does not badge a plain video as a Reel', () => {
+    renderBubble({ ...baseMessage, type: 'Video', body: null, waveformPeaks: null });
+
+    expect(screen.queryByText('messengerContent.reel')).not.toBeInTheDocument();
+  });
+
+  it('shows a reply to a story as context (small thumbnail chip) plus the reply text, not as a full-size image', () => {
+    renderBubble({ ...baseMessage, type: 'StoryReply', body: 'nice story!', waveformPeaks: null });
+
+    expect(screen.getByText('messengerContent.storyReplyContext')).toBeInTheDocument();
+    expect(screen.getByText('nice story!')).toBeInTheDocument();
+  });
+
+  it('shows a story mention distinctly from a story reply — no reply text exists for a mention', () => {
+    renderBubble({ ...baseMessage, type: 'StoryReply', body: null, waveformPeaks: null });
+
+    expect(screen.getByText('messengerContent.storyMention')).toBeInTheDocument();
+    expect(screen.queryByText('messengerContent.storyReplyContext')).not.toBeInTheDocument();
+  });
+
+  it('renders the heart sticker as a large emoji, not a text bubble', () => {
+    renderBubble({ ...baseMessage, type: 'Text', mediaUrl: null, body: '❤️ (стикер)', waveformPeaks: null });
+
+    expect(screen.getByText('❤️')).toBeInTheDocument();
+  });
+
+  it('renders a reaction with its emoji interpolated', () => {
+    renderBubble({ ...baseMessage, type: 'Text', mediaUrl: null, body: '[реаксия: ❤]', waveformPeaks: null });
+
+    expect(screen.getByText('messengerContent.reaction')).toBeInTheDocument();
+  });
+
+  it('renders a removed reaction distinctly from a new one', () => {
+    renderBubble({ ...baseMessage, type: 'Text', mediaUrl: null, body: '[реаксия бардошта шуд]', waveformPeaks: null });
+
+    expect(screen.getByText('messengerContent.reactionRemoved')).toBeInTheDocument();
+  });
+
+  it('flags an unrecognized attachment type distinctly instead of showing it as plain, unexplained text', () => {
+    renderBubble({ ...baseMessage, type: 'Text', mediaUrl: null, body: '[навъи дастгирӣнашуда: sticker]', waveformPeaks: null });
+
+    expect(screen.getByText('messengerContent.unsupportedType')).toBeInTheDocument();
+  });
+
+  it('still renders an ordinary text message as plain text, untouched by any of the marker handling', () => {
+    renderBubble({ ...baseMessage, type: 'Text', mediaUrl: null, body: 'Салом, чӣ хел ҳастед?', waveformPeaks: null });
+
+    expect(screen.getByText('Салом, чӣ хел ҳастед?')).toBeInTheDocument();
+  });
+});

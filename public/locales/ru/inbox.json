@@ -119,6 +119,14 @@
     "Location": "Локация",
     "Contact": "Контакт"
   },
+  "messengerContent": {
+    "reel": "Reel",
+    "storyReplyContext": "Ответ на вашу Story",
+    "storyMention": "Упомянул вас в Story",
+    "reaction": "Реакция: {{emoji}}",
+    "reactionRemoved": "Реакция убрана",
+    "unsupportedType": "Неподдерживаемый тип: {{type}}"
+  },
   "composerPlaceholder": "Напишите сообщение...",
   "send": "Отправить",
   "sending": "Отправка...",

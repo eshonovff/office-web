@@ -1,14 +1,30 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { AlertCircle, Ban, Check, CheckCheck, Clock, Contact, Download, FileText, Image, MapPin, Paperclip } from 'lucide-react';
+import {
+  AlertCircle,
+  AlertTriangle,
+  Ban,
+  Check,
+  CheckCheck,
+  Clapperboard,
+  Clock,
+  Contact,
+  Download,
+  FileText,
+  Image,
+  MapPin,
+  Paperclip,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { conversationsApi } from '~/api/conversations';
+import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { formatDate } from '~/lib/format';
 import { cn } from '~/lib/utils';
 import type { Message, MessageType } from '~/types/message';
+import { classifyMessengerContent } from '../messengerContent';
 import { getMessageObjectUrl, useMessageBlobUrl } from '../useMessageBlobUrl';
 import { ImageLightbox } from './ImageLightbox';
 import { VideoMessage } from './VideoMessage';
@@ -151,7 +167,7 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
     }
   }
 
-  if (message.type === 'Image' || message.type === 'StoryReply') {
+  if (message.type === 'Image') {
     const previewUrl = thumbnail.objectUrl ?? media.objectUrl;
     return (
       <div className="space-y-1.5">
@@ -167,6 +183,35 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
         <MediaStatus message={message} status={media.status === 'idle' ? thumbnail.status : media.status} />
         {message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
         <ImageLightbox open={lightboxOpen} onOpenChange={setLightboxOpen} src={media.objectUrl} alt={fileName} />
+      </div>
+    );
+  }
+
+  // Instagram: either a reply to our story (message.body carries the reply
+  // text) or a mention of us in the customer's own story (no text at all) —
+  // MessageType.StoryReply covers both, see messengerContent.ts. Either way
+  // the story itself is shown small, as CONTEXT for the reply/mention below
+  // it, not as the main content the way a real Image message is — without
+  // that distinction an operator can't tell what the customer is even
+  // replying to (item 2 of the request this was built for).
+  if (message.type === 'StoryReply') {
+    const content = classifyMessengerContent(message);
+    const isMention = content?.kind === 'storyMention';
+    const previewUrl = thumbnail.objectUrl ?? media.objectUrl;
+    return (
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2 rounded-md border border-current/15 p-1.5">
+          {previewUrl ? (
+            <img src={previewUrl} alt="" className="h-9 w-9 shrink-0 rounded object-cover" />
+          ) : (
+            <div className="bg-muted flex h-9 w-9 shrink-0 items-center justify-center rounded">
+              <Image className="text-muted-foreground h-3.5 w-3.5" />
+            </div>
+          )}
+          <span className="text-2xs opacity-80">{t(isMention ? 'messengerContent.storyMention' : 'messengerContent.storyReplyContext')}</span>
+        </div>
+        <MediaStatus message={message} status={media.status === 'idle' ? thumbnail.status : media.status} />
+        {message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
       </div>
     );
   }
@@ -189,8 +234,20 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
 
   if (message.type === 'Video') {
     const disabled = !!message.mediaDeletedAt || !!message.mediaDownloadError;
+    // A Reel/shared post shared into DM has no MessageType of its own on the
+    // backend — it's a Video with a "[Reel] <title>" marker in body (see
+    // messengerContent.ts) — without the badge here it's indistinguishable
+    // from a regular video attachment.
+    const content = classifyMessengerContent(message);
+    const reel = content?.kind === 'reel' ? content : null;
     return (
       <div className="space-y-1.5">
+        {reel && (
+          <Badge variant="outline" className="gap-1 text-2xs">
+            <Clapperboard className="h-3 w-3" />
+            {t('messengerContent.reel')}
+          </Badge>
+        )}
         <VideoMessage
           src={disabled ? null : media.objectUrl}
           posterUrl={thumbnail.objectUrl}
@@ -198,6 +255,7 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
           sizeLabel={meta || undefined}
         />
         <MediaStatus message={message} status={media.status} />
+        {reel?.caption && <p className="whitespace-pre-wrap break-words">{reel.caption}</p>}
       </div>
     );
   }
@@ -234,6 +292,11 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   const { t } = useTranslation('inbox');
   const isOutbound = message.direction === 'Outbound';
   const MediaIcon = message.type !== 'Text' ? MEDIA_ICON[message.type] : undefined;
+  // Instagram/Facebook stickers, reactions and unsupported-attachment
+  // markers all arrive as MessageType.Text with a recognizable body — see
+  // messengerContent.ts. A plain-text message classifies as null here and
+  // falls through to the ordinary text bubble below, untouched.
+  const textContent = message.type === 'Text' ? classifyMessengerContent(message) : null;
 
   return (
     <div className={cn('flex', isOutbound ? 'justify-end' : 'justify-start')}>
@@ -255,7 +318,22 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
         {MediaIcon && <MessageMedia message={message} isOutbound={isOutbound} />}
 
-        {message.type === 'Text' && message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
+        {message.type === 'Text' && message.body && (
+          <>
+            {textContent?.kind === 'stickerHeart' && <p className="text-3xl leading-none">❤️</p>}
+            {textContent?.kind === 'reaction' && (
+              <p className="text-2xs italic opacity-80">{t('messengerContent.reaction', { emoji: textContent.emoji })}</p>
+            )}
+            {textContent?.kind === 'reactionRemoved' && <p className="text-2xs italic opacity-80">{t('messengerContent.reactionRemoved')}</p>}
+            {textContent?.kind === 'unsupportedType' && (
+              <div className="flex items-center gap-1.5 text-2xs italic opacity-80">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                {t('messengerContent.unsupportedType', { type: textContent.rawType })}
+              </div>
+            )}
+            {!textContent && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
+          </>
+        )}
 
         {message.deliveryStatus === 'Failed' && message.failureReason && (
           <p className="text-destructive text-2xs">{message.failureReason}</p>

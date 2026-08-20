@@ -119,6 +119,14 @@
     "Location": "Ҷойгиршавӣ",
     "Contact": "Контакт"
   },
+  "messengerContent": {
+    "reel": "Reel",
+    "storyReplyContext": "Ҷавоб ба Story-и шумо",
+    "storyMention": "Шуморо дар Story зикр кард",
+    "reaction": "Реаксия: {{emoji}}",
+    "reactionRemoved": "Реаксия бардошта шуд",
+    "unsupportedType": "Навъи дастгирӣнашуда: {{type}}"
+  },
   "composerPlaceholder": "Паём нависед...",
   "send": "Фиристодан",
   "sending": "Фиристода истодааст...",
