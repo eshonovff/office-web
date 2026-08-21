@@ -174,11 +174,16 @@ function MediaStatus({
   const errorKey = mediaErrorKey(status);
   const errorText = serverState === 'failed' ? message.mediaDownloadError : errorKey ? t(errorKey) : null;
   if (errorText) {
+    // serverState === 'failed' means MediaDownloadJob already gave up for good (e.g. an
+    // expired CDN url) — mediaUnavailable makes useMessageBlobUrl never even fetch, so retry
+    // was a dead button that looked actionable but did nothing. Only offer it for a genuine
+    // client-side hiccup, where the server DOES have the file and retrying can actually work.
+    const canRetry = onRetry && serverState !== 'failed';
     return (
       <div className="flex items-center gap-1.5 text-2xs opacity-90">
         <AlertCircle className="h-3 w-3 shrink-0" />
         <span className="min-w-0 flex-1">{errorText}</span>
-        {onRetry && (
+        {canRetry && (
           <Button type="button" variant="ghost" size="sm" className="h-5 shrink-0 px-1.5 text-2xs" onClick={onRetry}>
             {t('retry')}
           </Button>

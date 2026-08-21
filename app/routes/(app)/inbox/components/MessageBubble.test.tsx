@@ -251,16 +251,16 @@ describe('MessageBubble media loading/error states', () => {
     expect(screen.queryByText('mediaGone')).not.toBeInTheDocument();
   });
 
-  it('shows the server-reported reason plus a retry button for a permanently failed download', async () => {
-    const retry = vi.fn();
-    vi.mocked(useMessageBlobUrl).mockReturnValue({ objectUrl: null, status: 'idle', retry });
-    const user = userEvent.setup();
+  it('shows the server-reported reason but no retry button for a permanently failed download', () => {
+    // MediaDownloadJob already gave up for good here (e.g. an expired CDN url) — mediaUnavailable
+    // means useMessageBlobUrl never even attempts a fetch, so a retry button would be a dead end
+    // that looks actionable but silently does nothing. See mediaAvailability.ts's 'failed' state.
+    vi.mocked(useMessageBlobUrl).mockReturnValue({ objectUrl: null, status: 'idle', retry: vi.fn() });
 
     renderBubble({ ...baseMessage, type: 'Audio', mediaDownloadError: 'Instagram: token expired' });
 
     expect(screen.getByText('Instagram: token expired')).toBeInTheDocument();
-    await user.click(screen.getByText('retry'));
-    expect(retry).toHaveBeenCalled();
+    expect(screen.queryByText('retry')).not.toBeInTheDocument();
   });
 
   it('offers a retry button for a browser-side fetch failure too, distinct from the pending/deleted states', async () => {
