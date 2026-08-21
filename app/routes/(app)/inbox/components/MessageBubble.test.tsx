@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { toast } from 'sonner';
 import { describe, expect, it, vi } from 'vitest';
@@ -11,7 +11,7 @@ import { MessageBubble } from './MessageBubble';
 
 vi.mock('../useMessageBlobUrl', () => ({
   getMessageObjectUrl: vi.fn(),
-  useMessageBlobUrl: vi.fn(() => ({ objectUrl: null, status: 'idle' })),
+  useMessageBlobUrl: vi.fn(() => ({ objectUrl: null, status: 'idle', retry: vi.fn() })),
 }));
 vi.mock('~/api/conversations', () => ({
   conversationsApi: { cancelMessage: vi.fn() },
@@ -76,7 +76,9 @@ describe('MessageBubble media rendering', () => {
 
     expect(vi.mocked(useMessageBlobUrl)).toHaveBeenNthCalledWith(1, 'media', 'message-1', null);
     expect(vi.mocked(useMessageBlobUrl)).toHaveBeenNthCalledWith(2, 'thumbnail', 'message-1', null);
-    expect(screen.getByText('mediaDownloadFailed')).toBeInTheDocument();
+    // The server's own reason text, not the generic mediaDownloadFailed key —
+    // see mediaAvailability.ts/getServerMediaState's 'failed' branch.
+    expect(screen.getByText('WhatsApp download failed')).toBeInTheDocument();
   });
 
   it('renders the waveform for backfilled voice notes whose duration is still null', () => {
@@ -238,5 +240,60 @@ describe('MessageBubble Instagram/Facebook content (item 2)', () => {
     renderBubble({ ...baseMessage, type: 'Text', mediaUrl: null, body: 'Салом, чӣ хел ҳастед?', waveformPeaks: null });
 
     expect(screen.getByText('Салом, чӣ хел ҳастед?')).toBeInTheDocument();
+  });
+});
+
+describe('MessageBubble media loading/error states', () => {
+  it('shows a distinct "still on the server" state before mediaUrl is populated — not an empty player indistinguishable from "no media"', () => {
+    renderBubble({ ...baseMessage, type: 'Video', mediaUrl: null, mediaDeletedAt: null, mediaDownloadError: null });
+
+    expect(screen.getByText('mediaPending')).toBeInTheDocument();
+    expect(screen.queryByText('mediaGone')).not.toBeInTheDocument();
+  });
+
+  it('shows the server-reported reason plus a retry button for a permanently failed download', async () => {
+    const retry = vi.fn();
+    vi.mocked(useMessageBlobUrl).mockReturnValue({ objectUrl: null, status: 'idle', retry });
+    const user = userEvent.setup();
+
+    renderBubble({ ...baseMessage, type: 'Audio', mediaDownloadError: 'Instagram: token expired' });
+
+    expect(screen.getByText('Instagram: token expired')).toBeInTheDocument();
+    await user.click(screen.getByText('retry'));
+    expect(retry).toHaveBeenCalled();
+  });
+
+  it('offers a retry button for a browser-side fetch failure too, distinct from the pending/deleted states', async () => {
+    const retry = vi.fn();
+    vi.mocked(useMessageBlobUrl).mockReturnValue({ objectUrl: null, status: 'error', retry });
+    const user = userEvent.setup();
+
+    renderBubble({ ...baseMessage, type: 'Audio' });
+
+    expect(screen.getByText('mediaLoadFailed')).toBeInTheDocument();
+    await user.click(screen.getByText('retry'));
+    expect(retry).toHaveBeenCalled();
+  });
+
+  it('surfaces a video that fetched successfully but will not decode/play, instead of a silent black box', () => {
+    vi.mocked(useMessageBlobUrl).mockReturnValue({ objectUrl: 'blob:video', status: 'ready', retry: vi.fn() });
+    const { container } = renderBubble({ ...baseMessage, type: 'Video' });
+
+    const video = container.querySelector('video')!;
+    fireEvent.error(video);
+
+    expect(screen.getByTestId('video-playback-error')).toBeInTheDocument();
+    expect(screen.getByText('videoPlaybackFailed')).toBeInTheDocument();
+    expect(screen.getByText('retry')).toBeInTheDocument();
+  });
+
+  it('surfaces an audio file that fetched successfully but will not decode/play', () => {
+    vi.mocked(useMessageBlobUrl).mockReturnValue({ objectUrl: 'blob:audio', status: 'ready', retry: vi.fn() });
+    const { container } = renderBubble({ ...baseMessage, type: 'Audio' });
+
+    const audio = container.querySelector('audio')!;
+    fireEvent.error(audio);
+
+    expect(screen.getByText('mediaLoadFailed')).toBeInTheDocument();
   });
 });

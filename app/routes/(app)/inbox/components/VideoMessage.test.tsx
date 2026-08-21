@@ -35,4 +35,26 @@ describe('VideoMessage', () => {
 
     expect(screen.getByTestId('video-play-button')).toBeDisabled();
   });
+
+  it('shows an inline playback-failed overlay (not the play button) when the video element itself cannot decode the fetched bytes', () => {
+    const onPlaybackError = vi.fn();
+    render(<VideoMessage src="blob:video-1" onPlaybackError={onPlaybackError} />);
+
+    fireEvent.error(document.querySelector('video')!);
+
+    expect(screen.getByTestId('video-playback-error')).toBeInTheDocument();
+    expect(screen.queryByTestId('video-play-button')).not.toBeInTheDocument();
+    expect(onPlaybackError).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears the playback-failed overlay once a new src is supplied (e.g. after a retry)', () => {
+    const { rerender } = render(<VideoMessage src="blob:video-1" />);
+    fireEvent.error(document.querySelector('video')!);
+    expect(screen.getByTestId('video-playback-error')).toBeInTheDocument();
+
+    rerender(<VideoMessage src="blob:video-2" />);
+
+    expect(screen.queryByTestId('video-playback-error')).not.toBeInTheDocument();
+    expect(screen.getByTestId('video-play-button')).toBeInTheDocument();
+  });
 });

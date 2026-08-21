@@ -34,9 +34,11 @@ interface VoiceNotePlayerProps {
   disabled?: boolean;
   /** Track title shown above the progress bar for regular audio attachments (voice notes omit it). */
   title?: string;
+  /** Fires on the native <audio> element's own error event — the fetch already succeeded, the bytes just aren't valid/decodable audio. */
+  onPlaybackError?: () => void;
 }
 
-export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false, title }: VoiceNotePlayerProps) {
+export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false, title, onPlaybackError }: VoiceNotePlayerProps) {
   const { t } = useTranslation('inbox');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const waveformRef = useRef<HTMLDivElement | null>(null);
@@ -96,6 +98,7 @@ export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false,
             if (activeAudio === audioRef.current) activeAudio = null;
           }}
           onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
+          onError={onPlaybackError}
         />
       )}
       <Button

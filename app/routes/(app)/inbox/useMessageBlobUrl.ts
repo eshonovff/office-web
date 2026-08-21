@@ -15,6 +15,14 @@ interface BlobUrlState {
   status: BlobStatus;
 }
 
+export interface BlobUrlResult extends BlobUrlState {
+  /** Clears this blob's cache entry and re-fetches — for a transient error (network blip
+   * fetching our own server) this succeeds; for a permanent server-side failure
+   * (message.mediaDownloadError, surfaced as a 424) it just asks again and gets the same
+   * answer back, since there's no backend endpoint yet to re-enqueue that download job. */
+  retry: () => void;
+}
+
 const blobCache = new Map<string, BlobCacheEntry>();
 
 function cacheKey(kind: BlobKind, messageId: string, path: string) {
@@ -55,8 +63,12 @@ export async function getMessageObjectUrl(kind: BlobKind, messageId: string, pat
   return promise;
 }
 
-export function useMessageBlobUrl(kind: BlobKind, messageId: string, path: string | null | undefined): BlobUrlState {
+export function useMessageBlobUrl(kind: BlobKind, messageId: string, path: string | null | undefined): BlobUrlResult {
   const [state, setState] = useState<BlobUrlState>({ objectUrl: null, status: path ? 'loading' : 'idle' });
+  // Bumped by retry() to force the effect below to run again — clearing the
+  // cache alone wouldn't do that, since [kind, messageId, path] wouldn't
+  // have changed.
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!path) {
@@ -91,9 +103,14 @@ export function useMessageBlobUrl(kind: BlobKind, messageId: string, path: strin
     return () => {
       cancelled = true;
     };
-  }, [kind, messageId, path]);
+  }, [kind, messageId, path, attempt]);
 
-  return state;
+  function retry() {
+    if (path) blobCache.delete(cacheKey(kind, messageId, path));
+    setAttempt((a) => a + 1);
+  }
+
+  return { ...state, retry };
 }
 
 export function revokeMessageBlobCache() {

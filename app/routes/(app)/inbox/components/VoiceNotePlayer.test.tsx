@@ -84,4 +84,13 @@ describe('VoiceNotePlayer', () => {
     render(<VoiceNotePlayer src="blob:audio-1" durationSeconds={30} peaks={[]} />);
     expect(screen.getByTestId('audio-progress-track')).toHaveClass('touch-none');
   });
+
+  it('reports a playback error from the underlying <audio> element to the caller', () => {
+    const onPlaybackError = vi.fn();
+    render(<VoiceNotePlayer src="blob:voice-1" durationSeconds={12} peaks={[0.2, 0.4]} onPlaybackError={onPlaybackError} />);
+
+    fireEvent.error(document.querySelector('audio')!);
+
+    expect(onPlaybackError).toHaveBeenCalledTimes(1);
+  });
 });

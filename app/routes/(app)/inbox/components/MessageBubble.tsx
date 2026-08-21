@@ -12,6 +12,7 @@ import {
   Download,
   FileText,
   Image,
+  Loader2,
   MapPin,
   Paperclip,
 } from 'lucide-react';
@@ -24,6 +25,7 @@ import { Button } from '~/components/ui/button';
 import { formatDate } from '~/lib/format';
 import { cn } from '~/lib/utils';
 import type { Message, MessageType } from '~/types/message';
+import { getServerMediaState } from '../mediaAvailability';
 import { classifyMessengerContent } from '../messengerContent';
 import { getMessageObjectUrl, useMessageBlobUrl } from '../useMessageBlobUrl';
 import { ImageLightbox } from './ImageLightbox';
@@ -133,13 +135,76 @@ function mediaErrorKey(status: ReturnType<typeof useMessageBlobUrl>['status']) {
   return null;
 }
 
-function MediaStatus({ message, status }: { message: Message; status: ReturnType<typeof useMessageBlobUrl>['status'] }) {
+/**
+ * Two layers of state, shown as one line: whether the SERVER has the file at
+ * all (getServerMediaState — pending while MediaDownloadJob hasn't finished
+ * yet, failed/deleted once it has an answer) and, once it does, whether the
+ * BROWSER has fetched those bytes yet (status, from useMessageBlobUrl). A
+ * pending message used to show nothing at all here — indistinguishable from
+ * a message that will never have media.
+ */
+function MediaStatus({
+  message,
+  status,
+  onRetry,
+}: {
+  message: Message;
+  status: ReturnType<typeof useMessageBlobUrl>['status'];
+  onRetry?: () => void;
+}) {
   const { t } = useTranslation('inbox');
-  const errorKey = message.mediaDownloadError ? 'mediaDownloadFailed' : mediaErrorKey(status);
-  if (message.mediaDeletedAt) return <p className="text-2xs opacity-75">{t('mediaGone')}</p>;
-  if (errorKey) return <p className="text-2xs opacity-75">{t(errorKey)}</p>;
-  if (status === 'loading') return <p className="text-2xs opacity-75">{t('mediaLoading')}</p>;
+  const serverState = getServerMediaState(message);
+
+  if (serverState === 'pending') {
+    return (
+      <p className="flex items-center gap-1.5 text-2xs opacity-75">
+        <Loader2 className="h-3 w-3 shrink-0 animate-spin" />
+        {t('mediaPending')}
+      </p>
+    );
+  }
+
+  if (serverState === 'deleted') {
+    return <p className="text-2xs opacity-75">{t('mediaGone')}</p>;
+  }
+
+  // message.mediaDownloadError is the server's own reason text (already
+  // human-readable, not a translation key) — a browser-side fetch problem
+  // (status) is everything else, translated via mediaErrorKey.
+  const errorKey = mediaErrorKey(status);
+  const errorText = serverState === 'failed' ? message.mediaDownloadError : errorKey ? t(errorKey) : null;
+  if (errorText) {
+    return (
+      <div className="flex items-center gap-1.5 text-2xs opacity-90">
+        <AlertCircle className="h-3 w-3 shrink-0" />
+        <span className="min-w-0 flex-1">{errorText}</span>
+        {onRetry && (
+          <Button type="button" variant="ghost" size="sm" className="h-5 shrink-0 px-1.5 text-2xs" onClick={onRetry}>
+            {t('retry')}
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  if (status === 'loading') {
+    return (
+      <p className="flex items-center gap-1.5 text-2xs opacity-75">
+        <Loader2 className="h-3 w-3 shrink-0 animate-spin" />
+        {t('mediaLoading')}
+      </p>
+    );
+  }
+
   return null;
+}
+
+/** The icon shown inside an empty placeholder box (Image/StoryReply, before there's anything to preview) — reflects the same state MediaStatus describes in words below it. */
+function PlaceholderIcon({ message, status }: { message: Message; status: ReturnType<typeof useMessageBlobUrl>['status'] }) {
+  const serverState = getServerMediaState(message);
+  if (serverState === 'pending' || status === 'loading') return <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />;
+  if (serverState === 'failed' || mediaErrorKey(status)) return <AlertCircle className="text-muted-foreground h-5 w-5" />;
+  return <Image className="text-muted-foreground h-5 w-5" />;
 }
 
 function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: boolean }) {
@@ -151,6 +216,17 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
   const thumbnail = useMessageBlobUrl('thumbnail', message.id, message.mediaDownloadError ? null : message.thumbnailUrl);
   const fileName = message.originalFileName || t(`messageType.${message.type}`);
   const meta = formatBytes(message.sizeBytes);
+
+  // The fetch (useMessageBlobUrl) can succeed — a 200 with a real byte
+  // stream — while the bytes themselves aren't valid media (an <img>/
+  // <video>/<audio> element's own onError, separate from any HTTP status).
+  // Reset whenever the underlying blob changes, so a stale error from a
+  // previous object URL doesn't linger after a real fix.
+  const [imageDecodeError, setImageDecodeError] = useState(false);
+  const [playbackError, setPlaybackError] = useState(false);
+  const previewSource = thumbnail.objectUrl ?? media.objectUrl;
+  useEffect(() => setImageDecodeError(false), [previewSource]);
+  useEffect(() => setPlaybackError(false), [media.objectUrl]);
 
   async function downloadFile() {
     if (!message.mediaUrl || downloadStatus === 'loading') return;
@@ -168,19 +244,33 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
   }
 
   if (message.type === 'Image') {
-    const previewUrl = thumbnail.objectUrl ?? media.objectUrl;
+    const combinedStatus = media.status === 'idle' ? thumbnail.status : media.status;
+    const previewUrl = imageDecodeError ? null : previewSource;
     return (
       <div className="space-y-1.5">
         {previewUrl ? (
           <button type="button" className="block overflow-hidden rounded-md" onClick={() => media.objectUrl && setLightboxOpen(true)}>
-            <img src={previewUrl} alt={fileName} className="max-h-56 max-w-full object-cover" />
+            <img
+              src={previewUrl}
+              alt={fileName}
+              className="max-h-56 max-w-full object-cover"
+              onError={() => setImageDecodeError(true)}
+            />
           </button>
         ) : (
           <div className="bg-muted flex min-h-24 min-w-48 items-center justify-center rounded-md">
-            <Image className="text-muted-foreground h-5 w-5" />
+            <PlaceholderIcon message={message} status={combinedStatus} />
           </div>
         )}
-        <MediaStatus message={message} status={media.status === 'idle' ? thumbnail.status : media.status} />
+        <MediaStatus
+          message={message}
+          status={imageDecodeError ? 'error' : combinedStatus}
+          onRetry={() => {
+            setImageDecodeError(false);
+            media.retry();
+            thumbnail.retry();
+          }}
+        />
         {message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
         <ImageLightbox open={lightboxOpen} onOpenChange={setLightboxOpen} src={media.objectUrl} alt={fileName} />
       </div>
@@ -197,20 +287,34 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
   if (message.type === 'StoryReply') {
     const content = classifyMessengerContent(message);
     const isMention = content?.kind === 'storyMention';
-    const previewUrl = thumbnail.objectUrl ?? media.objectUrl;
+    const combinedStatus = media.status === 'idle' ? thumbnail.status : media.status;
+    const previewUrl = imageDecodeError ? null : previewSource;
     return (
       <div className="space-y-1.5">
         <div className="flex items-center gap-2 rounded-md border border-current/15 p-1.5">
           {previewUrl ? (
-            <img src={previewUrl} alt="" className="h-9 w-9 shrink-0 rounded object-cover" />
+            <img
+              src={previewUrl}
+              alt=""
+              className="h-9 w-9 shrink-0 rounded object-cover"
+              onError={() => setImageDecodeError(true)}
+            />
           ) : (
             <div className="bg-muted flex h-9 w-9 shrink-0 items-center justify-center rounded">
-              <Image className="text-muted-foreground h-3.5 w-3.5" />
+              <PlaceholderIcon message={message} status={combinedStatus} />
             </div>
           )}
           <span className="text-2xs opacity-80">{t(isMention ? 'messengerContent.storyMention' : 'messengerContent.storyReplyContext')}</span>
         </div>
-        <MediaStatus message={message} status={media.status === 'idle' ? thumbnail.status : media.status} />
+        <MediaStatus
+          message={message}
+          status={imageDecodeError ? 'error' : combinedStatus}
+          onRetry={() => {
+            setImageDecodeError(false);
+            media.retry();
+            thumbnail.retry();
+          }}
+        />
         {message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
       </div>
     );
@@ -224,10 +328,18 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
           src={message.mediaDeletedAt ? null : media.objectUrl}
           durationSeconds={message.voiceDurationSeconds}
           peaks={message.waveformPeaks ?? []}
-          disabled={!!message.mediaDeletedAt || !!message.mediaDownloadError}
+          disabled={!!message.mediaDeletedAt || !!message.mediaDownloadError || playbackError}
           title={hasWaveform ? undefined : (message.originalFileName ?? undefined)}
+          onPlaybackError={() => setPlaybackError(true)}
         />
-        <MediaStatus message={message} status={media.status} />
+        <MediaStatus
+          message={message}
+          status={playbackError ? 'error' : media.status}
+          onRetry={() => {
+            setPlaybackError(false);
+            media.retry();
+          }}
+        />
       </div>
     );
   }
@@ -251,10 +363,18 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
         <VideoMessage
           src={disabled ? null : media.objectUrl}
           posterUrl={thumbnail.objectUrl}
-          disabled={disabled}
+          disabled={disabled || playbackError}
           sizeLabel={meta || undefined}
+          onPlaybackError={() => setPlaybackError(true)}
         />
-        <MediaStatus message={message} status={media.status} />
+        <MediaStatus
+          message={message}
+          status={playbackError ? 'error' : media.status}
+          onRetry={() => {
+            setPlaybackError(false);
+            media.retry();
+          }}
+        />
         {reel?.caption && <p className="whitespace-pre-wrap break-words">{reel.caption}</p>}
       </div>
     );
@@ -266,11 +386,11 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{fileName}</p>
         {meta && <p className="text-2xs opacity-70">{meta}</p>}
-        {(message.mediaDeletedAt || message.mediaDownloadError || downloadStatus === 'error') && (
-          <p className="text-2xs opacity-75">
-            {message.mediaDeletedAt ? t('mediaGone') : message.mediaDownloadError ? t('mediaDownloadFailed') : t('mediaLoadFailed')}
-          </p>
-        )}
+        <MediaStatus
+          message={message}
+          status={downloadStatus === 'error' ? 'error' : downloadStatus === 'loading' ? 'loading' : 'idle'}
+          onRetry={downloadFile}
+        />
       </div>
       <Button
         type="button"
@@ -278,7 +398,7 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
         size="icon-sm"
         disabled={!message.mediaUrl || !!message.mediaDeletedAt || !!message.mediaDownloadError || downloadStatus === 'loading'}
         onClick={downloadFile}>
-        <Download className="h-3.5 w-3.5" />
+        {downloadStatus === 'loading' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
       </Button>
     </div>
   );
