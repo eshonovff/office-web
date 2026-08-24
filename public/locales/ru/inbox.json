@@ -122,7 +122,9 @@
   "messengerContent": {
     "reel": "Reel",
     "post": "Пост",
+    "story": "Story",
     "openInInstagram": "Открыть в Instagram",
+    "storyMayBeGone": "Story могла уже исчезнуть (живёт не более 24 часов).",
     "storyReplyContext": "Ответ на вашу Story",
     "storyMention": "Упомянул вас в Story",
     "reaction": "Реакция: {{emoji}}",

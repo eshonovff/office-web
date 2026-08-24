@@ -24,10 +24,13 @@ const UNSUPPORTED_TYPE_PREFIX = '[навъи дастгирӣнашуда: ';
 export type MessengerContent =
   // A shared Reel/Post — the backend never has real media bytes for these (Instagram only ever
   // sends a web permalink, confirmed live 2026-08-24, see InstagramPayloadParser), so there's no
-  // player: caption + a link out to view it on Instagram.
+  // player: caption + a link out to view it on Instagram. permalink comes from
+  // message.externalContentUrl (a dedicated field), never parsed out of body text.
   | { kind: 'sharedPost'; label: 'reel' | 'post'; caption: string | null; permalink: string | null }
-  | { kind: 'storyReply'; text: string }
-  | { kind: 'storyMention' }
+  // permalink here dies within ~24h of the ORIGINAL story (Instagram deletes it) — the frontend
+  // shows that as a caveat since there's no reliable way to know exactly when from here.
+  | { kind: 'storyReply'; text: string; permalink: string | null }
+  | { kind: 'storyMention'; permalink: string | null }
   | { kind: 'stickerHeart' }
   | { kind: 'reaction'; emoji: string }
   | { kind: 'reactionRemoved' }
@@ -36,34 +39,27 @@ export type MessengerContent =
 export interface MessengerContentInput {
   type: MessageType;
   body: string | null;
+  externalContentUrl?: string | null;
 }
 
-/** Body shape is "MARKER[ caption]\n<permalink>" — the permalink line is optional (older messages, or no url in the webhook). */
-function parseSharedPost(body: string, marker: string, label: 'reel' | 'post'): MessengerContent {
-  const rest = body.slice(marker.length);
-  const newlineIndex = rest.indexOf('\n');
-  const captionPart = (newlineIndex === -1 ? rest : rest.slice(0, newlineIndex)).trim();
-  const permalinkPart = newlineIndex === -1 ? '' : rest.slice(newlineIndex + 1).trim();
-  return {
-    kind: 'sharedPost',
-    label,
-    caption: captionPart.length > 0 ? captionPart : null,
-    permalink: permalinkPart.length > 0 ? permalinkPart : null,
-  };
+function captionAfterMarker(body: string, marker: string): string | null {
+  const caption = body.slice(marker.length).trim();
+  return caption.length > 0 ? caption : null;
 }
 
 /** Null means "nothing special — render this message the normal way for its type". */
-export function classifyMessengerContent({ type, body }: MessengerContentInput): MessengerContent | null {
+export function classifyMessengerContent({ type, body, externalContentUrl }: MessengerContentInput): MessengerContent | null {
   if (type === 'Video' && body?.startsWith(REEL_MARKER)) {
-    return parseSharedPost(body, REEL_MARKER, 'reel');
+    return { kind: 'sharedPost', label: 'reel', caption: captionAfterMarker(body, REEL_MARKER), permalink: externalContentUrl ?? null };
   }
 
   if (type === 'Video' && body?.startsWith(POST_MARKER)) {
-    return parseSharedPost(body, POST_MARKER, 'post');
+    return { kind: 'sharedPost', label: 'post', caption: captionAfterMarker(body, POST_MARKER), permalink: externalContentUrl ?? null };
   }
 
   if (type === 'StoryReply') {
-    return body ? { kind: 'storyReply', text: body } : { kind: 'storyMention' };
+    const permalink = externalContentUrl ?? null;
+    return body ? { kind: 'storyReply', text: body, permalink } : { kind: 'storyMention', permalink };
   }
 
   if (type === 'Text' && body) {

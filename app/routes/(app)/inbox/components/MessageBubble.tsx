@@ -317,38 +317,39 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
   // it, not as the main content the way a real Image message is — without
   // that distinction an operator can't tell what the customer is even
   // replying to (item 2 of the request this was built for).
+  // Instagram never gives real media for a story reply/mention either — same finding as
+  // Reel/Post (payload.url is a web permalink, confirmed live) — and a story permalink itself
+  // dies ~24h after the ORIGINAL story, sooner than most operators would think to check it. No
+  // preview image is attempted (it would sit in an eternal "pending" spinner, mediaUrl is never
+  // populated); instead a Story badge + link + an explicit "may already be gone" caveat.
   if (message.type === 'StoryReply') {
     const content = classifyMessengerContent(message);
     const isMention = content?.kind === 'storyMention';
-    const combinedStatus = media.status === 'idle' ? thumbnail.status : media.status;
-    const previewUrl = imageDecodeError ? null : previewSource;
+    const permalink = content?.kind === 'storyReply' || content?.kind === 'storyMention' ? content.permalink : null;
     return (
       <div className="space-y-1.5">
-        <div className="flex items-center gap-2 rounded-md border border-current/15 p-1.5">
-          {previewUrl ? (
-            <img
-              src={previewUrl}
-              alt=""
-              className="h-9 w-9 shrink-0 rounded object-cover"
-              onError={() => setImageDecodeError(true)}
-            />
-          ) : (
-            <div className="bg-muted flex h-9 w-9 shrink-0 items-center justify-center rounded">
-              <PlaceholderIcon message={message} status={combinedStatus} />
-            </div>
-          )}
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-2xs">
+            {t('messengerContent.story')}
+          </Badge>
           <span className="text-2xs opacity-80">{t(isMention ? 'messengerContent.storyMention' : 'messengerContent.storyReplyContext')}</span>
         </div>
-        <MediaStatus
-          message={message}
-          status={imageDecodeError ? 'error' : combinedStatus}
-          onRetry={() => {
-            setImageDecodeError(false);
-            media.retry();
-            thumbnail.retry();
-          }}
-        />
         {message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
+        {permalink ? (
+          <div className="space-y-0.5">
+            <a
+              href={permalink}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-2xs underline underline-offset-2 opacity-80 hover:opacity-100">
+              <ExternalLink className="h-3 w-3" />
+              {t('messengerContent.openInInstagram')}
+            </a>
+            <p className="text-2xs opacity-60">{t('messengerContent.storyMayBeGone')}</p>
+          </div>
+        ) : (
+          <p className="text-2xs opacity-60">{t('messengerContent.storyMayBeGone')}</p>
+        )}
       </div>
     );
   }

@@ -122,7 +122,9 @@
   "messengerContent": {
     "reel": "Reel",
     "post": "Пост",
+    "story": "Story",
     "openInInstagram": "Кушодан дар Instagram",
+    "storyMayBeGone": "Story метавонад аллакай нест шуда бошад (то 24 соат зинда аст).",
     "storyReplyContext": "Ҷавоб ба Story-и шумо",
     "storyMention": "Шуморо дар Story зикр кард",
     "reaction": "Реаксия: {{emoji}}",

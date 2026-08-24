@@ -29,6 +29,13 @@ export interface Message {
   // Set when dispatch fails after the delay (e.g. the 24h window closed
   // during the wait) — only meaningful when deliveryStatus is Failed.
   failureReason: string | null;
+  // A shared Reel/Post/Story's real Instagram permalink — never downloadable media (Instagram
+  // only ever gives a web page link for these, confirmed live), so it's a link-out, not a player.
+  // A dedicated field, not embedded in body text — an earlier version did that and the "open in
+  // Instagram" button ended up pointing at the wrong place.
+  externalContentUrl: string | null;
+  // 'Reel' | 'Post' | 'Story' — only set alongside externalContentUrl.
+  externalContentKind: string | null;
 }
 
 export interface MessagesListParams {

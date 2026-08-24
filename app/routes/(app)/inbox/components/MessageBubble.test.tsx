@@ -42,6 +42,8 @@ const baseMessage: Message = {
   mediaDownloadError: null,
   waveformPeaks: [0.2, 0.4, 0.8],
   failureReason: null,
+  externalContentUrl: null,
+  externalContentKind: null,
 };
 
 function renderBubble(message: Message) {
@@ -198,8 +200,17 @@ describe('MessageBubble Instagram/Facebook content (item 2)', () => {
     // The regression this fixes: mediaUrl is null forever for a shared Reel/Post (Instagram only
     // ever gives a web permalink, confirmed live) — the normal Video path would show an eternal
     // "still downloading" spinner (getServerMediaState treats null mediaUrl + no error as
-    // 'pending'). No player, no download button, no pending state — just the link.
-    renderBubble({ ...baseMessage, type: 'Video', body: '[Reel] Cool clip\nhttps://www.instagram.com/reel/abc/', waveformPeaks: null });
+    // 'pending'). No player, no download button, no pending state — just the link. The permalink
+    // comes from the dedicated externalContentUrl field, not parsed out of body text (an earlier
+    // version embedded it in body, and the button ended up pointing at the wrong place).
+    renderBubble({
+      ...baseMessage,
+      type: 'Video',
+      body: '[Reel] Cool clip',
+      externalContentUrl: 'https://www.instagram.com/reel/abc/',
+      externalContentKind: 'Reel',
+      waveformPeaks: null,
+    });
 
     expect(screen.getByText('messengerContent.reel')).toBeInTheDocument();
     expect(screen.getByText('Cool clip')).toBeInTheDocument();
@@ -209,7 +220,14 @@ describe('MessageBubble Instagram/Facebook content (item 2)', () => {
   });
 
   it('badges a shared Post distinctly from a Reel', () => {
-    renderBubble({ ...baseMessage, type: 'Video', body: '[Post] Sunset\nhttps://www.instagram.com/p/xyz/', waveformPeaks: null });
+    renderBubble({
+      ...baseMessage,
+      type: 'Video',
+      body: '[Post] Sunset',
+      externalContentUrl: 'https://www.instagram.com/p/xyz/',
+      externalContentKind: 'Post',
+      waveformPeaks: null,
+    });
 
     expect(screen.getByText('messengerContent.post')).toBeInTheDocument();
     expect(screen.queryByText('messengerContent.reel')).not.toBeInTheDocument();
@@ -221,9 +239,10 @@ describe('MessageBubble Instagram/Facebook content (item 2)', () => {
     expect(screen.queryByText('messengerContent.reel')).not.toBeInTheDocument();
   });
 
-  it('shows a reply to a story as context (small thumbnail chip) plus the reply text, not as a full-size image', () => {
+  it('shows a reply to a story as context plus the reply text, badged distinctly as a Story', () => {
     renderBubble({ ...baseMessage, type: 'StoryReply', body: 'nice story!', waveformPeaks: null });
 
+    expect(screen.getByText('messengerContent.story')).toBeInTheDocument();
     expect(screen.getByText('messengerContent.storyReplyContext')).toBeInTheDocument();
     expect(screen.getByText('nice story!')).toBeInTheDocument();
   });
@@ -233,6 +252,33 @@ describe('MessageBubble Instagram/Facebook content (item 2)', () => {
 
     expect(screen.getByText('messengerContent.storyMention')).toBeInTheDocument();
     expect(screen.queryByText('messengerContent.storyReplyContext')).not.toBeInTheDocument();
+  });
+
+  it('never shows a broken preview for a story reply — no player, no pending spinner, since Instagram gives no downloadable media for these either', () => {
+    // Same root cause as Reel/Post: the backend never enqueues a download for a story's url
+    // (also just a permalink, and one that dies within ~24h besides) — mediaUrl stays null
+    // forever, so the old preview-image chip would sit in an eternal pending spinner.
+    renderBubble({ ...baseMessage, type: 'StoryReply', body: 'nice story!', waveformPeaks: null });
+
+    expect(screen.queryByText('mediaPending')).not.toBeInTheDocument();
+    expect(screen.getByText('messengerContent.storyMayBeGone')).toBeInTheDocument();
+  });
+
+  it('shows an open-in-Instagram link for a story reply when the webhook carried a permalink', () => {
+    renderBubble({
+      ...baseMessage,
+      type: 'StoryReply',
+      body: 'nice story!',
+      externalContentUrl: 'https://www.instagram.com/stories/customer/123/',
+      externalContentKind: 'Story',
+      waveformPeaks: null,
+    });
+
+    expect(screen.getByText('messengerContent.openInInstagram')).toHaveAttribute(
+      'href',
+      'https://www.instagram.com/stories/customer/123/'
+    );
+    expect(screen.getByText('messengerContent.storyMayBeGone')).toBeInTheDocument();
   });
 
   it('renders the heart sticker as a large emoji, not a text bubble', () => {

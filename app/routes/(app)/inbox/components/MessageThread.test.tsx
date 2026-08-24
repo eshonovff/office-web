@@ -39,6 +39,8 @@ function makeMessage(overrides: Partial<Message> = {}): Message {
     mediaDownloadError: null,
     waveformPeaks: null,
     failureReason: null,
+    externalContentUrl: null,
+    externalContentKind: null,
     ...overrides,
   };
 }

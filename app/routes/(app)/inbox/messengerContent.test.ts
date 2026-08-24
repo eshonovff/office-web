@@ -30,8 +30,12 @@ describe('classifyMessengerContent', () => {
     });
   });
 
-  it('recognizes a Reel permalink on the second line, separate from the caption', () => {
-    expect(classifyMessengerContent({ type: 'Video', body: '[Reel] Cool clip\nhttps://www.instagram.com/reel/abc/' })).toEqual({
+  it('takes the permalink from the dedicated externalContentUrl field, not from body text', () => {
+    // An earlier version embedded the url on a second body line — this is the fix: body carries
+    // only the caption, externalContentUrl is a real message field the backend now sets directly.
+    expect(
+      classifyMessengerContent({ type: 'Video', body: '[Reel] Cool clip', externalContentUrl: 'https://www.instagram.com/reel/abc/' })
+    ).toEqual({
       kind: 'sharedPost',
       label: 'reel',
       caption: 'Cool clip',
@@ -40,7 +44,9 @@ describe('classifyMessengerContent', () => {
   });
 
   it('recognizes a shared Post the same way, distinct from a Reel', () => {
-    expect(classifyMessengerContent({ type: 'Video', body: '[Post] Sunset\nhttps://www.instagram.com/p/xyz/' })).toEqual({
+    expect(
+      classifyMessengerContent({ type: 'Video', body: '[Post] Sunset', externalContentUrl: 'https://www.instagram.com/p/xyz/' })
+    ).toEqual({
       kind: 'sharedPost',
       label: 'post',
       caption: 'Sunset',
@@ -48,15 +54,27 @@ describe('classifyMessengerContent', () => {
     });
   });
 
-  it('recognizes a story reply (text present)', () => {
-    expect(classifyMessengerContent({ type: 'StoryReply', body: 'nice story!' })).toEqual({
+  it('has a null permalink when externalContentUrl is not given', () => {
+    expect(classifyMessengerContent({ type: 'Video', body: '[Reel] Cool clip' })).toEqual({
+      kind: 'sharedPost',
+      label: 'reel',
+      caption: 'Cool clip',
+      permalink: null,
+    });
+  });
+
+  it('recognizes a story reply (text present), carrying the permalink too', () => {
+    expect(
+      classifyMessengerContent({ type: 'StoryReply', body: 'nice story!', externalContentUrl: 'https://www.instagram.com/stories/x/1/' })
+    ).toEqual({
       kind: 'storyReply',
       text: 'nice story!',
+      permalink: 'https://www.instagram.com/stories/x/1/',
     });
   });
 
   it('recognizes a story mention (no text) — the only signal StoryReply gives for it', () => {
-    expect(classifyMessengerContent({ type: 'StoryReply', body: null })).toEqual({ kind: 'storyMention' });
+    expect(classifyMessengerContent({ type: 'StoryReply', body: null })).toEqual({ kind: 'storyMention', permalink: null });
   });
 
   it('recognizes the heart sticker', () => {
