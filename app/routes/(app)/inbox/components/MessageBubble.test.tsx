@@ -222,18 +222,27 @@ describe('MessageBubble Instagram/Facebook content (item 2)', () => {
     expect(screen.queryByText('mediaPending')).not.toBeInTheDocument();
   });
 
-  it('badges a shared Post distinctly from a Reel', () => {
+  it('badges a shared Post distinctly from a Reel, and shows the real player plus an open-in-Instagram link', () => {
+    // Unlike a Reel, a Post's url turned out to be a real downloadable CDN asset (confirmed live
+    // 2026-08-25) — so a Post gets the normal player (proven by MediaDownloadJob succeeding on
+    // one), badged, with the permalink offered as a bonus link, not instead of the player.
     renderBubble({
       ...baseMessage,
       type: 'Video',
       body: '[Post] Sunset',
-      externalContentUrl: 'https://www.instagram.com/p/xyz/',
+      externalContentUrl: 'https://lookaside.fbsbx.com/ig_messaging_cdn/?asset_id=1',
       externalContentKind: 'Post',
       waveformPeaks: null,
     });
 
     expect(screen.getByText('messengerContent.post')).toBeInTheDocument();
     expect(screen.queryByText('messengerContent.reel')).not.toBeInTheDocument();
+    expect(screen.getByTestId('video-message')).toBeInTheDocument();
+    expect(screen.getByText('Sunset')).toBeInTheDocument();
+    expect(screen.getByText('messengerContent.openInInstagram').closest('a')).toHaveAttribute(
+      'href',
+      'https://lookaside.fbsbx.com/ig_messaging_cdn/?asset_id=1'
+    );
   });
 
   it('does not badge a plain video as a Reel', () => {

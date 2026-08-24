@@ -386,17 +386,19 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
 
   if (message.type === 'Video') {
     // A shared Reel/Post has no MessageType of its own on the backend — it's a Video with a
-    // "[Reel]"/"[Post]" marker in body (see messengerContent.ts). Confirmed live 2026-08-24:
-    // Instagram only ever gives a web permalink for these, never real media bytes — mediaUrl
-    // stays null forever, so the normal gated-download player would sit in an eternal "pending"
-    // spinner. Render a link card instead: caption + "open on Instagram", no player.
+    // "[Reel]"/"[Post]" marker in body (see messengerContent.ts). Reel and Post turned out to
+    // behave differently once checked against real production payloads (2026-08-25): a Reel's
+    // url is a web permalink (confirmed, no downloadable bytes ever exist — link card only,
+    // no player, would otherwise sit in an eternal "pending" spinner), but a Post's url is a
+    // real lookaside.fbsbx.com CDN asset — same as a plain video/image attachment — so it gets
+    // the normal player, just with the badge (and the open-in-Instagram link) added on top.
     const content = classifyMessengerContent(message);
-    if (content?.kind === 'sharedPost') {
+    if (content?.kind === 'sharedPost' && content.label === 'reel') {
       return (
         <div className="space-y-1.5">
           <Badge variant="outline" className="gap-1 text-2xs">
             <Clapperboard className="h-3 w-3" />
-            {t(content.label === 'reel' ? 'messengerContent.reel' : 'messengerContent.post')}
+            {t('messengerContent.reel')}
           </Badge>
           {content.caption && <p className="whitespace-pre-wrap break-words">{content.caption}</p>}
           {content.permalink && (
@@ -413,9 +415,16 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
       );
     }
 
+    const post = content?.kind === 'sharedPost' && content.label === 'post' ? content : null;
     const disabled = !!message.mediaDeletedAt || !!message.mediaDownloadError;
     return (
       <div className="space-y-1.5">
+        {post && (
+          <Badge variant="outline" className="gap-1 text-2xs">
+            <Clapperboard className="h-3 w-3" />
+            {t('messengerContent.post')}
+          </Badge>
+        )}
         <VideoMessage
           downloadState={gatedMedia.status === 'downloading' ? 'downloading' : gatedMedia.status === 'ready' ? 'ready' : 'idle'}
           objectUrl={disabled ? null : gatedMedia.objectUrl}
@@ -439,6 +448,17 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
             gatedMedia.retry();
           }}
         />
+        {post?.caption && <p className="whitespace-pre-wrap break-words">{post.caption}</p>}
+        {post?.permalink && (
+          <a
+            href={post.permalink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-2xs underline underline-offset-2 opacity-80 hover:opacity-100">
+            <ExternalLink className="h-3 w-3" />
+            {t('messengerContent.openInInstagram')}
+          </a>
+        )}
       </div>
     );
   }
