@@ -1,13 +1,27 @@
-import { AlertCircle, Play } from 'lucide-react';
+import { AlertCircle, Download, Play } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '~/lib/utils';
+import { formatDownloadProgress } from '../formatMediaSize';
+import type { DownloadProgress } from '../useMessageBlobUrl';
+import { DownloadProgressRing } from './DownloadProgressRing';
 
 interface VideoMessageProps {
-  src: string | null;
+  /** 'idle' = not yet fetched from our server (Telegram-style: thumbnail + download button first). */
+  downloadState: 'idle' | 'downloading' | 'ready';
+  objectUrl: string | null;
+  progress: DownloadProgress | null;
   posterUrl?: string | null;
   disabled?: boolean;
   sizeLabel?: string;
+  /**
+   * Not populated by the backend yet (video thumbnails/duration were deferred, see PROGRESS.md) —
+   * once MediaDownloadJob starts probing video duration, this switches the corner label from size
+   * to duration automatically. Until then it's always null and sizeLabel is shown instead.
+   */
+  durationLabel?: string | null;
+  onStartDownload: () => void;
+  onCancelDownload: () => void;
   /**
    * Fires on the native <video> element's own error event — the fetch
    * (useMessageBlobUrl) already succeeded with a 200 and real bytes, but
@@ -18,18 +32,32 @@ interface VideoMessageProps {
   onPlaybackError?: () => void;
 }
 
-export function VideoMessage({ src, posterUrl, disabled = false, sizeLabel, onPlaybackError }: VideoMessageProps) {
+export function VideoMessage({
+  downloadState,
+  objectUrl,
+  progress,
+  posterUrl,
+  disabled = false,
+  sizeLabel,
+  durationLabel,
+  onStartDownload,
+  onCancelDownload,
+  onPlaybackError,
+}: VideoMessageProps) {
   const { t } = useTranslation('inbox');
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [decodeFailed, setDecodeFailed] = useState(false);
 
-  useEffect(() => setDecodeFailed(false), [src]);
+  useEffect(() => setDecodeFailed(false), [objectUrl]);
 
   function play() {
-    if (disabled || !src || decodeFailed) return;
+    if (disabled || !objectUrl || decodeFailed) return;
     void videoRef.current?.play();
   }
+
+  const progressRatio = progress?.total ? progress.loaded / progress.total : null;
+  const cornerLabel = downloadState === 'downloading' && progress ? formatDownloadProgress(progress.loaded, progress.total) : (durationLabel ?? sizeLabel);
 
   return (
     <div
@@ -37,7 +65,7 @@ export function VideoMessage({ src, posterUrl, disabled = false, sizeLabel, onPl
       data-testid="video-message">
       <video
         ref={videoRef}
-        src={src ?? undefined}
+        src={objectUrl ?? undefined}
         poster={posterUrl ?? undefined}
         controls={playing}
         playsInline
@@ -59,19 +87,23 @@ export function VideoMessage({ src, posterUrl, disabled = false, sizeLabel, onPl
         !playing && (
           <button
             type="button"
-            aria-label={t('videoPlay')}
-            disabled={disabled || !src}
-            onClick={play}
+            aria-label={
+              downloadState === 'idle' ? t('download') : downloadState === 'downloading' ? t('cancelDownload') : t('videoPlay')
+            }
+            disabled={disabled}
+            onClick={downloadState === 'idle' ? onStartDownload : downloadState === 'downloading' ? onCancelDownload : play}
             data-testid="video-play-button"
             className="absolute inset-0 flex items-center justify-center bg-black/10 transition-colors hover:bg-black/25 disabled:cursor-default disabled:hover:bg-black/10">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/55 text-white shadow-sm">
-              <Play className="h-5 w-5 translate-x-0.5" fill="currentColor" />
+              {downloadState === 'idle' && <Download className="h-5 w-5" />}
+              {downloadState === 'downloading' && <DownloadProgressRing progress={progressRatio} size={28} strokeWidth={2.5} />}
+              {downloadState === 'ready' && <Play className="h-5 w-5 translate-x-0.5" fill="currentColor" />}
             </span>
           </button>
         )
       )}
-      {!playing && !decodeFailed && sizeLabel && (
-        <span className="absolute right-1.5 bottom-1.5 rounded bg-black/55 px-1.5 py-0.5 text-2xs text-white">{sizeLabel}</span>
+      {!playing && !decodeFailed && cornerLabel && (
+        <span className="absolute right-1.5 bottom-1.5 rounded bg-black/55 px-1.5 py-0.5 text-2xs text-white">{cornerLabel}</span>
       )}
     </div>
   );

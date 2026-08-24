@@ -51,8 +51,11 @@ export const conversationsApi = {
     });
     return data;
   },
-  getMediaBlob: async (path: string): Promise<Blob> => {
-    const { data } = await originClient.get<Blob>(path, { responseType: 'blob' });
+  getMediaBlob: async (
+    path: string,
+    config?: { onDownloadProgress?: (event: AxiosProgressEvent) => void; signal?: AbortSignal }
+  ): Promise<Blob> => {
+    const { data } = await originClient.get<Blob>(path, { responseType: 'blob', ...config });
     return data;
   },
   getThumbnailBlob: async (path: string): Promise<Blob> => {

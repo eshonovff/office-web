@@ -10,13 +10,14 @@ import {
   Clock,
   Contact,
   Download,
+  ExternalLink,
   FileText,
   Image,
   Loader2,
   MapPin,
   Paperclip,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { conversationsApi } from '~/api/conversations';
@@ -25,9 +26,11 @@ import { Button } from '~/components/ui/button';
 import { formatDate } from '~/lib/format';
 import { cn } from '~/lib/utils';
 import type { Message, MessageType } from '~/types/message';
+import { formatBytes, formatDownloadProgress } from '../formatMediaSize';
 import { getServerMediaState } from '../mediaAvailability';
 import { classifyMessengerContent } from '../messengerContent';
-import { getMessageObjectUrl, useMessageBlobUrl } from '../useMessageBlobUrl';
+import { useGatedMediaDownload, useMessageBlobUrl, type GatedMediaStatus } from '../useMessageBlobUrl';
+import { DownloadProgressRing } from './DownloadProgressRing';
 import { ImageLightbox } from './ImageLightbox';
 import { VideoMessage } from './VideoMessage';
 import { VoiceNotePlayer } from './VoiceNotePlayer';
@@ -121,13 +124,17 @@ function PendingSendControls({ message }: { message: Message }) {
   );
 }
 
-function formatBytes(bytes: number | null | undefined) {
-  if (!bytes) return '';
-  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(bytes < 10 * 1024 * 1024 ? 1 : 0)} MB`;
+function triggerSaveAs(objectUrl: string, fileName: string) {
+  const link = document.createElement('a');
+  link.href = objectUrl;
+  link.download = fileName;
+  link.click();
 }
 
-function mediaErrorKey(status: ReturnType<typeof useMessageBlobUrl>['status']) {
+/** Union of useMessageBlobUrl's (auto) and useGatedMediaDownload's (manual) status shapes — the two differ only in 'loading' vs 'downloading', both handled below. */
+type MediaFetchStatus = ReturnType<typeof useMessageBlobUrl>['status'] | GatedMediaStatus;
+
+function mediaErrorKey(status: MediaFetchStatus) {
   if (status === 'gone') return 'mediaGone';
   if (status === 'download-error') return 'mediaDownloadFailed';
   if (status === 'not-found') return 'mediaNotFound';
@@ -147,10 +154,13 @@ function MediaStatus({
   message,
   status,
   onRetry,
+  progressLabel,
 }: {
   message: Message;
-  status: ReturnType<typeof useMessageBlobUrl>['status'];
+  status: MediaFetchStatus;
   onRetry?: () => void;
+  /** "3.1 / 12.4 MB" while a gated (manual) download is in flight — takes priority over every other line, since it IS the current state. */
+  progressLabel?: string | null;
 }) {
   const { t } = useTranslation('inbox');
   const serverState = getServerMediaState(message);
@@ -166,6 +176,10 @@ function MediaStatus({
 
   if (serverState === 'deleted') {
     return <p className="text-2xs opacity-75">{t('mediaGone')}</p>;
+  }
+
+  if (progressLabel) {
+    return <p className="text-2xs tabular-nums opacity-75">{progressLabel}</p>;
   }
 
   // message.mediaDownloadError is the server's own reason text (already
@@ -215,37 +229,51 @@ function PlaceholderIcon({ message, status }: { message: Message; status: Return
 function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: boolean }) {
   const { t } = useTranslation('inbox');
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [downloadStatus, setDownloadStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const mediaUnavailable = !!message.mediaDeletedAt || !!message.mediaDownloadError;
-  const media = useMessageBlobUrl('media', message.id, mediaUnavailable ? null : message.mediaUrl);
+  // Image/StoryReply auto-load (small, previewed inline like Telegram's own chat photos); every
+  // other type — Video/Audio/File — is gated behind an explicit Download tap (see the top-level
+  // request this was built for: real progress is only possible for OUR OWN server's response,
+  // so it's worth showing). Both hooks are always called (rules of hooks) but only one of them
+  // ever gets a non-null path for a given message.type, so only one of them ever actually fetches.
+  const isEagerPreview = message.type === 'Image' || message.type === 'StoryReply';
+  const media = useMessageBlobUrl('media', message.id, isEagerPreview && !mediaUnavailable ? message.mediaUrl : null);
+  const gatedMedia = useGatedMediaDownload(message.id, !isEagerPreview && !mediaUnavailable ? message.mediaUrl : null);
   const thumbnail = useMessageBlobUrl('thumbnail', message.id, message.mediaDownloadError ? null : message.thumbnailUrl);
   const fileName = message.originalFileName || t(`messageType.${message.type}`);
   const meta = formatBytes(message.sizeBytes);
+  const gatedProgressLabel = gatedMedia.status === 'downloading' && gatedMedia.progress ? formatDownloadProgress(gatedMedia.progress.loaded, gatedMedia.progress.total) : null;
 
-  // The fetch (useMessageBlobUrl) can succeed — a 200 with a real byte
-  // stream — while the bytes themselves aren't valid media (an <img>/
-  // <video>/<audio> element's own onError, separate from any HTTP status).
-  // Reset whenever the underlying blob changes, so a stale error from a
-  // previous object URL doesn't linger after a real fix.
+  // The fetch can succeed — a 200 with a real byte stream — while the bytes
+  // themselves aren't valid media (an <img>/<video>/<audio> element's own
+  // onError, separate from any HTTP status). Reset whenever the underlying
+  // blob changes, so a stale error from a previous object URL doesn't linger
+  // after a real fix.
   const [imageDecodeError, setImageDecodeError] = useState(false);
   const [playbackError, setPlaybackError] = useState(false);
   const previewSource = thumbnail.objectUrl ?? media.objectUrl;
   useEffect(() => setImageDecodeError(false), [previewSource]);
-  useEffect(() => setPlaybackError(false), [media.objectUrl]);
+  useEffect(() => setPlaybackError(false), [gatedMedia.objectUrl]);
 
-  async function downloadFile() {
-    if (!message.mediaUrl || downloadStatus === 'loading') return;
-    setDownloadStatus('loading');
-    try {
-      const objectUrl = await getMessageObjectUrl('media', message.id, message.mediaUrl);
-      const link = document.createElement('a');
-      link.href = objectUrl;
-      link.download = fileName;
-      link.click();
-      setDownloadStatus('idle');
-    } catch {
-      setDownloadStatus('error');
+  // File has no inline "player" state — once fetched it's handed straight to the browser as a
+  // save-as download, same as before this hook existed. The ref guards against re-triggering
+  // that save-as on every render once ready (e.g. the cache already had it from an earlier tap);
+  // a click while it's ALREADY ready (cache hit) triggers save-as immediately instead, since
+  // start() is then a no-op and status/objectUrl never change to re-run the effect.
+  const pendingSaveAsRef = useRef(false);
+  useEffect(() => {
+    if (message.type === 'File' && gatedMedia.status === 'ready' && gatedMedia.objectUrl && pendingSaveAsRef.current) {
+      pendingSaveAsRef.current = false;
+      triggerSaveAs(gatedMedia.objectUrl, fileName);
     }
+  }, [message.type, gatedMedia.status, gatedMedia.objectUrl, fileName]);
+
+  function startFileDownload() {
+    if (gatedMedia.status === 'ready' && gatedMedia.objectUrl) {
+      triggerSaveAs(gatedMedia.objectUrl, fileName);
+      return;
+    }
+    pendingSaveAsRef.current = true;
+    gatedMedia.start();
   }
 
   if (message.type === 'Image') {
@@ -327,22 +355,28 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
 
   if (message.type === 'Audio') {
     const hasWaveform = !!message.waveformPeaks?.length;
+    const disabled = !!message.mediaDeletedAt || !!message.mediaDownloadError;
     return (
       <div className="space-y-1.5">
         <VoiceNotePlayer
-          src={message.mediaDeletedAt ? null : media.objectUrl}
+          src={disabled ? null : gatedMedia.objectUrl}
+          downloadState={gatedMedia.status === 'downloading' ? 'downloading' : gatedMedia.status === 'ready' ? 'ready' : 'idle'}
+          downloadProgress={gatedMedia.progress}
+          onStartDownload={gatedMedia.start}
+          onCancelDownload={gatedMedia.cancel}
           durationSeconds={message.voiceDurationSeconds}
           peaks={message.waveformPeaks ?? []}
-          disabled={!!message.mediaDeletedAt || !!message.mediaDownloadError || playbackError}
+          disabled={disabled || playbackError}
           title={hasWaveform ? undefined : (message.originalFileName ?? undefined)}
           onPlaybackError={() => setPlaybackError(true)}
         />
         <MediaStatus
           message={message}
-          status={playbackError ? 'error' : media.status}
+          status={playbackError ? 'error' : gatedMedia.status}
+          progressLabel={gatedProgressLabel}
           onRetry={() => {
             setPlaybackError(false);
-            media.retry();
+            gatedMedia.retry();
           }}
         />
       </div>
@@ -350,37 +384,60 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
   }
 
   if (message.type === 'Video') {
-    const disabled = !!message.mediaDeletedAt || !!message.mediaDownloadError;
-    // A Reel/shared post shared into DM has no MessageType of its own on the
-    // backend — it's a Video with a "[Reel] <title>" marker in body (see
-    // messengerContent.ts) — without the badge here it's indistinguishable
-    // from a regular video attachment.
+    // A shared Reel/Post has no MessageType of its own on the backend — it's a Video with a
+    // "[Reel]"/"[Post]" marker in body (see messengerContent.ts). Confirmed live 2026-08-24:
+    // Instagram only ever gives a web permalink for these, never real media bytes — mediaUrl
+    // stays null forever, so the normal gated-download player would sit in an eternal "pending"
+    // spinner. Render a link card instead: caption + "open on Instagram", no player.
     const content = classifyMessengerContent(message);
-    const reel = content?.kind === 'reel' ? content : null;
-    return (
-      <div className="space-y-1.5">
-        {reel && (
+    if (content?.kind === 'sharedPost') {
+      return (
+        <div className="space-y-1.5">
           <Badge variant="outline" className="gap-1 text-2xs">
             <Clapperboard className="h-3 w-3" />
-            {t('messengerContent.reel')}
+            {t(content.label === 'reel' ? 'messengerContent.reel' : 'messengerContent.post')}
           </Badge>
-        )}
+          {content.caption && <p className="whitespace-pre-wrap break-words">{content.caption}</p>}
+          {content.permalink && (
+            <a
+              href={content.permalink}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-2xs underline underline-offset-2 opacity-80 hover:opacity-100">
+              <ExternalLink className="h-3 w-3" />
+              {t('messengerContent.openInInstagram')}
+            </a>
+          )}
+        </div>
+      );
+    }
+
+    const disabled = !!message.mediaDeletedAt || !!message.mediaDownloadError;
+    return (
+      <div className="space-y-1.5">
         <VideoMessage
-          src={disabled ? null : media.objectUrl}
+          downloadState={gatedMedia.status === 'downloading' ? 'downloading' : gatedMedia.status === 'ready' ? 'ready' : 'idle'}
+          objectUrl={disabled ? null : gatedMedia.objectUrl}
+          progress={gatedMedia.progress}
           posterUrl={thumbnail.objectUrl}
           disabled={disabled || playbackError}
           sizeLabel={meta || undefined}
+          // Backend doesn't probe video duration yet (deferred, see PROGRESS.md) — VideoMessage
+          // falls back to sizeLabel on its own whenever this is null.
+          durationLabel={null}
+          onStartDownload={gatedMedia.start}
+          onCancelDownload={gatedMedia.cancel}
           onPlaybackError={() => setPlaybackError(true)}
         />
         <MediaStatus
           message={message}
-          status={playbackError ? 'error' : media.status}
+          status={playbackError ? 'error' : gatedMedia.status}
+          progressLabel={null}
           onRetry={() => {
             setPlaybackError(false);
-            media.retry();
+            gatedMedia.retry();
           }}
         />
-        {reel?.caption && <p className="whitespace-pre-wrap break-words">{reel.caption}</p>}
       </div>
     );
   }
@@ -390,20 +447,26 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
       <FileText className="h-4 w-4 shrink-0" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{fileName}</p>
-        {meta && <p className="text-2xs opacity-70">{meta}</p>}
+        {meta && !gatedProgressLabel && <p className="text-2xs opacity-70">{meta}</p>}
         <MediaStatus
           message={message}
-          status={downloadStatus === 'error' ? 'error' : downloadStatus === 'loading' ? 'loading' : 'idle'}
-          onRetry={downloadFile}
+          status={gatedMedia.status}
+          progressLabel={gatedProgressLabel}
+          onRetry={gatedMedia.retry}
         />
       </div>
       <Button
         type="button"
         variant={isOutbound ? 'secondary' : 'outline'}
         size="icon-sm"
-        disabled={!message.mediaUrl || !!message.mediaDeletedAt || !!message.mediaDownloadError || downloadStatus === 'loading'}
-        onClick={downloadFile}>
-        {downloadStatus === 'loading' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+        disabled={!message.mediaUrl || !!message.mediaDeletedAt || !!message.mediaDownloadError}
+        aria-label={gatedMedia.status === 'downloading' ? t('cancelDownload') : t('download')}
+        onClick={gatedMedia.status === 'downloading' ? gatedMedia.cancel : startFileDownload}>
+        {gatedMedia.status === 'downloading' ? (
+          <DownloadProgressRing progress={gatedMedia.progress?.total ? gatedMedia.progress.loaded / gatedMedia.progress.total : null} size={16} strokeWidth={2} />
+        ) : (
+          <Download className="h-3.5 w-3.5" />
+        )}
       </Button>
     </div>
   );

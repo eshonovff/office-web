@@ -121,6 +121,8 @@
   },
   "messengerContent": {
     "reel": "Reel",
+    "post": "Пост",
+    "openInInstagram": "Открыть в Instagram",
     "storyReplyContext": "Ответ на вашу Story",
     "storyMention": "Упомянул вас в Story",
     "reaction": "Реакция: {{emoji}}",
@@ -151,6 +153,8 @@
   "mediaLoadFailed": "Не удалось открыть файл.",
   "videoPlaybackFailed": "Видео не воспроизводится.",
   "retry": "Повторить",
+  "download": "Скачать",
+  "cancelDownload": "Отменить загрузку",
   "windowRemainingHours": "Осталось {{hours}} ч {{minutes}} мин",
   "windowRemainingMinutes": "Осталось {{count}} мин",
   "windowClosedTitle": "24-часовое окно закрыто",

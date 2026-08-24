@@ -14,13 +14,38 @@ describe('classifyMessengerContent', () => {
 
   it('recognizes a Reel with a title', () => {
     expect(classifyMessengerContent({ type: 'Video', body: '[Reel] Cool clip' })).toEqual({
-      kind: 'reel',
+      kind: 'sharedPost',
+      label: 'reel',
       caption: 'Cool clip',
+      permalink: null,
     });
   });
 
   it('recognizes a Reel with no title as having a null caption', () => {
-    expect(classifyMessengerContent({ type: 'Video', body: '[Reel]' })).toEqual({ kind: 'reel', caption: null });
+    expect(classifyMessengerContent({ type: 'Video', body: '[Reel]' })).toEqual({
+      kind: 'sharedPost',
+      label: 'reel',
+      caption: null,
+      permalink: null,
+    });
+  });
+
+  it('recognizes a Reel permalink on the second line, separate from the caption', () => {
+    expect(classifyMessengerContent({ type: 'Video', body: '[Reel] Cool clip\nhttps://www.instagram.com/reel/abc/' })).toEqual({
+      kind: 'sharedPost',
+      label: 'reel',
+      caption: 'Cool clip',
+      permalink: 'https://www.instagram.com/reel/abc/',
+    });
+  });
+
+  it('recognizes a shared Post the same way, distinct from a Reel', () => {
+    expect(classifyMessengerContent({ type: 'Video', body: '[Post] Sunset\nhttps://www.instagram.com/p/xyz/' })).toEqual({
+      kind: 'sharedPost',
+      label: 'post',
+      caption: 'Sunset',
+      permalink: 'https://www.instagram.com/p/xyz/',
+    });
   });
 
   it('recognizes a story reply (text present)', () => {

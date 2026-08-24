@@ -1,8 +1,10 @@
-import { Pause, Play } from 'lucide-react';
+import { Download, Pause, Play } from 'lucide-react';
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
 import { cn } from '~/lib/utils';
+import type { DownloadProgress } from '../useMessageBlobUrl';
+import { DownloadProgressRing } from './DownloadProgressRing';
 
 let activeAudio: HTMLAudioElement | null = null;
 
@@ -28,7 +30,13 @@ export function getSeekTime(clientX: number, left: number, width: number, durati
 }
 
 interface VoiceNotePlayerProps {
+  /** Only set once downloadState is 'ready' — the waveform above renders from `peaks` regardless, same as Telegram shows a voice note's waveform before the bytes are fetched. */
   src: string | null;
+  /** 'idle' = not yet fetched from our server — tapping the button starts the download instead of playback. */
+  downloadState: 'idle' | 'downloading' | 'ready';
+  downloadProgress: DownloadProgress | null;
+  onStartDownload: () => void;
+  onCancelDownload: () => void;
   durationSeconds: number | null;
   peaks: number[];
   disabled?: boolean;
@@ -38,7 +46,18 @@ interface VoiceNotePlayerProps {
   onPlaybackError?: () => void;
 }
 
-export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false, title, onPlaybackError }: VoiceNotePlayerProps) {
+export function VoiceNotePlayer({
+  src,
+  downloadState,
+  downloadProgress,
+  onStartDownload,
+  onCancelDownload,
+  durationSeconds,
+  peaks,
+  disabled = false,
+  title,
+  onPlaybackError,
+}: VoiceNotePlayerProps) {
   const { t } = useTranslation('inbox');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const waveformRef = useRef<HTMLDivElement | null>(null);
@@ -106,10 +125,16 @@ export function VoiceNotePlayer({ src, durationSeconds, peaks, disabled = false,
         variant="secondary"
         size="icon-sm"
         className="h-8 w-8 shrink-0 rounded-full"
-        disabled={disabled || !src}
-        aria-label={playing ? t('voicePause') : t('voicePlay')}
-        onClick={togglePlayback}>
-        {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 translate-x-px" />}
+        disabled={disabled}
+        aria-label={
+          downloadState === 'idle' ? t('download') : downloadState === 'downloading' ? t('cancelDownload') : playing ? t('voicePause') : t('voicePlay')
+        }
+        onClick={downloadState === 'idle' ? onStartDownload : downloadState === 'downloading' ? onCancelDownload : togglePlayback}>
+        {downloadState === 'idle' && <Download className="h-3.5 w-3.5" />}
+        {downloadState === 'downloading' && (
+          <DownloadProgressRing progress={downloadProgress?.total ? downloadProgress.loaded / downloadProgress.total : null} size={18} strokeWidth={2} />
+        )}
+        {downloadState === 'ready' && (playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 translate-x-px" />)}
       </Button>
       <div className="min-w-0 flex-1">
         {title && <p className="truncate text-2xs font-medium">{title}</p>}

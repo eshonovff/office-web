@@ -15,13 +15,17 @@ import type { MessageType } from '~/types/message';
  */
 
 export const REEL_MARKER = '[Reel]';
+export const POST_MARKER = '[Post]';
 const STICKER_HEART_BODY = '❤️ (стикер)';
 const REACTION_REMOVED_BODY = '[реаксия бардошта шуд]';
 const REACTION_PREFIX = '[реаксия: ';
 const UNSUPPORTED_TYPE_PREFIX = '[навъи дастгирӣнашуда: ';
 
 export type MessengerContent =
-  | { kind: 'reel'; caption: string | null }
+  // A shared Reel/Post — the backend never has real media bytes for these (Instagram only ever
+  // sends a web permalink, confirmed live 2026-08-24, see InstagramPayloadParser), so there's no
+  // player: caption + a link out to view it on Instagram.
+  | { kind: 'sharedPost'; label: 'reel' | 'post'; caption: string | null; permalink: string | null }
   | { kind: 'storyReply'; text: string }
   | { kind: 'storyMention' }
   | { kind: 'stickerHeart' }
@@ -34,11 +38,28 @@ export interface MessengerContentInput {
   body: string | null;
 }
 
+/** Body shape is "MARKER[ caption]\n<permalink>" — the permalink line is optional (older messages, or no url in the webhook). */
+function parseSharedPost(body: string, marker: string, label: 'reel' | 'post'): MessengerContent {
+  const rest = body.slice(marker.length);
+  const newlineIndex = rest.indexOf('\n');
+  const captionPart = (newlineIndex === -1 ? rest : rest.slice(0, newlineIndex)).trim();
+  const permalinkPart = newlineIndex === -1 ? '' : rest.slice(newlineIndex + 1).trim();
+  return {
+    kind: 'sharedPost',
+    label,
+    caption: captionPart.length > 0 ? captionPart : null,
+    permalink: permalinkPart.length > 0 ? permalinkPart : null,
+  };
+}
+
 /** Null means "nothing special — render this message the normal way for its type". */
 export function classifyMessengerContent({ type, body }: MessengerContentInput): MessengerContent | null {
   if (type === 'Video' && body?.startsWith(REEL_MARKER)) {
-    const caption = body.slice(REEL_MARKER.length).trim();
-    return { kind: 'reel', caption: caption.length > 0 ? caption : null };
+    return parseSharedPost(body, REEL_MARKER, 'reel');
+  }
+
+  if (type === 'Video' && body?.startsWith(POST_MARKER)) {
+    return parseSharedPost(body, POST_MARKER, 'post');
   }
 
   if (type === 'StoryReply') {

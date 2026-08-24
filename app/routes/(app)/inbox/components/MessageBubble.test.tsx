@@ -6,12 +6,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { conversationsApi } from '~/api/conversations';
 import { makeQueryClient } from '~/lib/query-client';
 import type { Message } from '~/types/message';
-import { useMessageBlobUrl } from '../useMessageBlobUrl';
+import { formatBytes, formatDownloadProgress } from '../formatMediaSize';
+import { useGatedMediaDownload, useMessageBlobUrl } from '../useMessageBlobUrl';
 import { MessageBubble } from './MessageBubble';
 
 vi.mock('../useMessageBlobUrl', () => ({
   getMessageObjectUrl: vi.fn(),
   useMessageBlobUrl: vi.fn(() => ({ objectUrl: null, status: 'idle', retry: vi.fn() })),
+  useGatedMediaDownload: vi.fn(() => ({ objectUrl: null, status: 'idle', progress: null, start: vi.fn(), cancel: vi.fn(), retry: vi.fn() })),
 }));
 vi.mock('~/api/conversations', () => ({
   conversationsApi: { cancelMessage: vi.fn() },
@@ -192,6 +194,27 @@ describe('MessageBubble Instagram/Facebook content (item 2)', () => {
     expect(screen.getByText('messengerContent.reel')).toBeInTheDocument();
   });
 
+  it('shows an open-in-Instagram link for a shared Reel instead of a player — there is never real media to download for these', () => {
+    // The regression this fixes: mediaUrl is null forever for a shared Reel/Post (Instagram only
+    // ever gives a web permalink, confirmed live) — the normal Video path would show an eternal
+    // "still downloading" spinner (getServerMediaState treats null mediaUrl + no error as
+    // 'pending'). No player, no download button, no pending state — just the link.
+    renderBubble({ ...baseMessage, type: 'Video', body: '[Reel] Cool clip\nhttps://www.instagram.com/reel/abc/', waveformPeaks: null });
+
+    expect(screen.getByText('messengerContent.reel')).toBeInTheDocument();
+    expect(screen.getByText('Cool clip')).toBeInTheDocument();
+    expect(screen.getByText('messengerContent.openInInstagram')).toHaveAttribute('href', 'https://www.instagram.com/reel/abc/');
+    expect(screen.queryByTestId('video-message')).not.toBeInTheDocument();
+    expect(screen.queryByText('mediaPending')).not.toBeInTheDocument();
+  });
+
+  it('badges a shared Post distinctly from a Reel', () => {
+    renderBubble({ ...baseMessage, type: 'Video', body: '[Post] Sunset\nhttps://www.instagram.com/p/xyz/', waveformPeaks: null });
+
+    expect(screen.getByText('messengerContent.post')).toBeInTheDocument();
+    expect(screen.queryByText('messengerContent.reel')).not.toBeInTheDocument();
+  });
+
   it('does not badge a plain video as a Reel', () => {
     renderBubble({ ...baseMessage, type: 'Video', body: null, waveformPeaks: null });
 
@@ -253,9 +276,9 @@ describe('MessageBubble media loading/error states', () => {
 
   it('shows the server-reported reason but no retry button for a permanently failed download', () => {
     // MediaDownloadJob already gave up for good here (e.g. an expired CDN url) — mediaUnavailable
-    // means useMessageBlobUrl never even attempts a fetch, so a retry button would be a dead end
-    // that looks actionable but silently does nothing. See mediaAvailability.ts's 'failed' state.
-    vi.mocked(useMessageBlobUrl).mockReturnValue({ objectUrl: null, status: 'idle', retry: vi.fn() });
+    // means the gated hook is never even given a real path to fetch, so a retry button would be a
+    // dead end that looks actionable but silently does nothing. See mediaAvailability.ts's 'failed' state.
+    vi.mocked(useGatedMediaDownload).mockReturnValue({ objectUrl: null, status: 'idle', progress: null, start: vi.fn(), cancel: vi.fn(), retry: vi.fn() });
 
     renderBubble({ ...baseMessage, type: 'Audio', mediaDownloadError: 'Instagram: token expired' });
 
@@ -265,7 +288,7 @@ describe('MessageBubble media loading/error states', () => {
 
   it('offers a retry button for a browser-side fetch failure too, distinct from the pending/deleted states', async () => {
     const retry = vi.fn();
-    vi.mocked(useMessageBlobUrl).mockReturnValue({ objectUrl: null, status: 'error', retry });
+    vi.mocked(useGatedMediaDownload).mockReturnValue({ objectUrl: null, status: 'error', progress: null, start: vi.fn(), cancel: vi.fn(), retry });
     const user = userEvent.setup();
 
     renderBubble({ ...baseMessage, type: 'Audio' });
@@ -276,7 +299,7 @@ describe('MessageBubble media loading/error states', () => {
   });
 
   it('surfaces a video that fetched successfully but will not decode/play, instead of a silent black box', () => {
-    vi.mocked(useMessageBlobUrl).mockReturnValue({ objectUrl: 'blob:video', status: 'ready', retry: vi.fn() });
+    vi.mocked(useGatedMediaDownload).mockReturnValue({ objectUrl: 'blob:video', status: 'ready', progress: null, start: vi.fn(), cancel: vi.fn(), retry: vi.fn() });
     const { container } = renderBubble({ ...baseMessage, type: 'Video' });
 
     const video = container.querySelector('video')!;
@@ -288,12 +311,43 @@ describe('MessageBubble media loading/error states', () => {
   });
 
   it('surfaces an audio file that fetched successfully but will not decode/play', () => {
-    vi.mocked(useMessageBlobUrl).mockReturnValue({ objectUrl: 'blob:audio', status: 'ready', retry: vi.fn() });
+    vi.mocked(useGatedMediaDownload).mockReturnValue({ objectUrl: 'blob:audio', status: 'ready', progress: null, start: vi.fn(), cancel: vi.fn(), retry: vi.fn() });
     const { container } = renderBubble({ ...baseMessage, type: 'Audio' });
 
     const audio = container.querySelector('audio')!;
     fireEvent.error(audio);
 
     expect(screen.getByText('mediaLoadFailed')).toBeInTheDocument();
+  });
+
+  it('shows a download button and size for video before the browser has fetched it, and starts the download on tap', async () => {
+    const start = vi.fn();
+    vi.mocked(useGatedMediaDownload).mockReturnValue({ objectUrl: null, status: 'idle', progress: null, start, cancel: vi.fn(), retry: vi.fn() });
+    const user = userEvent.setup();
+
+    renderBubble({ ...baseMessage, type: 'Video', sizeBytes: 5_000_000, waveformPeaks: null });
+
+    expect(screen.getByText(formatBytes(5_000_000))).toBeInTheDocument();
+    await user.click(screen.getByTestId('video-play-button'));
+    expect(start).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows loaded/total progress and offers cancel while a video is downloading', async () => {
+    const cancel = vi.fn();
+    vi.mocked(useGatedMediaDownload).mockReturnValue({
+      objectUrl: null,
+      status: 'downloading',
+      progress: { loaded: 2 * 1024 * 1024, total: 5_000_000 },
+      start: vi.fn(),
+      cancel,
+      retry: vi.fn(),
+    });
+    const user = userEvent.setup();
+
+    renderBubble({ ...baseMessage, type: 'Video', waveformPeaks: null });
+
+    expect(screen.getByText(formatDownloadProgress(2 * 1024 * 1024, 5_000_000))).toBeInTheDocument();
+    await user.click(screen.getByTestId('video-play-button'));
+    expect(cancel).toHaveBeenCalledTimes(1);
   });
 });
