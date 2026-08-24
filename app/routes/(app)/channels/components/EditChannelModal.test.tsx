@@ -14,6 +14,8 @@ function makeChannel(overrides: Partial<ChannelListItem> = {}): ChannelListItem 
     externalId: '1206432455895142',
     isActive: true,
     createdAt: new Date().toISOString(),
+    requiresReconnect: false,
+    credentialsExpiresAt: null,
     ...overrides,
   };
 }

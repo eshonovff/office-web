@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link2, Pencil, Plus, PowerOff, RotateCw, Users, Zap } from 'lucide-react';
+import { AlertTriangle, Link2, Pencil, Plus, PowerOff, RotateCw, Users, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -123,11 +123,19 @@ export default function ChannelsPage() {
                   <span className="font-semibold">{channel.name}</span>
                   <p className="text-muted-foreground text-2xs">{t(`channelType.${channel.type}`)}</p>
                 </div>
-                {!channel.isActive && (
-                  <Badge variant="outline" className="text-muted-foreground text-2xs">
-                    {t('inactive', { ns: 'users' })}
-                  </Badge>
-                )}
+                <div className="flex flex-col items-end gap-1">
+                  {!channel.isActive && (
+                    <Badge variant="outline" className="text-muted-foreground text-2xs">
+                      {t('inactive', { ns: 'users' })}
+                    </Badge>
+                  )}
+                  {channel.requiresReconnect && (
+                    <Badge variant="destructive" className="gap-1 text-2xs">
+                      <AlertTriangle className="h-3 w-3" />
+                      {t('requiresReconnect')}
+                    </Badge>
+                  )}
+                </div>
               </div>
               <div className="mt-auto flex flex-wrap gap-1.5">
                 <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setEditingChannel(channel)}>
@@ -140,7 +148,7 @@ export default function ChannelsPage() {
                 </Button>
                 {(channel.type === 'Instagram' || channel.type === 'Facebook') && (
                   <Button
-                    variant="outline"
+                    variant={channel.requiresReconnect ? 'destructive' : 'outline'}
                     size="sm"
                     className="gap-1.5"
                     onClick={() => void (channel.type === 'Instagram' ? instagramOAuth : facebookOAuth).begin()}>

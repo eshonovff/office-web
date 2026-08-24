@@ -7,6 +7,12 @@ export interface ChannelListItem {
   externalId: string;
   isActive: boolean;
   createdAt: string;
+  // Meta responded with a token error (or an automatic refresh failed) — sending is broken until
+  // someone reconnects (OAuth) or pastes fresh credentials. Used to be silent (owner notification
+  // only); now surfaced here too.
+  requiresReconnect: boolean;
+  // Instagram only (ig_exchange_token/ig_refresh_token give this) — null for WhatsApp/Facebook.
+  credentialsExpiresAt: string | null;
 }
 
 export interface MyChannelListItem {

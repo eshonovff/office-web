@@ -30,6 +30,8 @@ function makeChannel(overrides: Partial<ChannelListItem> = {}): ChannelListItem 
     externalId: '1206432455895142',
     isActive: true,
     createdAt: new Date().toISOString(),
+    requiresReconnect: false,
+    credentialsExpiresAt: null,
     ...overrides,
   };
 }
@@ -195,5 +197,22 @@ describe('ChannelsPage OAuth connect', () => {
     await user.click(screen.getByText('reconnect'));
 
     expect(window.open).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a "requires reconnect" badge when Meta rejected the stored token — used to be silent, only an owner notification', async () => {
+    vi.mocked(channelsApi.list).mockResolvedValue([
+      makeChannel({ id: 'ig', type: 'Instagram', externalId: 'ig1', requiresReconnect: true }),
+    ]);
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText('requiresReconnect')).toBeInTheDocument());
+  });
+
+  it('does not show the badge for a channel whose credentials are still good', async () => {
+    vi.mocked(channelsApi.list).mockResolvedValue([makeChannel({ id: 'ig', type: 'Instagram', externalId: 'ig1' })]);
+    renderPage();
+
+    await waitFor(() => screen.getByText('reconnect'));
+    expect(screen.queryByText('requiresReconnect')).not.toBeInTheDocument();
   });
 });

@@ -53,6 +53,7 @@
   "connectInstagram": "Подключить Instagram",
   "connectFacebook": "Подключить Facebook",
   "reconnect": "Переподключить",
+  "requiresReconnect": "Требуется переподключение",
   "connect": "Подключить",
   "oauthTesterNotice": "Пока не пройдена проверка Meta App Review, подключиться могут только пользователи, добавленные в настройках Meta App как Admin, Developer или Tester.",
   "oauthWaitingBody": "Войдите через Meta в открывшемся окне — оно закроется автоматически.",

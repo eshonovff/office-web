@@ -53,6 +53,7 @@
   "connectInstagram": "Пайваст кардани Instagram",
   "connectFacebook": "Пайваст кардани Facebook",
   "reconnect": "Пайваст аз нав",
+  "requiresReconnect": "Пайвастшавӣ лозим",
   "connect": "Пайваст кардан",
   "oauthTesterNotice": "То тасдиқи Meta App Review, танҳо корбароне метавонанд пайваст кунанд, ки дар танзимоти Meta App ҳамчун Admin, Developer ё Tester илова шудаанд.",
   "oauthWaitingBody": "Дар равзанаи кушодашуда бо Meta ворид шавед — он худкор пӯшида мешавад.",
