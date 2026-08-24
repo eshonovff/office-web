@@ -12,6 +12,7 @@ function makeConversation(overrides: Partial<ConversationListItemType> = {}): Co
     externalId: '992509886588',
     contactName: null,
     contactAvatarUrl: null,
+    contactUsername: null,
     status: 'New',
     assignedTo: null,
     assignedToName: null,

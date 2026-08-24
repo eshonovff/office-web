@@ -1,4 +1,4 @@
-import { Check, Copy } from 'lucide-react';
+import { Check, Copy, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
@@ -31,18 +31,20 @@ export function ContextPanel({ conversation, onStatusChange, isChangingStatus }:
   const initials = displayName.slice(0, 2).toUpperCase();
 
   // Only WhatsApp's externalId is a phone number — Instagram/Facebook use a
-  // platform-scoped user id there (IGSID/PSID), meaningless to a human, not
-  // a username. There's no separate username field from the backend either:
-  // Conversation.ContactName already falls back to the Instagram username
-  // server-side when the real name is empty (InstagramProvider.
-  // GetContactProfileAsync) — the two are indistinguishable once they reach
-  // here, so displayName above is already the best available identity for
-  // Instagram/Facebook. This copies whichever value is actually the
-  // displayed identity: the phone for WhatsApp, that resolved name/username
-  // otherwise.
+  // platform-scoped user id there (IGSID/PSID), meaningless to a human. This
+  // copies whichever value is actually the displayed identity: the phone
+  // for WhatsApp, the resolved name/username otherwise.
   const isWhatsApp = conversation.channelType === 'WhatsApp';
   const phoneNumber = isWhatsApp ? formatPhoneNumber(conversation.externalId) : null;
   const copyValue = phoneNumber ?? displayName;
+
+  // Instagram only — GetContactProfileAsync fetches @handle separately from
+  // display name (Facebook's Profile API has no equivalent, contactUsername
+  // stays null there) — a direct link to the customer's real profile.
+  const instagramProfileUrl =
+    conversation.channelType === 'Instagram' && conversation.contactUsername
+      ? `https://www.instagram.com/${conversation.contactUsername}/`
+      : null;
 
   async function copyContactHandle() {
     await navigator.clipboard.writeText(copyValue);
@@ -94,6 +96,15 @@ export function ContextPanel({ conversation, onStatusChange, isChangingStatus }:
               {handleCopied ? <Check className="text-success h-3 w-3" /> : <Copy className="h-3 w-3" />}
             </Button>
           </div>
+        )}
+        {instagramProfileUrl && (
+          <a
+            href={instagramProfileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground inline-flex items-center gap-1 text-2xs underline underline-offset-2 hover:opacity-80">
+            <ExternalLink className="h-3 w-3" />@{conversation.contactUsername}
+          </a>
         )}
         <Badge variant="outline" className="text-2xs">
           {t(`channelType.${conversation.channelType}`)}

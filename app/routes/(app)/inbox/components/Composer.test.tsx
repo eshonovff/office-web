@@ -35,6 +35,7 @@ function makeConversation(overrides: Partial<ConversationDetail> = {}): Conversa
     externalId: '992900000001',
     contactName: 'Далер',
     contactAvatarUrl: null,
+    contactUsername: null,
     status: 'New',
     assignedTo: null,
     assignedToName: null,

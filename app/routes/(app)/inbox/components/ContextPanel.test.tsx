@@ -22,6 +22,7 @@ function makeConversation(overrides: Partial<ConversationDetail> = {}): Conversa
     externalId: '992509886588',
     contactName: 'Далер',
     contactAvatarUrl: null,
+    contactUsername: null,
     status: 'New',
     assignedTo: null,
     assignedToName: null,
@@ -60,11 +61,26 @@ describe('ContextPanel contact handle', () => {
     expect(screen.getByText('+992 50 988 65 88')).toBeInTheDocument();
   });
 
-  it('never shows the platform-scoped externalId for Instagram/Facebook — there is no separate username field to show it as', () => {
+  it('never shows the platform-scoped externalId for Instagram/Facebook — that id is meaningless to a human', () => {
     renderPanel(makeConversation({ channelType: 'Instagram', externalId: 'ig_scoped_id_123', contactName: 'daler_ig' }));
 
     expect(screen.queryByText('ig_scoped_id_123')).not.toBeInTheDocument();
     expect(screen.queryByText('contactHandleLabel.Instagram:')).not.toBeInTheDocument();
+  });
+
+  it('links to the customer\'s real Instagram profile when contactUsername is available', () => {
+    renderPanel(makeConversation({ channelType: 'Instagram', contactName: 'Daler', contactUsername: 'the_cinecut' }));
+
+    const link = screen.getByText('@the_cinecut').closest('a');
+    expect(link).toHaveAttribute('href', 'https://www.instagram.com/the_cinecut/');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  it('shows no profile link for Facebook — GetContactProfileAsync never resolves a username there', () => {
+    renderPanel(makeConversation({ channelType: 'Facebook', contactName: 'Daler', contactUsername: null }));
+
+    expect(screen.queryByText(/^@/)).not.toBeInTheDocument();
   });
 
   it('shows the resolved contactName for Instagram/Facebook — it already falls back to the username server-side', () => {

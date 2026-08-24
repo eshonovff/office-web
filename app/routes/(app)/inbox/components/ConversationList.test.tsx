@@ -32,6 +32,7 @@ function makeConversation(overrides: Partial<ConversationListItem> = {}): Conver
     externalId: overrides.id ?? 'c1',
     contactName: null,
     contactAvatarUrl: null,
+    contactUsername: null,
     status: 'New',
     assignedTo: null,
     assignedToName: null,

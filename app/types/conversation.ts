@@ -9,6 +9,9 @@ export interface ConversationListItem {
   externalId: string;
   contactName: string | null;
   contactAvatarUrl: string | null;
+  // Instagram @handle only (Facebook's Profile API doesn't expose one) — for a link to
+  // instagram.com/{contactUsername} in the UI.
+  contactUsername: string | null;
   status: ConversationStatus;
   assignedTo: string | null;
   assignedToName: string | null;
