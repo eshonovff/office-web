@@ -245,6 +245,24 @@ describe('MessageBubble Instagram/Facebook content (item 2)', () => {
     );
   });
 
+  it('badges a shared Story distinctly, also with the real player — confirmed live it is downloadable too', () => {
+    // ig_story's payload shape (story_media_id/story_media_url) is completely different from
+    // ig_reel/ig_post's (url/title) — confirmed live 2026-08-25 via webhook_logs. Like Post, its
+    // url is a real CDN asset, not a permalink, so it gets the normal player.
+    renderBubble({
+      ...baseMessage,
+      type: 'Video',
+      body: '[Story]',
+      externalContentUrl: 'https://lookaside.fbsbx.com/ig_messaging_cdn/?asset_id=story1',
+      externalContentKind: 'Story',
+      waveformPeaks: null,
+    });
+
+    expect(screen.getByText('messengerContent.story')).toBeInTheDocument();
+    expect(screen.queryByText('messengerContent.post')).not.toBeInTheDocument();
+    expect(screen.getByTestId('video-message')).toBeInTheDocument();
+  });
+
   it('does not badge a plain video as a Reel', () => {
     renderBubble({ ...baseMessage, type: 'Video', body: null, waveformPeaks: null });
 

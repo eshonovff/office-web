@@ -16,17 +16,19 @@ import type { MessageType } from '~/types/message';
 
 export const REEL_MARKER = '[Reel]';
 export const POST_MARKER = '[Post]';
+export const STORY_MARKER = '[Story]';
 const STICKER_HEART_BODY = '❤️ (стикер)';
 const REACTION_REMOVED_BODY = '[реаксия бардошта шуд]';
 const REACTION_PREFIX = '[реаксия: ';
 const UNSUPPORTED_TYPE_PREFIX = '[навъи дастгирӣнашуда: ';
 
 export type MessengerContent =
-  // A shared Reel/Post — the backend never has real media bytes for these (Instagram only ever
-  // sends a web permalink, confirmed live 2026-08-24, see InstagramPayloadParser), so there's no
-  // player: caption + a link out to view it on Instagram. permalink comes from
-  // message.externalContentUrl (a dedicated field), never parsed out of body text.
-  | { kind: 'sharedPost'; label: 'reel' | 'post'; caption: string | null; permalink: string | null }
+  // A shared Reel/Post/Story. Reel is the odd one out — confirmed live (2026-08-24) Instagram
+  // only ever gives a web permalink for it, no real media bytes, so it's a link card, no player.
+  // Post and Story (confirmed live 2026-08-25) both turn out to carry a real downloadable CDN
+  // asset — normal player, badged, with permalink as a bonus link underneath. permalink comes
+  // from message.externalContentUrl (a dedicated field), never parsed out of body text.
+  | { kind: 'sharedPost'; label: 'reel' | 'post' | 'story'; caption: string | null; permalink: string | null }
   // permalink here dies within ~24h of the ORIGINAL story (Instagram deletes it) — the frontend
   // shows that as a caveat since there's no reliable way to know exactly when from here.
   | { kind: 'storyReply'; text: string; permalink: string | null }
@@ -55,6 +57,10 @@ export function classifyMessengerContent({ type, body, externalContentUrl }: Mes
 
   if (type === 'Video' && body?.startsWith(POST_MARKER)) {
     return { kind: 'sharedPost', label: 'post', caption: captionAfterMarker(body, POST_MARKER), permalink: externalContentUrl ?? null };
+  }
+
+  if (type === 'Video' && body?.startsWith(STORY_MARKER)) {
+    return { kind: 'sharedPost', label: 'story', caption: captionAfterMarker(body, STORY_MARKER), permalink: externalContentUrl ?? null };
   }
 
   if (type === 'StoryReply') {

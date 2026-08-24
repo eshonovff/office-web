@@ -54,6 +54,17 @@ describe('classifyMessengerContent', () => {
     });
   });
 
+  it('recognizes a shared Story the same way as a Post — real downloadable media, confirmed live', () => {
+    expect(
+      classifyMessengerContent({ type: 'Video', body: '[Story]', externalContentUrl: 'https://lookaside.fbsbx.com/ig_messaging_cdn/?asset_id=1' })
+    ).toEqual({
+      kind: 'sharedPost',
+      label: 'story',
+      caption: null,
+      permalink: 'https://lookaside.fbsbx.com/ig_messaging_cdn/?asset_id=1',
+    });
+  });
+
   it('has a null permalink when externalContentUrl is not given', () => {
     expect(classifyMessengerContent({ type: 'Video', body: '[Reel] Cool clip' })).toEqual({
       kind: 'sharedPost',

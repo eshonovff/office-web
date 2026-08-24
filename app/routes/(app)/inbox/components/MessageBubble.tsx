@@ -385,13 +385,13 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
   }
 
   if (message.type === 'Video') {
-    // A shared Reel/Post has no MessageType of its own on the backend — it's a Video with a
-    // "[Reel]"/"[Post]" marker in body (see messengerContent.ts). Reel and Post turned out to
-    // behave differently once checked against real production payloads (2026-08-25): a Reel's
-    // url is a web permalink (confirmed, no downloadable bytes ever exist — link card only,
-    // no player, would otherwise sit in an eternal "pending" spinner), but a Post's url is a
-    // real lookaside.fbsbx.com CDN asset — same as a plain video/image attachment — so it gets
-    // the normal player, just with the badge (and the open-in-Instagram link) added on top.
+    // A shared Reel/Post/Story has no MessageType of its own on the backend — it's a Video with a
+    // "[Reel]"/"[Post]"/"[Story]" marker in body (see messengerContent.ts). Reel is the odd one
+    // out once checked against real production payloads: its url is a web permalink (confirmed
+    // live 2026-08-24, no downloadable bytes ever exist — link card only, no player, would
+    // otherwise sit in an eternal "pending" spinner). Post and Story (confirmed live 2026-08-25)
+    // both carry a real lookaside.fbsbx.com CDN asset — same as a plain video/image attachment —
+    // so they get the normal player, just with the badge (and the open-in-Instagram link) added.
     const content = classifyMessengerContent(message);
     if (content?.kind === 'sharedPost' && content.label === 'reel') {
       return (
@@ -415,14 +415,14 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
       );
     }
 
-    const post = content?.kind === 'sharedPost' && content.label === 'post' ? content : null;
+    const post = content?.kind === 'sharedPost' && (content.label === 'post' || content.label === 'story') ? content : null;
     const disabled = !!message.mediaDeletedAt || !!message.mediaDownloadError;
     return (
       <div className="space-y-1.5">
         {post && (
           <Badge variant="outline" className="gap-1 text-2xs">
             <Clapperboard className="h-3 w-3" />
-            {t('messengerContent.post')}
+            {t(post.label === 'story' ? 'messengerContent.story' : 'messengerContent.post')}
           </Badge>
         )}
         <VideoMessage
