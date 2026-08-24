@@ -214,7 +214,10 @@ describe('MessageBubble Instagram/Facebook content (item 2)', () => {
 
     expect(screen.getByText('messengerContent.reel')).toBeInTheDocument();
     expect(screen.getByText('Cool clip')).toBeInTheDocument();
-    expect(screen.getByText('messengerContent.openInInstagram')).toHaveAttribute('href', 'https://www.instagram.com/reel/abc/');
+    const link = screen.getByText('messengerContent.openInInstagram').closest('a');
+    expect(link).toHaveAttribute('href', 'https://www.instagram.com/reel/abc/');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     expect(screen.queryByTestId('video-message')).not.toBeInTheDocument();
     expect(screen.queryByText('mediaPending')).not.toBeInTheDocument();
   });
@@ -274,10 +277,10 @@ describe('MessageBubble Instagram/Facebook content (item 2)', () => {
       waveformPeaks: null,
     });
 
-    expect(screen.getByText('messengerContent.openInInstagram')).toHaveAttribute(
-      'href',
-      'https://www.instagram.com/stories/customer/123/'
-    );
+    const link = screen.getByText('messengerContent.openInInstagram').closest('a');
+    expect(link).toHaveAttribute('href', 'https://www.instagram.com/stories/customer/123/');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     expect(screen.getByText('messengerContent.storyMayBeGone')).toBeInTheDocument();
   });
 

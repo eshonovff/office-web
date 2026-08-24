@@ -340,7 +340,7 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
             <a
               href={permalink}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-2xs underline underline-offset-2 opacity-80 hover:opacity-100">
               <ExternalLink className="h-3 w-3" />
               {t('messengerContent.openInInstagram')}
@@ -403,7 +403,7 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
             <a
               href={content.permalink}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-2xs underline underline-offset-2 opacity-80 hover:opacity-100">
               <ExternalLink className="h-3 w-3" />
               {t('messengerContent.openInInstagram')}
