@@ -457,21 +457,24 @@ export function Composer({ conversation }: ComposerProps) {
           )}
           <div className="flex items-end gap-2">
             <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
-            {!isNoteMode && (
-              <>
-                <Button type="button" variant="outline" size="icon" disabled={isPending || isUploading} onClick={() => fileInputRef.current?.click()}>
-                  <Paperclip className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant={recording ? 'default' : 'outline'}
-                  size="icon"
-                  className="touch-manipulation"
-                  disabled={isPending || isUploading || isUploadingVoiceNote}
-                  onClick={() => (recording ? stopVoiceRecording(true) : startVoiceRecording())}>
-                  {recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
-              </>
+            {/* !== false, not a truthy check: an undefined flag (stale cache, an old conversation
+                shape) must fail OPEN — show the button — not silently hide it. Only an explicit
+                false (the backend always sends a real boolean) hides it. */}
+            {!isNoteMode && conversation.canSendMedia !== false && (
+              <Button type="button" variant="outline" size="icon" disabled={isPending || isUploading} onClick={() => fileInputRef.current?.click()}>
+                <Paperclip className="h-4 w-4" />
+              </Button>
+            )}
+            {!isNoteMode && conversation.canSendVoice !== false && (
+              <Button
+                type="button"
+                variant={recording ? 'default' : 'outline'}
+                size="icon"
+                className="touch-manipulation"
+                disabled={isPending || isUploading || isUploadingVoiceNote}
+                onClick={() => (recording ? stopVoiceRecording(true) : startVoiceRecording())}>
+                {recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
             )}
             <Textarea
               ref={textareaRef}

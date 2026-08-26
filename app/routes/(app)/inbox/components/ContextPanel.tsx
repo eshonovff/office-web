@@ -62,14 +62,14 @@ export function ContextPanel({ conversation, onStatusChange, isChangingStatus }:
   }));
 
   return (
-    <div className="space-y-4 p-3">
-      <div className="flex flex-col items-center gap-2 pt-2 text-center">
+    <div className="min-w-0 space-y-4 p-3">
+      <div className="flex min-w-0 flex-col items-center gap-2 pt-2 text-center">
         <Avatar size="lg">
           {conversation.contactAvatarUrl && <AvatarImage src={conversation.contactAvatarUrl} />}
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
-        <div className="flex items-center gap-1">
-          <span className="font-semibold">{displayName}</span>
+        <div className="flex min-w-0 max-w-full items-center gap-1">
+          <span className="min-w-0 font-semibold [overflow-wrap:anywhere]">{displayName}</span>
           {!phoneNumber && (
             <Button
               type="button"
@@ -102,8 +102,8 @@ export function ContextPanel({ conversation, onStatusChange, isChangingStatus }:
             href={instagramProfileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground inline-flex items-center gap-1 text-2xs underline underline-offset-2 hover:opacity-80">
-            <ExternalLink className="h-3 w-3" />@{conversation.contactUsername}
+            className="text-muted-foreground inline-flex max-w-full items-center gap-1 text-2xs underline underline-offset-2 hover:opacity-80 [overflow-wrap:anywhere]">
+            <ExternalLink className="h-3 w-3 shrink-0" />@{conversation.contactUsername}
           </a>
         )}
         <Badge variant="outline" className="text-2xs">
@@ -113,7 +113,7 @@ export function ContextPanel({ conversation, onStatusChange, isChangingStatus }:
 
       <div className="space-y-1">
         <Label className="text-muted-foreground text-2xs">{t('channel')}</Label>
-        <p className="text-sm">{conversation.channelName}</p>
+        <p className="text-sm [overflow-wrap:anywhere]">{conversation.channelName}</p>
       </div>
 
       <div className="space-y-1">

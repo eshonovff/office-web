@@ -167,7 +167,7 @@ export function ConversationList({
         </div>
       )}
 
-      <div className="scrollbar-thin flex-1 space-y-1.5 overflow-y-auto px-2 pb-2">
+      <div className="scrollbar-thin min-w-0 flex-1 space-y-1.5 overflow-x-hidden overflow-y-auto px-2 pb-2">
         {isLoading ? (
           Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-lg" />)
         ) : conversations.length === 0 ? (

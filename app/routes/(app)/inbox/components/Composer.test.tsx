@@ -48,6 +48,8 @@ function makeConversation(overrides: Partial<ConversationDetail> = {}): Conversa
       { category: 'audioVideo', maxSizeBytes: 16 * 1024 * 1024 },
       { category: 'document', maxSizeBytes: 100 * 1024 * 1024 },
     ],
+    canSendMedia: true,
+    canSendVoice: true,
     ...overrides,
   };
 }
@@ -265,6 +267,85 @@ describe('Composer', () => {
 
       expect(screen.queryByText('windowClosedTitle')).not.toBeInTheDocument();
       expect(screen.getByPlaceholderText('internalNotePlaceholder')).toBeInTheDocument();
+    });
+  });
+
+  describe('media capability gating (block 3, item 2) — backend-driven, never hardcoded by channel', () => {
+    // The buttons must not render at all when the flag is off (not just disabled) — a missing
+    // control needs no explanatory text, a disabled one invites "why can't I click this?".
+    // windowExpiresAt must be open (default null reads as closed, WhatsApp falls into the
+    // template picker) — same reason the note-mode test above sets it, see its comment.
+    const openWindow = dayjs().add(6, 'hour').toISOString();
+
+    it('shows both attach and voice-record when the conversation allows both', () => {
+      renderComposer(makeConversation({ windowExpiresAt: openWindow, canSendMedia: true, canSendVoice: true }));
+
+      // send + attach + voice-record
+      expect(screen.getAllByRole('button')).toHaveLength(3);
+    });
+
+    it('hides the attach button when canSendMedia is false, keeping voice-record', () => {
+      renderComposer(makeConversation({ windowExpiresAt: openWindow, canSendMedia: false, canSendVoice: true }));
+
+      // send + voice-record only
+      expect(screen.getAllByRole('button')).toHaveLength(2);
+    });
+
+    it('hides the voice-record button when canSendVoice is false, keeping attach', () => {
+      renderComposer(makeConversation({ windowExpiresAt: openWindow, canSendMedia: true, canSendVoice: false }));
+
+      // send + attach only
+      expect(screen.getAllByRole('button')).toHaveLength(2);
+    });
+
+    it('hides both when the channel can send neither — the current Instagram/Facebook reality', () => {
+      renderComposer(
+        makeConversation({ channelType: 'Instagram', windowExpiresAt: openWindow, canSendMedia: false, canSendVoice: false })
+      );
+
+      // send only — matches the note-mode button count, same UI shape either way
+      expect(screen.getAllByRole('button')).toHaveLength(1);
+    });
+
+    // Regression (2026-08-25): a stale dev server briefly meant the backend response had no
+    // canSendMedia/canSendVoice at all — Composer's `&&` check treated that missing/undefined
+    // value as falsy and hid the attach/voice-record buttons for WhatsApp too, not just IG/FB.
+    // One test per real channel type, plus the undefined case that caused it.
+    it('WhatsApp shows both buttons', () => {
+      renderComposer(
+        makeConversation({ channelType: 'WhatsApp', windowExpiresAt: openWindow, canSendMedia: true, canSendVoice: true })
+      );
+
+      expect(screen.getAllByRole('button')).toHaveLength(3);
+    });
+
+    it('Instagram hides both buttons', () => {
+      renderComposer(
+        makeConversation({ channelType: 'Instagram', windowExpiresAt: openWindow, canSendMedia: false, canSendVoice: false })
+      );
+
+      expect(screen.getAllByRole('button')).toHaveLength(1);
+    });
+
+    it('Facebook hides both buttons', () => {
+      renderComposer(
+        makeConversation({ channelType: 'Facebook', windowExpiresAt: openWindow, canSendMedia: false, canSendVoice: false })
+      );
+
+      expect(screen.getAllByRole('button')).toHaveLength(1);
+    });
+
+    it('fails open (shows both buttons) when the flags are undefined — a stale cache or an old response shape must never silently hide send capability', () => {
+      renderComposer(
+        makeConversation({
+          channelType: 'WhatsApp',
+          windowExpiresAt: openWindow,
+          canSendMedia: undefined as unknown as boolean,
+          canSendVoice: undefined as unknown as boolean,
+        })
+      );
+
+      expect(screen.getAllByRole('button')).toHaveLength(3);
     });
   });
 

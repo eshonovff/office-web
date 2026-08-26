@@ -92,7 +92,7 @@ export function MessageThread({ conversationId, conversation, onBack, onOpenInfo
   useEffect(() => revokeMessageBlobCache, []);
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 min-w-0 flex-col">
       <div className="flex items-center gap-2 border-b px-3 py-2.5">
         {onBack && (
           <Button type="button" variant="ghost" size="icon-sm" aria-label={t('back')} onClick={onBack} className="-ml-1 shrink-0">
@@ -118,7 +118,7 @@ export function MessageThread({ conversationId, conversation, onBack, onOpenInfo
         )}
       </div>
 
-      <div ref={scrollContainerRef} className="scrollbar-thin flex-1 space-y-2 overflow-y-auto p-3">
+      <div ref={scrollContainerRef} className="scrollbar-thin min-w-0 flex-1 space-y-2 overflow-x-hidden overflow-y-auto p-3">
         {isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -142,7 +142,7 @@ export function MessageThread({ conversationId, conversation, onBack, onOpenInfo
               </div>
             )}
             {messages.map((message) => (
-              <MessageBubble key={message.id} message={message} />
+              <MessageBubble key={message.id} message={message} channelType={conversation?.channelType} />
             ))}
             <div ref={bottomRef} />
           </>

@@ -35,6 +35,8 @@ function makeConversation(overrides: Partial<ConversationDetail> = {}): Conversa
       { category: 'audioVideo', maxSizeBytes: 16 * 1024 * 1024 },
       { category: 'document', maxSizeBytes: 100 * 1024 * 1024 },
     ],
+    canSendMedia: true,
+    canSendVoice: true,
     ...overrides,
   };
 }

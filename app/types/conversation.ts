@@ -33,6 +33,12 @@ export interface MediaTypeLimit {
 // Composer needs to pre-validate an upload (see lib/mediaLimits.ts).
 export interface ConversationDetail extends ConversationListItem {
   mediaLimits: MediaTypeLimit[];
+  // Whether this channel can send media/voice notes right now (ChannelCapabilities on the
+  // backend) — Instagram/Facebook Send API is App-Review-gated (message_attachments 200s, but
+  // POST /messages with an attachment_id always 500s), so both are false until that clears.
+  // Composer reads these, never hardcodes a channel check — one backend flip re-enables it.
+  canSendMedia: boolean;
+  canSendVoice: boolean;
 }
 
 export interface PagedResult<T> {

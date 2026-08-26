@@ -27,8 +27,13 @@ export interface Message {
   mediaDownloadError: string | null;
   waveformPeaks: number[] | null;
   // Set when dispatch fails after the delay (e.g. the 24h window closed
-  // during the wait) — only meaningful when deliveryStatus is Failed.
+  // during the wait) — only meaningful when deliveryStatus is Failed. Always
+  // short, human-readable text (backend's MetaErrorTranslator translates raw
+  // Meta Graph API errors before this is ever set — never JSON).
   failureReason: string | null;
+  // The raw Meta Graph API error body, only when failureReason came from a GraphApiException —
+  // debug-only, rendered collapsed (never as the primary failure text, that's failureReason).
+  failureDetail: string | null;
   // A shared Reel/Post/Story's real Instagram permalink — never downloadable media (Instagram
   // only ever gives a web page link for these, confirmed live), so it's a link-out, not a player.
   // A dedicated field, not embedded in body text — an earlier version did that and the "open in

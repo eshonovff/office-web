@@ -44,13 +44,14 @@ const baseMessage: Message = {
   failureReason: null,
   externalContentUrl: null,
   externalContentKind: null,
+  failureDetail: null,
 };
 
-function renderBubble(message: Message) {
+function renderBubble(message: Message, channelType?: 'WhatsApp' | 'Instagram' | 'Facebook') {
   const queryClient = makeQueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <MessageBubble message={message} />
+      <MessageBubble message={message} channelType={channelType} />
     </QueryClientProvider>
   );
 }
@@ -425,5 +426,120 @@ describe('MessageBubble media loading/error states', () => {
     expect(screen.getByText(formatDownloadProgress(2 * 1024 * 1024, 5_000_000))).toBeInTheDocument();
     await user.click(screen.getByTestId('video-play-button'));
     expect(cancel).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('MessageBubble echo attribution (is_echo — sent from the provider app directly)', () => {
+  const echoMessage: Message = {
+    ...baseMessage,
+    direction: 'Outbound',
+    type: 'Text',
+    body: 'reply from the account itself',
+    sentByUserId: null,
+    sentByUserName: null,
+  };
+
+  it('shows the "sent from the app" label for an Instagram echo with no agent attached', () => {
+    renderBubble(echoMessage, 'Instagram');
+
+    expect(screen.getByText('sentFromApp')).toBeInTheDocument();
+  });
+
+  it('shows the "sent from the app" label for a Facebook echo with no agent attached', () => {
+    renderBubble(echoMessage, 'Facebook');
+
+    expect(screen.getByText('sentFromApp')).toBeInTheDocument();
+  });
+
+  it('does not show the label for WhatsApp (no is_echo concept there)', () => {
+    renderBubble(echoMessage, 'WhatsApp');
+
+    expect(screen.queryByText('sentFromApp')).not.toBeInTheDocument();
+  });
+
+  it('prefers the agent name over the app label once the message has one', () => {
+    renderBubble({ ...echoMessage, sentByUserName: 'Даler' }, 'Instagram');
+
+    expect(screen.getByText('Даler')).toBeInTheDocument();
+    expect(screen.queryByText('sentFromApp')).not.toBeInTheDocument();
+  });
+
+  it('does not show the label for inbound messages', () => {
+    renderBubble({ ...echoMessage, direction: 'Inbound' }, 'Instagram');
+
+    expect(screen.queryByText('sentFromApp')).not.toBeInTheDocument();
+  });
+});
+
+describe('MessageBubble overflow safety — long/unbroken text (block 3, item 1)', () => {
+  // jsdom does not implement CSS layout — scrollWidth/clientWidth are always 0 there regardless
+  // of markup, so a literal "scrollWidth <= clientWidth" assertion would be vacuously true even
+  // if the bug were still present. What CAN be verified here, honestly: the bubble carries the
+  // exact CSS contract that fixes the overflow (min-w-0 so the flex item can actually shrink to
+  // max-w-[70%]; overflow-wrap:anywhere so a long unbroken run is considered breakable when the
+  // browser computes that item's min-content size — see the comment in MessageBubble.tsx for why
+  // break-words alone doesn't do this), and that a 500-char unbroken string renders without
+  // crashing or being silently dropped. Real pixel-level verification needs a real browser
+  // (Playwright/browser-mode Vitest, not currently wired into this project).
+  const UNBROKEN_500 = 'x'.repeat(500);
+
+  it('renders the bubble container with min-w-0 and overflow-wrap:anywhere', () => {
+    renderBubble({ ...baseMessage, type: 'Text', body: 'Салом' });
+
+    const bubble = screen.getByText('Салом').closest('div');
+    expect(bubble?.className).toContain('min-w-0');
+    expect(bubble?.className).toContain('[overflow-wrap:anywhere]');
+  });
+
+  it('renders a 500-character unbroken failureReason (e.g. an untranslated raw error) without crashing, inside the wrap-safe bubble', () => {
+    renderBubble({
+      ...baseMessage,
+      type: 'Text',
+      body: null,
+      deliveryStatus: 'Failed',
+      failureReason: UNBROKEN_500,
+    });
+
+    const reasonEl = screen.getByText(UNBROKEN_500);
+    expect(reasonEl).toBeInTheDocument();
+    // No explicit overflow-wrap on the <p> itself — it must inherit from the bubble ancestor,
+    // which is the whole point (one declaration covers every text child, including this one).
+    expect(reasonEl.closest('[class*="overflow-wrap"]')).not.toBeNull();
+  });
+
+  it('renders a 500-character unbroken message body without crashing', () => {
+    renderBubble({ ...baseMessage, type: 'Text', body: UNBROKEN_500 });
+
+    expect(screen.getByText(UNBROKEN_500)).toBeInTheDocument();
+  });
+
+  it('keeps the raw failureDetail collapsed by default, behind a toggle, never shown as the primary failure text', () => {
+    renderBubble({
+      ...baseMessage,
+      type: 'Text',
+      body: null,
+      deliveryStatus: 'Failed',
+      failureReason: 'Тирезаи 24-соата баста аст.',
+      failureDetail: '{"error":{"message":"raw diagnostic","code":131047}}',
+    });
+
+    expect(screen.getByText('Тирезаи 24-соата баста аст.')).toBeInTheDocument();
+    const details = screen.getByText('failureDetailToggle').closest('details');
+    expect(details).not.toBeNull();
+    expect(details).not.toHaveAttribute('open');
+    expect(screen.getByText('{"error":{"message":"raw diagnostic","code":131047}}')).toBeInTheDocument();
+  });
+
+  it('shows no debug toggle when failureDetail is absent (e.g. a non-Meta failure)', () => {
+    renderBubble({
+      ...baseMessage,
+      type: 'Text',
+      body: null,
+      deliveryStatus: 'Failed',
+      failureReason: 'Network error',
+      failureDetail: null,
+    });
+
+    expect(screen.queryByText('failureDetailToggle')).not.toBeInTheDocument();
   });
 });

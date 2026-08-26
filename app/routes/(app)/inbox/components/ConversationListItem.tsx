@@ -74,7 +74,7 @@ export function ConversationListItem({ conversation, active, draggable, onClick 
             </Badge>
           )}
           {conversation.assignedToName && (
-            <span className="text-muted-foreground truncate text-2xs">→ {conversation.assignedToName}</span>
+            <span className="text-muted-foreground min-w-0 truncate text-2xs">→ {conversation.assignedToName}</span>
           )}
         </div>
       </div>

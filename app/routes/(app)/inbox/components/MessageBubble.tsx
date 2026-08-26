@@ -25,6 +25,7 @@ import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { formatDate } from '~/lib/format';
 import { cn } from '~/lib/utils';
+import type { ChannelType } from '~/types/conversation';
 import type { Message, MessageType } from '~/types/message';
 import { formatBytes, formatDownloadProgress } from '../formatMediaSize';
 import { getServerMediaState } from '../mediaAvailability';
@@ -304,7 +305,7 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
             thumbnail.retry();
           }}
         />
-        {message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
+        {message.body && <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{message.body}</p>}
         <ImageLightbox open={lightboxOpen} onOpenChange={setLightboxOpen} src={media.objectUrl} alt={fileName} />
       </div>
     );
@@ -334,7 +335,7 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
           </Badge>
           <span className="text-2xs opacity-80">{t(isMention ? 'messengerContent.storyMention' : 'messengerContent.storyReplyContext')}</span>
         </div>
-        {message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
+        {message.body && <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{message.body}</p>}
         {permalink ? (
           <div className="space-y-0.5">
             <a
@@ -400,7 +401,7 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
             <Clapperboard className="h-3 w-3" />
             {t('messengerContent.reel')}
           </Badge>
-          {content.caption && <p className="whitespace-pre-wrap break-words">{content.caption}</p>}
+          {content.caption && <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{content.caption}</p>}
           {content.permalink && (
             <a
               href={content.permalink}
@@ -448,7 +449,7 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
             gatedMedia.retry();
           }}
         />
-        {post?.caption && <p className="whitespace-pre-wrap break-words">{post.caption}</p>}
+        {post?.caption && <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{post.caption}</p>}
         {post?.permalink && (
           <a
             href={post.permalink}
@@ -495,11 +496,18 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
 
 interface MessageBubbleProps {
   message: Message;
+  channelType?: ChannelType;
 }
 
-export function MessageBubble({ message }: MessageBubbleProps) {
+export function MessageBubble({ message, channelType }: MessageBubbleProps) {
   const { t } = useTranslation('inbox');
   const isOutbound = message.direction === 'Outbound';
+  // is_echo аз Meta: агенте набуд, худи мижоздор мустақим аз барномаи Instagram/Facebook
+  // навиштааст — sentByUserId/sentByUserName холианд (ниг. InstagramPayloadParser/FacebookPayloadParser).
+  const sentFromAppLabel =
+    isOutbound && !message.sentByUserName && channelType && channelType !== 'WhatsApp'
+      ? t('sentFromApp', { channel: channelType })
+      : null;
   const MediaIcon = message.type !== 'Text' ? MEDIA_ICON[message.type] : undefined;
   // Instagram/Facebook stickers, reactions and unsupported-attachment
   // markers all arrive as MessageType.Text with a recognizable body — see
@@ -511,7 +519,12 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     <div className={cn('flex', isOutbound ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'max-w-[70%] space-y-1 rounded-lg px-3 py-2 text-sm',
+          // overflow-wrap: anywhere (not just break-words) inherits to every text child below —
+          // break-word alone doesn't shrink a flex item's min-content size (CSS Text spec), so a
+          // long unbroken run (raw Graph API error JSON, a URL, a filename) still forced the
+          // bubble past max-w and scrolled the whole thread horizontally. min-w-0 is the other
+          // half: without it this flex item's auto min-width still wins over max-w-[70%].
+          'min-w-0 max-w-[70%] space-y-1 rounded-lg px-3 py-2 text-sm [overflow-wrap:anywhere]',
           message.isInternalNote
             ? 'bg-warning/10 border-warning/30 border'
             : isOutbound
@@ -524,6 +537,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         {isOutbound && message.sentByUserName && (
           <p className="text-2xs opacity-70">{message.sentByUserName}</p>
         )}
+        {sentFromAppLabel && <p className="text-2xs opacity-70">{sentFromAppLabel}</p>}
 
         {MediaIcon && <MessageMedia message={message} isOutbound={isOutbound} />}
 
@@ -540,12 +554,22 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                 {t('messengerContent.unsupportedType', { type: textContent.rawType })}
               </div>
             )}
-            {!textContent && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
+            {!textContent && <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{message.body}</p>}
           </>
         )}
 
         {message.deliveryStatus === 'Failed' && message.failureReason && (
-          <p className="text-destructive text-2xs">{message.failureReason}</p>
+          <div className="space-y-0.5">
+            <p className="text-destructive text-2xs">{message.failureReason}</p>
+            {message.failureDetail && (
+              <details className="text-2xs opacity-60">
+                <summary className="cursor-pointer select-none">{t('failureDetailToggle')}</summary>
+                <pre className="mt-1 max-h-32 overflow-auto rounded bg-black/10 p-1.5 whitespace-pre-wrap [overflow-wrap:anywhere]">
+                  {message.failureDetail}
+                </pre>
+              </details>
+            )}
+          </div>
         )}
         {message.deliveryStatus === 'Cancelled' && <p className="text-2xs italic opacity-70">{t('messageCancelled')}</p>}
         {isOutbound && message.deliveryStatus === 'Pending' && !message.isInternalNote && (

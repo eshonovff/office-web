@@ -59,7 +59,7 @@ export function AssignmentHistory({ conversationId }: AssignmentHistoryProps) {
           {events.map((event) => (
             <div key={event.id} className="space-y-0.5 rounded-md border p-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-2xs font-medium">
+                <span className="min-w-0 flex-1 truncate text-2xs font-medium">
                   {event.fromUserName ?? t('unassigned')} → {event.toUserName ?? t('unassigned')}
                 </span>
                 <Badge variant="outline" className="shrink-0 text-2xs">

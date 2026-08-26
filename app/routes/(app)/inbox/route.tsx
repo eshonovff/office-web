@@ -404,7 +404,7 @@ export default function InboxPage() {
         <div className="grid min-h-0 grid-cols-1 gap-3 md:grid-cols-[320px_1fr] xl:grid-cols-[320px_1fr_300px]">
           <div
             className={cn(
-              'bg-sidebar min-h-0 rounded-xl',
+              'bg-sidebar min-h-0 min-w-0 rounded-xl',
               breakpoint === 'mobile' && mobileView !== 'list' && 'hidden'
             )}>
             <ConversationList
@@ -424,7 +424,7 @@ export default function InboxPage() {
               auto-scroll behavior. */}
           <div
             className={cn(
-              'bg-sidebar min-h-0 rounded-xl',
+              'bg-sidebar min-h-0 min-w-0 rounded-xl',
               breakpoint === 'mobile' && mobileView !== 'thread' && 'hidden'
             )}>
             {selectedId ? (
@@ -440,7 +440,7 @@ export default function InboxPage() {
           </div>
 
           {/* Permanent third column only at the desktop tier. */}
-          <div className="bg-sidebar hidden min-h-0 rounded-xl xl:block">
+          <div className="bg-sidebar hidden min-h-0 min-w-0 rounded-xl xl:block">
             {selectedId && conversation && (
               <ContextPanel
                 conversation={conversation}

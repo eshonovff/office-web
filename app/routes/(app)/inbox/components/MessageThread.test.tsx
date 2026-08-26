@@ -41,6 +41,7 @@ function makeMessage(overrides: Partial<Message> = {}): Message {
     failureReason: null,
     externalContentUrl: null,
     externalContentKind: null,
+    failureDetail: null,
     ...overrides,
   };
 }
@@ -63,6 +64,8 @@ function makeConversation(overrides: Partial<ConversationDetail> = {}): Conversa
     windowExpiresAt: null,
     createdAt: new Date().toISOString(),
     mediaLimits: [],
+    canSendMedia: true,
+    canSendVoice: true,
     ...overrides,
   };
 }
