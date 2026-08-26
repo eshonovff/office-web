@@ -11,6 +11,10 @@ export interface ChannelListItem {
   // someone reconnects (OAuth) or pastes fresh credentials. Used to be silent (owner notification
   // only); now surfaced here too.
   requiresReconnect: boolean;
+  // Facebook/Instagram: the webhook subscription check after /connect found something missing
+  // (Page-level, or Meta's App Dashboard product config) — messages won't arrive until it's
+  // fixed. null = confirmed fine, or this channel type has no such subscription (WhatsApp).
+  webhookSetupWarning: string | null;
   // Instagram only (ig_exchange_token/ig_refresh_token give this) — null for WhatsApp/Facebook.
   credentialsExpiresAt: string | null;
 }

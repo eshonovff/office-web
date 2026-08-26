@@ -31,6 +31,7 @@ function makeChannel(overrides: Partial<ChannelListItem> = {}): ChannelListItem 
     isActive: true,
     createdAt: new Date().toISOString(),
     requiresReconnect: false,
+    webhookSetupWarning: null,
     credentialsExpiresAt: null,
     ...overrides,
   };
@@ -214,5 +215,30 @@ describe('ChannelsPage OAuth connect', () => {
 
     await waitFor(() => screen.getByText('reconnect'));
     expect(screen.queryByText('requiresReconnect')).not.toBeInTheDocument();
+  });
+
+  it('shows a "setup incomplete" badge and the reason when the webhook subscription check failed — not silent', async () => {
+    vi.mocked(channelsApi.list).mockResolvedValue([
+      makeChannel({
+        id: 'fb',
+        type: 'Facebook',
+        externalId: 'fb1',
+        webhookSetupWarning: 'Ин майдонҳо фаъол нестанд — сатҳи App Dashboard: messages. Паёмҳо намерасанд.',
+      }),
+    ]);
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText('webhookSetupWarning')).toBeInTheDocument());
+    expect(
+      screen.getByText('Ин майдонҳо фаъол нестанд — сатҳи App Dashboard: messages. Паёмҳо намерасанд.')
+    ).toBeInTheDocument();
+  });
+
+  it('does not show the setup-incomplete badge once the subscription is confirmed', async () => {
+    vi.mocked(channelsApi.list).mockResolvedValue([makeChannel({ id: 'fb', type: 'Facebook', externalId: 'fb1' })]);
+    renderPage();
+
+    await waitFor(() => screen.getByText('reconnect'));
+    expect(screen.queryByText('webhookSetupWarning')).not.toBeInTheDocument();
   });
 });

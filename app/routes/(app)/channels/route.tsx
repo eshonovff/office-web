@@ -135,8 +135,17 @@ export default function ChannelsPage() {
                       {t('requiresReconnect')}
                     </Badge>
                   )}
+                  {channel.webhookSetupWarning && (
+                    <Badge variant="destructive" className="gap-1 text-2xs" title={channel.webhookSetupWarning}>
+                      <AlertTriangle className="h-3 w-3" />
+                      {t('webhookSetupWarning')}
+                    </Badge>
+                  )}
                 </div>
               </div>
+              {channel.webhookSetupWarning && (
+                <p className="text-destructive text-2xs">{channel.webhookSetupWarning}</p>
+              )}
               <div className="mt-auto flex flex-wrap gap-1.5">
                 <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setEditingChannel(channel)}>
                   <Pencil className="h-3.5 w-3.5" />
@@ -148,7 +157,7 @@ export default function ChannelsPage() {
                 </Button>
                 {(channel.type === 'Instagram' || channel.type === 'Facebook') && (
                   <Button
-                    variant={channel.requiresReconnect ? 'destructive' : 'outline'}
+                    variant={channel.requiresReconnect || channel.webhookSetupWarning ? 'destructive' : 'outline'}
                     size="sm"
                     className="gap-1.5"
                     onClick={() => void (channel.type === 'Instagram' ? instagramOAuth : facebookOAuth).begin()}>

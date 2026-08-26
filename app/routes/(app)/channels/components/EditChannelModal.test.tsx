@@ -15,6 +15,7 @@ function makeChannel(overrides: Partial<ChannelListItem> = {}): ChannelListItem 
     isActive: true,
     createdAt: new Date().toISOString(),
     requiresReconnect: false,
+    webhookSetupWarning: null,
     credentialsExpiresAt: null,
     ...overrides,
   };

@@ -109,7 +109,7 @@ describe('useOAuthConnectFlow', () => {
 
   it('flags an account whose externalId already belongs to an existing channel of this provider', async () => {
     const existing: ChannelListItem[] = [
-      { id: 'ch1', type: 'Instagram', name: 'Old name', externalId: 'acc-1', isActive: true, createdAt: '2026-01-01', requiresReconnect: false, credentialsExpiresAt: null },
+      { id: 'ch1', type: 'Instagram', name: 'Old name', externalId: 'acc-1', isActive: true, createdAt: '2026-01-01', requiresReconnect: false, webhookSetupWarning: null, credentialsExpiresAt: null },
     ];
     const { result } = renderFlow(existing);
 
@@ -131,6 +131,7 @@ describe('useOAuthConnectFlow', () => {
       isActive: true,
       createdAt: '2026-01-01',
       requiresReconnect: false,
+      webhookSetupWarning: null,
       credentialsExpiresAt: null,
       members: [],
     });
@@ -149,7 +150,7 @@ describe('useOAuthConnectFlow', () => {
 
   it('reports "updated" instead of "created" when the picked account already maps to an existing channel', async () => {
     const existing: ChannelListItem[] = [
-      { id: 'ch1', type: 'Instagram', name: 'Old name', externalId: 'acc-1', isActive: true, createdAt: '2026-01-01', requiresReconnect: false, credentialsExpiresAt: null },
+      { id: 'ch1', type: 'Instagram', name: 'Old name', externalId: 'acc-1', isActive: true, createdAt: '2026-01-01', requiresReconnect: false, webhookSetupWarning: null, credentialsExpiresAt: null },
     ];
     vi.mocked(channelsApi.startOAuth).mockResolvedValue({ url: 'https://meta.example/auth' });
     waitForOAuthPopupResult.mockResolvedValue({
@@ -164,6 +165,7 @@ describe('useOAuthConnectFlow', () => {
       isActive: true,
       createdAt: '2026-01-01',
       requiresReconnect: false,
+      webhookSetupWarning: null,
       credentialsExpiresAt: null,
       members: [],
     });
