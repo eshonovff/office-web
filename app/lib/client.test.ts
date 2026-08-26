@@ -9,6 +9,7 @@ interface FakeAxiosInstance {
     };
   };
   post: ReturnType<typeof vi.fn>;
+  get: ReturnType<typeof vi.fn>;
   _reqHandler?: (config: any) => any;
   _resRejected?: (error: unknown) => unknown;
 }
@@ -28,6 +29,7 @@ function createFakeAxiosInstance(): FakeAxiosInstance {
     },
   };
   fn.post = vi.fn();
+  fn.get = vi.fn();
   return fn;
 }
 
@@ -43,9 +45,26 @@ vi.mock("axios", () => ({
   },
 }));
 
+vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
+vi.mock("i18next", () => ({ default: { t: (key: string) => key } }));
+
+function makeNotFoundError(url: string) {
+  return {
+    response: { status: 404, data: {} },
+    config: { url, headers: {} },
+  };
+}
+
 function makeUnauthorizedError(url: string) {
   return {
     response: { status: 401 },
+    config: { url, headers: {} },
+  };
+}
+
+function makeConflictError(url: string, detail: string) {
+  return {
+    response: { status: 409, data: { title: "Конфликт", detail } },
     config: { url, headers: {} },
   };
 }
@@ -61,7 +80,7 @@ describe("apiClient refresh queue", () => {
     const { useAuthStore } = await import("~/store/useAuthStore");
     void apiClient;
 
-    const [apiClientMock, refreshClientMock] = instances;
+    const [apiClientMock, , refreshClientMock] = instances;
     refreshClientMock.post.mockResolvedValue({ data: { accessToken: "new-token" } });
 
     const errors = Array.from({ length: 5 }, () => makeUnauthorizedError("/tasks"));
@@ -87,7 +106,7 @@ describe("apiClient refresh queue", () => {
     void apiClient;
     useAuthStore.setState({ accessToken: "stale-token", user: null, roles: [], permissions: [] });
 
-    const [apiClientMock, refreshClientMock] = instances;
+    const [apiClientMock, , refreshClientMock] = instances;
     refreshClientMock.post.mockRejectedValue(makeUnauthorizedError("/auth/refresh"));
 
     const error = makeUnauthorizedError("/tasks");
@@ -99,10 +118,45 @@ describe("apiClient refresh queue", () => {
     Object.defineProperty(window, "location", { value: originalLocation, writable: true, configurable: true });
   });
 
+  it("tags the error toast with the request url so a retried query updates one toast instead of stacking", async () => {
+    const { apiClient } = await import("~/lib/client");
+    const { toast } = await import("sonner");
+    void apiClient;
+    const [apiClientMock] = instances;
+
+    await expect(apiClientMock._resRejected!(makeNotFoundError("/tasks/123"))).rejects.toBeTruthy();
+
+    expect(toast.error).toHaveBeenCalledTimes(1);
+    expect(toast.error).toHaveBeenCalledWith(expect.any(String), { id: "/tasks/123" });
+  });
+
+  it("prefers the backend's specific detail over the generic per-status translation", async () => {
+    const { apiClient } = await import("~/lib/client");
+    const { toast } = await import("sonner");
+    void apiClient;
+    const [apiClientMock] = instances;
+    const detail = "Корманди таъиншуда узви канали ин чат нест — баъд аз таъин чатро намебинад.";
+
+    await expect(apiClientMock._resRejected!(makeConflictError("/conversations/c1", detail))).rejects.toBeTruthy();
+
+    expect(toast.error).toHaveBeenCalledWith(detail, { id: "/conversations/c1" });
+  });
+
+  it("falls back to the generic per-status translation when the backend sent no detail/title", async () => {
+    const { apiClient } = await import("~/lib/client");
+    const { toast } = await import("sonner");
+    void apiClient;
+    const [apiClientMock] = instances;
+
+    await expect(apiClientMock._resRejected!(makeNotFoundError("/tasks/123"))).rejects.toBeTruthy();
+
+    expect(toast.error).toHaveBeenCalledWith("errors.notFound", { id: "/tasks/123" });
+  });
+
   it("does not attempt a refresh for a failed /auth/login", async () => {
     const { apiClient } = await import("~/lib/client");
     void apiClient;
-    const [apiClientMock, refreshClientMock] = instances;
+    const [apiClientMock, , refreshClientMock] = instances;
 
     await expect(apiClientMock._resRejected!(makeUnauthorizedError("/auth/login"))).rejects.toBeTruthy();
 

@@ -10,5 +10,7 @@
   "roleKeyPattern": "Калиди роль бояд танҳо аз ҳарфи хурд, рақам, `_` ва `.` иборат бошад",
   "phonePattern": "Рақами телефон нодуруст аст (мас. +992XXXXXXXXX)",
   "invalidEmail": "Email-и нодуруст",
-  "avatarType": "Танҳо файли расм (.jpg, .jpeg, .png, .webp) иҷозат дода мешавад"
+  "avatarType": "Танҳо файли расм (.jpg, .jpeg, .png, .webp) иҷозат дода мешавад",
+  "projectKeyPattern": "Калиди проект бояд танҳо аз ҳарфи калон, рақам, `_` ва `-` иборат бошад",
+  "channelCredentialsAllOrNothing": "Барои иваз кардани токен, WABA ID ва Access Token-ро якҷоя пур кунед (ё ҳардуро холӣ гузоред, то токени кӯҳна бимонад)"
 }

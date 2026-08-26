@@ -11,6 +11,10 @@ export default [
     route('users/create', 'routes/(app)/users/create/route.tsx'),
     route('users/:id', 'routes/(app)/users/id/route.tsx'),
     route('roles', 'routes/(app)/roles/route.tsx'),
+    route('projects', 'routes/(app)/projects/route.tsx'),
+    route('projects/:id', 'routes/(app)/projects/id/route.tsx'),
+    route('inbox', 'routes/(app)/inbox/route.tsx'),
+    route('channels', 'routes/(app)/channels/route.tsx'),
   ]),
 
   ...(import.meta.env.DEV ? [route('kitchen-sink', 'routes/kitchen-sink.tsx')] : []),

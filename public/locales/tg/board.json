@@ -1,0 +1,44 @@
+{
+  "priority": {
+    "Low": "Паст",
+    "Medium": "Миёна",
+    "High": "Баланд",
+    "Urgent": "Таъҷилӣ"
+  },
+  "unassigned": "Таъин нашуда",
+  "emptyColumn": "Таск нест",
+  "doneBadge": "Тамом",
+  "fields": {
+    "title": "Сарлавҳа",
+    "description": "Тавсиф",
+    "priority": "Приоритет",
+    "dueDate": "Мӯҳлат",
+    "assignee": "Масъул",
+    "labels": "Тегҳо"
+  },
+  "updateSuccess": "Таск нав шуд",
+  "deleteTask": "Нест кардани таск",
+  "deleteTaskConfirmTitle": "Таск нест карда шавад?",
+  "deleteTaskConfirmDescription": "Ин амал бозгашт надорад — коммент, файл ва таърихи таск низ нест мешаванд.",
+  "deleteSuccess": "Таск нест шуд",
+  "createTitle": "Таски нав",
+  "createSuccess": "Таск сохта шуд",
+  "addTask": "Илова кардани таск",
+  "comments": "Комментҳо",
+  "commentPlaceholder": "Комментатон... (@ барои қайд кардани корманд)",
+  "sendComment": "Фиристодан",
+  "attachments": "Файлҳо",
+  "uploadFile": "Бор кардани файл",
+  "noAttachments": "Файл нест",
+  "activity": "Таърих",
+  "noActivity": "Таърих холӣ аст",
+  "activityAction": {
+    "created": "таск сохт",
+    "updated": "таскро нав кард",
+    "moved": "таскро кӯчонд",
+    "assigned": "масъулро иваз кард",
+    "commented": "коммент навишт",
+    "mention": "шуморо қайд кард",
+    "attachment_added": "файл илова кард"
+  }
+}

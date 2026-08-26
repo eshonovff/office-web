@@ -27,6 +27,19 @@ export const Permissions = {
 type ValueOf<T> = T[keyof T];
 export type PermissionKey = ValueOf<{ [K in keyof typeof Permissions]: ValueOf<(typeof Permissions)[K]> }>;
 
+// Mirrors office-api/Office.Api/Auth/RoleKeys.cs — /auth/me's `roles[]` carries these exact keys.
+export const RoleKeys = { Owner: "owner", Admin: "admin" } as const;
+
+/**
+ * Mirrors ChannelAccessGuard.CanSeeAllChannels: Owner/Admin bypass conversation
+ * assignment (e.g. can send on a chat assigned to someone else) regardless of
+ * their resolved permission grants, since that check is role-based on the
+ * backend, not permission-based.
+ */
+export function isOwnerOrAdmin(roles: string[]): boolean {
+  return roles.includes(RoleKeys.Owner) || roles.includes(RoleKeys.Admin);
+}
+
 export const ROUTE_PERMISSIONS: Record<string, PermissionKey> = {
   "/users": Permissions.Users.View,
   "/users/create": Permissions.Users.Manage,
@@ -36,6 +49,7 @@ export const ROUTE_PERMISSIONS: Record<string, PermissionKey> = {
   "/projects/:id": Permissions.Tasks.View,
   "/inbox": Permissions.Inbox.View,
   "/inbox/board": Permissions.Inbox.View,
+  "/channels": Permissions.Channels.Manage,
   "/settings": Permissions.Templates.Manage,
 };
 

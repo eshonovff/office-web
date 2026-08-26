@@ -6,6 +6,7 @@ import { useAuthStore } from "~/store/useAuthStore";
 import type { RefreshResponse } from "~/types/auth";
 
 const baseURL = (import.meta.env.VITE_API_URL || "") + "/api";
+const originBaseURL = import.meta.env.VITE_API_URL || "";
 
 export const apiClient = axios.create({
   baseURL,
@@ -15,10 +16,35 @@ export const apiClient = axios.create({
   },
 });
 
-// Separate instance for the refresh call itself — it must never go through
-// apiClient's response interceptor, or a failed refresh would recurse into
-// the same 401-handling logic that triggered it.
+export const originClient = axios.create({
+  baseURL: originBaseURL,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
 const refreshClient = axios.create({ baseURL, withCredentials: true });
+
+// Concurrent callers (the bootstrap loader and, moments later, the 401
+// interceptor below) share this one in-flight call instead of each firing
+// their own /auth/refresh.
+let refreshPromise: Promise<string> | null = null;
+
+export function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = refreshClient
+      .post<RefreshResponse>("/auth/refresh")
+      .then(({ data }) => {
+        useAuthStore.getState().setAccessToken(data.accessToken);
+        return data.accessToken;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
 
 const ERROR_MESSAGES: Record<number, string> = {
   400: "errors.badRequest",
@@ -36,13 +62,16 @@ const SILENT_URLS = ["/auth/login"];
 
 const isSilent = (url?: string): boolean => SILENT_URLS.some((silent) => url?.includes(silent));
 
-apiClient.interceptors.request.use((config) => {
+function withAuthorization(config: InternalAxiosRequestConfig) {
   const token = useAuthStore.getState().accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
-});
+}
+
+apiClient.interceptors.request.use(withAuthorization);
+originClient.interceptors.request.use(withAuthorization);
 
 // ─── 401 → single in-flight refresh, queued requests replay after ─────────
 
@@ -89,10 +118,9 @@ apiClient.interceptors.response.use(
 
       isRefreshing = true;
       try {
-        const { data } = await refreshClient.post<RefreshResponse>("/auth/refresh");
-        useAuthStore.getState().setAccessToken(data.accessToken);
-        onRefreshed(data.accessToken);
-        config.headers.Authorization = `Bearer ${data.accessToken}`;
+        const accessToken = await refreshAccessToken();
+        onRefreshed(accessToken);
+        config.headers.Authorization = `Bearer ${accessToken}`;
         return apiClient(config);
       } catch (refreshError) {
         onRefreshed(null);
@@ -112,16 +140,22 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // Backend ProblemDetails (`detail`/`title`) are already localized (Tajik)
+    // and specific to what actually went wrong — e.g. "Корманди таъиншуда
+    // узви канали ин чат нест" beats a blanket "conflict" for a 409 on
+    // assign. Prefer it; fall back to the generic per-status translation
+    // only when the backend didn't send one.
+    const serverMessage: string | undefined = error.response.data?.detail || error.response.data?.title;
+
     const translationKey = status ? ERROR_MESSAGES[status] : undefined;
     const translatedMessage = translationKey ? i18next.t(translationKey, { ns: "common" }) : undefined;
 
-    // Server messages (ASP.NET ProblemDetails `detail`/`title`) are not localized —
-    // only fall back to them for status codes we have no mapped translation for.
-    const serverMessage: string | undefined = error.response.data?.detail || error.response.data?.title;
+    const message = serverMessage || translatedMessage || i18next.t("errors.unknown", { ns: "common" });
 
-    const message = translatedMessage || serverMessage || i18next.t("errors.unknown", { ns: "common" });
-
-    toast.error(message);
+    // Keyed by request so retries of the same failing endpoint (TanStack
+    // Query's automatic retry, or several queries hitting it at once) update
+    // one toast in place instead of stacking a new one per attempt.
+    toast.error(message, { id: requestUrl ?? message });
 
     return Promise.reject(error);
   },

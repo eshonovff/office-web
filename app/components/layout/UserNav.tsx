@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { useAuthStore } from "~/store/useAuthStore";
+import { useInboxHub } from "~/store/useInboxHub";
 
 export function UserNav() {
   const { t } = useTranslation("auth");
@@ -34,6 +35,7 @@ export function UserNav() {
     try {
       await authApi.logout();
     } finally {
+      await useInboxHub.getState().stop();
       useAuthStore.getState().clear();
       queryClient.clear();
       navigate("/login");

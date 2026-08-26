@@ -1,0 +1,32 @@
+{
+  "title": "Проекты",
+  "create": "Новый проект",
+  "fields": {
+    "name": "Название",
+    "key": "Ключ",
+    "color": "Цвет"
+  },
+  "archivedBadge": "Архив",
+  "createTitle": "Новый проект",
+  "createSuccess": "Проект создан",
+  "edit": "Редактировать",
+  "editTitle": "Редактирование проекта",
+  "updateSuccess": "Проект обновлён",
+  "members": "Участники",
+  "membersTitle": "Управление участниками",
+  "saveMembers": "Сохранить участников",
+  "membersSaved": "Участники обновлены",
+  "manageColumns": "Управление колонками",
+  "doneColumn": "Колонка «готово»",
+  "addColumn": "Добавить колонку",
+  "createColumnSuccess": "Колонка создана",
+  "deleteColumnConfirmTitle": "Удалить колонку?",
+  "deleteColumnConfirmDescription": "Удалить можно только пустую колонку.",
+  "deleteColumnSuccess": "Колонка удалена",
+  "manageLabels": "Управление тегами",
+  "addLabel": "Добавить тег",
+  "createLabelSuccess": "Тег создан",
+  "deleteLabelConfirmTitle": "Удалить тег?",
+  "deleteLabelConfirmDescription": "Тег будет удалён со всех задач, к которым он применён.",
+  "deleteLabelSuccess": "Тег удалён"
+}
