@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, Link2, Pencil, Plus, PowerOff, RotateCw, Users, Zap } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { channelsApi } from '~/api/channels';
 import { ConfirmDialog } from '~/components/shared/ConfirmDialog';
@@ -33,6 +34,29 @@ export default function ChannelsPage() {
     queryKey: ['channels'],
     queryFn: channelsApi.list,
   });
+
+  // Deep link from the dashboard's channelIssues card (/channels?channel=<id>) — opens that
+  // channel's edit view directly instead of leaving the operator to find it in the list
+  // themselves. Only fires once the list has actually loaded; a bad/stale id is silently ignored
+  // rather than crashing (the channel may have been deleted since the dashboard was cached).
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const channelId = searchParams.get('channel');
+    if (!channelId || channels.length === 0) return;
+
+    const match = channels.find((c) => c.id === channelId);
+    if (match) setEditingChannel(match);
+
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('channel');
+        return next;
+      },
+      { replace: true }
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channels]);
 
   const instagramOAuth = useOAuthConnectFlow('Instagram', channels);
   const facebookOAuth = useOAuthConnectFlow('Facebook', channels);

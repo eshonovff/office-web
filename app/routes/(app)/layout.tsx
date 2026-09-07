@@ -9,10 +9,12 @@ import { canAccessRoute } from "~/config/permissions";
 import { useAuthStore } from "~/store/useAuthStore";
 import type { Route } from "./+types/layout";
 
-// Routes any authenticated user may reach regardless of ROUTE_PERMISSIONS —
-// the dashboard landing page, the forced password-change page, and the
-// denied-access page itself (denying access to /403 would be a dead end).
-const ALWAYS_ALLOWED = new Set(["/", "/change-password", "/403"]);
+// Routes any authenticated user may reach regardless of ROUTE_PERMISSIONS — the dashboard
+// landing page, the forced password-change page, and the denied-access page itself (denying
+// access to /403 would be a dead end). /dashboard/stats is here too, but isn't actually open to
+// everyone — its own clientLoader (dashboard/stats/route.tsx) enforces the real Owner/Admin
+// check; a permission-string entry here wouldn't fit (it's a role check, not a permission one).
+const ALWAYS_ALLOWED = new Set(["/", "/dashboard", "/dashboard/stats", "/change-password", "/403"]);
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const pathname = new URL(request.url).pathname;

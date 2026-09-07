@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { getAssigneeOptions, getEffectiveHubStatus, getInboxChannelOptions, getInboxMobileView, getRealtimeChannelIds, mergeChannelMembers } from './route';
+import {
+  getAssigneeOptions,
+  getEffectiveHubStatus,
+  getInboxChannelOptions,
+  getInboxMobileView,
+  getRealtimeChannelIds,
+  mergeChannelMembers,
+  resolveInboxFilterParams,
+} from './route';
 import type { MyChannelListItem } from '~/types/channel';
 
 const channels: MyChannelListItem[] = [
@@ -149,5 +157,38 @@ describe('getAssigneeOptions', () => {
         allChannelsMembers: [],
       })
     ).toEqual([]);
+  });
+});
+
+describe('resolveInboxFilterParams (dashboard deep links)', () => {
+  it('resolves a valid status', () => {
+    expect(resolveInboxFilterParams(new URLSearchParams('status=New'))).toEqual({ status: 'New', assigneeFilter: null });
+  });
+
+  it('ignores an unrecognized status instead of crashing the filter', () => {
+    expect(resolveInboxFilterParams(new URLSearchParams('status=Bogus'))).toEqual({ status: null, assigneeFilter: null });
+  });
+
+  it('resolves the "me" and "unassigned" assignee sentinels', () => {
+    expect(resolveInboxFilterParams(new URLSearchParams('assignee=me'))).toEqual({ status: null, assigneeFilter: 'me' });
+    expect(resolveInboxFilterParams(new URLSearchParams('assignee=unassigned'))).toEqual({ status: null, assigneeFilter: 'unassigned' });
+  });
+
+  it('does not resolve an arbitrary user id as an assignee filter — only the two sentinels are supported', () => {
+    expect(resolveInboxFilterParams(new URLSearchParams('assignee=019fdaee-359d-70f5-85bf-69eb5317ecbb'))).toEqual({
+      status: null,
+      assigneeFilter: null,
+    });
+  });
+
+  it('resolves both together (the actual dashboard "unassigned" link shape)', () => {
+    expect(resolveInboxFilterParams(new URLSearchParams('status=New&assignee=unassigned'))).toEqual({
+      status: 'New',
+      assigneeFilter: 'unassigned',
+    });
+  });
+
+  it('resolves neither when absent', () => {
+    expect(resolveInboxFilterParams(new URLSearchParams())).toEqual({ status: null, assigneeFilter: null });
   });
 });
