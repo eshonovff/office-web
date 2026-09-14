@@ -50,6 +50,7 @@ export const ROUTE_PERMISSIONS: Record<string, PermissionKey> = {
   "/inbox": Permissions.Inbox.View,
   "/inbox/board": Permissions.Inbox.View,
   "/channels": Permissions.Channels.Manage,
+  "/instagram-automation": Permissions.Channels.Manage,
   "/settings": Permissions.Templates.Manage,
 };
 

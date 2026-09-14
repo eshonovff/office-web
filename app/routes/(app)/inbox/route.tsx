@@ -31,9 +31,11 @@ import { ASSIGNEE_DROP_PREFIX, AssigneeAvatar } from './components/AssigneeAvata
 import { ConversationList } from './components/ConversationList';
 import { ContextPanel } from './components/ContextPanel';
 import { MessageThread } from './components/MessageThread';
-import { useInboxStore } from './store';
+import { ASSIGNEE_FILTER_ME, ASSIGNEE_FILTER_UNASSIGNED, useInboxStore } from './store';
 import { useInboxBreakpoint } from './useInboxBreakpoint';
 import { useInboxRealtime } from './useInboxRealtime';
+
+const VALID_INBOX_STATUSES: ConversationStatus[] = ['New', 'InProgress', 'Waiting', 'Closed'];
 
 const CONNECTION_DOT_CLASS = {
   connected: 'bg-success',
@@ -135,6 +137,26 @@ export function getInboxMobileView({ selectedId, infoOpen }: InboxMobileViewInpu
   return 'list';
 }
 
+interface ResolvedInboxFilterParams {
+  status: ConversationStatus | null;
+  assigneeFilter: string | null;
+}
+
+// Deep-link support for ?status=&assignee= (the dashboard's "45 бе масъул" -> inbox link, and
+// similar). Only the assignee sentinels are accepted here, not an arbitrary user id — no
+// dashboard link needs to filter to a specific OTHER user, only "me"/"unassigned" — see the
+// dashboard build's report for what actually needed this. Pure so it doesn't need a full
+// component render to test (this file's own convention, see the other exports above).
+export function resolveInboxFilterParams(searchParams: URLSearchParams): ResolvedInboxFilterParams {
+  const statusParam = searchParams.get('status');
+  const assigneeParam = searchParams.get('assignee');
+
+  return {
+    status: statusParam && VALID_INBOX_STATUSES.includes(statusParam as ConversationStatus) ? (statusParam as ConversationStatus) : null,
+    assigneeFilter: assigneeParam === ASSIGNEE_FILTER_ME || assigneeParam === ASSIGNEE_FILTER_UNASSIGNED ? assigneeParam : null,
+  };
+}
+
 export default function InboxPage() {
   const { t } = useTranslation('inbox');
   const { can } = useCan();
@@ -158,6 +180,18 @@ export default function InboxPage() {
   const baselineHistoryIndex = useRef<number | null>(null);
   useEffect(() => {
     baselineHistoryIndex.current = (window.history.state as { idx?: number } | null)?.idx ?? null;
+  }, []);
+
+  // One-way sync, on mount only — a deep link (e.g. from the dashboard: "45 бе масъул" ->
+  // /inbox?status=New&assignee=unassigned) seeds the filter store once; from then on the filter
+  // UI owns it as before (no URL rewriting on every filter change — that's a bigger feature
+  // nobody asked for here).
+  useEffect(() => {
+    const resolved = resolveInboxFilterParams(searchParams);
+    const store = useInboxStore.getState();
+    if (resolved.status) store.setStatus(resolved.status);
+    if (resolved.assigneeFilter) store.setAssigneeFilter(resolved.assigneeFilter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function selectConversation(id: string) {

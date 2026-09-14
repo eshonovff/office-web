@@ -1,6 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { channelsApi } from '~/api/channels';
 import { makeQueryClient } from '~/lib/query-client';
@@ -37,12 +38,14 @@ function makeChannel(overrides: Partial<ChannelListItem> = {}): ChannelListItem 
   };
 }
 
-function renderPage() {
+function renderPage(initialPath = '/channels') {
   const queryClient = makeQueryClient();
   return render(
-    <QueryClientProvider client={queryClient}>
-      <ChannelsPage />
-    </QueryClientProvider>
+    <MemoryRouter initialEntries={[initialPath]}>
+      <QueryClientProvider client={queryClient}>
+        <ChannelsPage />
+      </QueryClientProvider>
+    </MemoryRouter>
   );
 }
 
@@ -240,5 +243,30 @@ describe('ChannelsPage OAuth connect', () => {
 
     await waitFor(() => screen.getByText('reconnect'));
     expect(screen.queryByText('webhookSetupWarning')).not.toBeInTheDocument();
+  });
+});
+
+describe('ChannelsPage deep link (dashboard channelIssues card)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAuthStore.setState({ accessToken: null, user: null, roles: [], permissions: [] });
+  });
+
+  it('opens the matching channel for editing when ?channel=<id> is present', async () => {
+    vi.mocked(channelsApi.list).mockResolvedValue([
+      makeChannel({ id: 'ch1', name: 'First' }),
+      makeChannel({ id: 'ch2', name: 'Second' }),
+    ]);
+    renderPage('/channels?channel=ch2');
+
+    await waitFor(() => expect(screen.getByText('actions.save')).toBeInTheDocument());
+  });
+
+  it('does nothing when the id in ?channel= matches no known channel', async () => {
+    vi.mocked(channelsApi.list).mockResolvedValue([makeChannel({ id: 'ch1', name: 'WhatsApp Test' })]);
+    renderPage('/channels?channel=does-not-exist');
+
+    await waitFor(() => expect(screen.getByText('WhatsApp Test')).toBeInTheDocument());
+    expect(screen.queryByText('actions.save')).not.toBeInTheDocument();
   });
 });

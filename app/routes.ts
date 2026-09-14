@@ -4,7 +4,11 @@ export default [
   layout('routes/(auth)/layout.tsx', [route('login', 'routes/(auth)/login/route.tsx')]),
 
   layout('routes/(app)/layout.tsx', [
-    index('routes/(app)/dashboard/route.tsx'),
+    index('routes/(app)/root-redirect.tsx'),
+    route('dashboard', 'routes/(app)/dashboard/route.tsx', [
+      index('routes/(app)/dashboard/index/route.tsx'),
+      route('stats', 'routes/(app)/dashboard/stats/route.tsx'),
+    ]),
     route('change-password', 'routes/(app)/change-password/route.tsx'),
     route('403', 'routes/(app)/403/route.tsx'),
     route('users', 'routes/(app)/users/route.tsx'),
@@ -15,6 +19,7 @@ export default [
     route('projects/:id', 'routes/(app)/projects/id/route.tsx'),
     route('inbox', 'routes/(app)/inbox/route.tsx'),
     route('channels', 'routes/(app)/channels/route.tsx'),
+    route('instagram-automation', 'routes/(app)/instagram-automation/route.tsx'),
   ]),
 
   ...(import.meta.env.DEV ? [route('kitchen-sink', 'routes/kitchen-sink.tsx')] : []),

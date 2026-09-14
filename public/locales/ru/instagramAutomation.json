@@ -1,0 +1,59 @@
+{
+  "pageTitle": "Instagram — автоматизация комментариев",
+  "noInstagramChannel": "Нет ни одного подключённого активного канала Instagram",
+  "noRules": "Правила ещё не созданы",
+  "createRule": "Новое правило",
+  "editRule": "Редактировать правило",
+  "ruleCreated": "Правило создано",
+  "ruleUpdated": "Правило обновлено",
+  "active": "Активно",
+  "inactive": "Неактивно",
+  "enable": "Включить",
+  "disable": "Отключить",
+  "runCount_one": "{{count}} срабатывание",
+  "runCount_few": "{{count}} срабатывания",
+  "runCount_many": "{{count}} срабатываний",
+  "runCount_other": "{{count}} срабатываний",
+  "choosePosts": "Выбрать посты",
+  "postsSelectedCount": "{{count}} публикаций выбрано",
+  "addReply": "Добавить ответ",
+  "commentReplyPlaceholder": "Текст ответа на комментарий",
+  "matchModeAllWarning": "Внимание: ответ будет отправляться на ВСЕ комментарии, а не только на содержащие ключевое слово.",
+  "fields": {
+    "name": "Название",
+    "matchMode": "Триггер",
+    "keywords": "Ключевые слова",
+    "postScope": "Область постов",
+    "commentReplies": "Тексты ответов в комментарии",
+    "dmText": "Текст DM (private reply)",
+    "dmButtonUrl": "Ссылка кнопки в DM (необязательно)",
+    "cooldownMinutes": "Cooldown (минуты)"
+  },
+  "matchMode": {
+    "keyword": "Только комментарии с ключевым словом",
+    "all": "Все комментарии"
+  },
+  "postScope": {
+    "all": "Все посты",
+    "selected": "Выбранные посты"
+  },
+  "mediaPicker": {
+    "title": "Выбор поста",
+    "allPosts": "Все посты",
+    "selectedPosts": "Выбранные",
+    "empty": "Посты не найдены",
+    "loadMore": "Загрузить ещё"
+  },
+  "dryRun": {
+    "title": "Проверка (dry run)",
+    "notice": "Это проверка — НИЧЕГО не отправляется и не сохраняется.",
+    "placeholder": "Введите тестовый текст комментария...",
+    "run": "Проверить",
+    "matched": "Совпадение (слово: {{keyword}}) — был бы отправлен этот ответ.",
+    "notMatched": "Совпадения нет — ничего не было бы отправлено.",
+    "anyComment": "любой"
+  },
+  "actions": {
+    "confirm": "Подтвердить"
+  }
+}
