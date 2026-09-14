@@ -14,6 +14,7 @@ function baseForm() {
     commentReplies: ['Ташаккур! DM-ро тафтиш кунед.'],
     dmText: 'Салом дар DM',
     dmButtonUrl: '',
+    dmButtonTitle: '',
     cooldownMinutes: '60',
   };
 }
@@ -78,6 +79,39 @@ describe('commentAutomationRuleSchema', () => {
 
   it('accepts cooldownMinutes of "0"', () => {
     const result = commentAutomationRuleSchema(t).safeParse({ ...baseForm(), cooldownMinutes: '0' });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a dmButtonUrl with no dmButtonTitle', () => {
+    const result = commentAutomationRuleSchema(t).safeParse({ ...baseForm(), dmButtonUrl: 'https://example.com', dmButtonTitle: '' });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.some((i) => i.path[0] === 'dmButtonTitle')).toBe(true);
+  });
+
+  it('accepts a dmButtonUrl with a dmButtonTitle', () => {
+    const result = commentAutomationRuleSchema(t).safeParse({
+      ...baseForm(),
+      dmButtonUrl: 'https://example.com',
+      dmButtonTitle: 'Кушодан',
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a dmButtonTitle longer than 20 characters', () => {
+    const result = commentAutomationRuleSchema(t).safeParse({
+      ...baseForm(),
+      dmButtonUrl: 'https://example.com',
+      dmButtonTitle: 'ин матни хеле дарозе, ки аз 20 ҳарф зиёд аст',
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('does not require dmButtonTitle when no dmButtonUrl is set', () => {
+    const result = commentAutomationRuleSchema(t).safeParse({ ...baseForm(), dmButtonUrl: '', dmButtonTitle: '' });
 
     expect(result.success).toBe(true);
   });

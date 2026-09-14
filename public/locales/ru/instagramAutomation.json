@@ -27,6 +27,7 @@
     "commentReplies": "Тексты ответов в комментарии",
     "dmText": "Текст DM (private reply)",
     "dmButtonUrl": "Ссылка кнопки в DM (необязательно)",
+    "dmButtonTitle": "Текст кнопки (до 20 символов)",
     "cooldownMinutes": "Cooldown (минуты)"
   },
   "matchMode": {

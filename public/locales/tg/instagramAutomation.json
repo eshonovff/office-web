@@ -25,6 +25,7 @@
     "commentReplies": "Матнҳои ҷавоб дар коментарий",
     "dmText": "Матни DM (private reply)",
     "dmButtonUrl": "Пайванди тугмаи DM (ихтиёрӣ)",
+    "dmButtonTitle": "Сарлавҳаи тугма (то 20 ҳарф)",
     "cooldownMinutes": "Cooldown (дақиқа)"
   },
   "matchMode": {

@@ -56,7 +56,7 @@ describe('commentAutomationApi', () => {
     const payload = {
       name: 'Price question',
       triggerConfig: { matchMode: 'keyword' as const, keywords: ['нарх'], postScope: 'all' as const, postIds: [] },
-      actionConfig: { commentReplies: ['DM-ро тафтиш кунед'], dmText: 'Салом!', dmButtonUrl: null },
+      actionConfig: { commentReplies: ['DM-ро тафтиш кунед'], dmText: 'Салом!', dmButtonUrl: null, dmButtonTitle: null },
       cooldownMinutes: 60,
     };
 

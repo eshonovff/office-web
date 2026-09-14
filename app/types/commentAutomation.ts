@@ -12,6 +12,7 @@ export interface AutomationActionConfig {
   commentReplies: string[];
   dmText: string;
   dmButtonUrl: string | null;
+  dmButtonTitle: string | null;
 }
 
 export interface AutomationRuleListItem {

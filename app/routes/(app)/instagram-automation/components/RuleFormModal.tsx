@@ -42,6 +42,7 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
       commentReplies: rule?.actionConfig.commentReplies ?? [''],
       dmText: rule?.actionConfig.dmText ?? '',
       dmButtonUrl: rule?.actionConfig.dmButtonUrl ?? '',
+      dmButtonTitle: rule?.actionConfig.dmButtonTitle ?? '',
       cooldownMinutes: String(rule?.cooldownMinutes ?? 60),
     },
   });
@@ -50,6 +51,7 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
   const postScope = watch('postScope');
   const postIds = watch('postIds');
   const keywords = watch('keywords');
+  const dmButtonUrl = watch('dmButtonUrl');
 
   function submit(data: CommentAutomationRuleForm) {
     onSave({
@@ -65,6 +67,7 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
         commentReplies: data.commentReplies.filter((r) => r.trim()),
         dmText: data.dmText,
         dmButtonUrl: data.dmButtonUrl?.trim() || null,
+        dmButtonTitle: data.dmButtonUrl?.trim() ? data.dmButtonTitle?.trim() || null : null,
       },
     });
   }
@@ -175,6 +178,9 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
 
           <FormTextarea control={control} name="dmText" label={t('fields.dmText')} required rows={3} />
           <FormInput control={control} name="dmButtonUrl" label={t('fields.dmButtonUrl')} placeholder="https://..." />
+          {dmButtonUrl?.trim() && (
+            <FormInput control={control} name="dmButtonTitle" label={t('fields.dmButtonTitle')} maxLength={20} required />
+          )}
           <FormInput control={control} name="cooldownMinutes" type="number" min={0} label={t('fields.cooldownMinutes')} required />
 
           <DryRunPanel channelId={channelId} matchMode={matchMode} keywords={keywords} postScope={postScope} postIds={postIds} />
