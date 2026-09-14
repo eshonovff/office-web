@@ -82,6 +82,7 @@
   "editCredentialsHint": "Барои нигоҳ доштани токени ҷорӣ, WABA ID ва Access Token-ро холӣ гузоред. Барои иваз кардан, ҳарду майдонро пур кунед.",
   "editCredentialsHintGeneric": "Барои нигоҳ доштани credentials-и ҷорӣ, майдонро холӣ гузоред.",
   "manageMembers": "Идораи аъзоён",
+  "automation": "Автоматизатсия",
   "membersSaved": "Аъзоён нав шуданд",
   "noUsers": "Корманд нест",
   "createdAt": "Сохта шуд",

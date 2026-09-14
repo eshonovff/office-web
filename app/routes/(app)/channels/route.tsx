@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Link2, Pencil, Plus, PowerOff, RotateCw, Users, Zap } from 'lucide-react';
+import { AlertTriangle, Bot, Link2, Pencil, Plus, PowerOff, RotateCw, Users, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { channelsApi } from '~/api/channels';
 import { ConfirmDialog } from '~/components/shared/ConfirmDialog';
@@ -187,6 +187,12 @@ export default function ChannelsPage() {
                     onClick={() => void (channel.type === 'Instagram' ? instagramOAuth : facebookOAuth).begin()}>
                     <RotateCw className="h-3.5 w-3.5" />
                     {t('reconnect')}
+                  </Button>
+                )}
+                {channel.type === 'Instagram' && (
+                  <Button variant="outline" size="sm" className="gap-1.5" render={<Link to={`/instagram-automation?channel=${channel.id}`} />}>
+                    <Bot className="h-3.5 w-3.5" />
+                    {t('automation')}
                   </Button>
                 )}
                 {channel.type === 'WhatsApp' && canTestWhatsApp && (

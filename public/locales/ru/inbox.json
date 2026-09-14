@@ -82,6 +82,7 @@
   "editCredentialsHint": "Чтобы сохранить текущий токен, оставьте WABA ID и Access Token пустыми. Чтобы изменить — заполните оба поля.",
   "editCredentialsHintGeneric": "Чтобы сохранить текущие credentials, оставьте поле пустым.",
   "manageMembers": "Управление участниками",
+  "automation": "Автоматизация",
   "membersSaved": "Участники обновлены",
   "noUsers": "Нет сотрудников",
   "createdAt": "Создано",

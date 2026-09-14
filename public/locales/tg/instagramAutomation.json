@@ -1,0 +1,57 @@
+{
+  "pageTitle": "Instagram — автоматизатсияи коментарий",
+  "noInstagramChannel": "Ягон канали фаъоли Instagram пайваст нашудааст",
+  "noRules": "Ҳанӯз ягон қоида сохта нашудааст",
+  "createRule": "Қоидаи нав",
+  "editRule": "Таҳрири қоида",
+  "ruleCreated": "Қоида сохта шуд",
+  "ruleUpdated": "Қоида нав шуд",
+  "active": "Фаъол",
+  "inactive": "Ғайрифаъол",
+  "enable": "Фаъол кардан",
+  "disable": "Хомӯш кардан",
+  "runCount_one": "{{count}} маротиба иҷро шуд",
+  "runCount_other": "{{count}} маротиба иҷро шуд",
+  "choosePosts": "Интихоби пост",
+  "postsSelectedCount": "{{count}} пост интихоб шуд",
+  "addReply": "Илова кардани ҷавоб",
+  "commentReplyPlaceholder": "Матни ҷавоби комментарий",
+  "matchModeAllWarning": "Диққат: ба ҲАМАИ комментарийҳо ҷавоб дода мешавад, на танҳо ба онҳое, ки калимаи калидӣ доранд.",
+  "fields": {
+    "name": "Ном",
+    "matchMode": "Триггер",
+    "keywords": "Калимаҳои калидӣ",
+    "postScope": "Доираи пост",
+    "commentReplies": "Матнҳои ҷавоб дар коментарий",
+    "dmText": "Матни DM (private reply)",
+    "dmButtonUrl": "Пайванди тугмаи DM (ихтиёрӣ)",
+    "cooldownMinutes": "Cooldown (дақиқа)"
+  },
+  "matchMode": {
+    "keyword": "Танҳо комментарийҳои дорои калима",
+    "all": "Ҳамаи комментарийҳо"
+  },
+  "postScope": {
+    "all": "Ҳамаи постҳо",
+    "selected": "Постҳои интихобшуда"
+  },
+  "mediaPicker": {
+    "title": "Интихоби пост",
+    "allPosts": "Ҳамаи постҳо",
+    "selectedPosts": "Интихобшуда",
+    "empty": "Ягон пост ёфт нашуд",
+    "loadMore": "Боз бор кун"
+  },
+  "dryRun": {
+    "title": "Санҷиш (dry run)",
+    "notice": "Ин санҷиш аст — ҲЕҶ ЧИЗ фиристода ё захира намешавад.",
+    "placeholder": "Матни фарзии коментарийро дар ин ҷо нависед...",
+    "run": "Санҷиш",
+    "matched": "Мувофиқ шуд (калима: {{keyword}}) — ин ҷавоб мефиристод.",
+    "notMatched": "Мувофиқ нашуд — ҳеҷ чиз фиристода намешуд.",
+    "anyComment": "ҳама"
+  },
+  "actions": {
+    "confirm": "Тасдиқ"
+  }
+}
