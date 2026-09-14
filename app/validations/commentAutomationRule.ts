@@ -21,6 +21,10 @@ export const commentAutomationRuleSchema = (t: TFunction) =>
       // input type diverge from the parsed output type, which react-hook-form's Resolver can't
       // express). Parsed to a number in RuleFormModal.submit before it's sent to the API.
       cooldownMinutes: z.string().regex(/^\d+$/, t('required', { ns: 'validation' })),
+      // Фазаи 11 — тасдиқи обуна. Вақте фаъол аст, шохаи дуюм (бе тугма — тибқи спека) ҳатмист.
+      requiresFollow: z.boolean(),
+      notFollowingCommentReplies: z.array(z.string()),
+      notFollowingDmText: z.string().optional(),
     })
     .superRefine((data, ctx) => {
       if (data.matchMode === 'keyword' && data.keywords.filter((k) => k.trim()).length === 0) {
@@ -34,6 +38,14 @@ export const commentAutomationRuleSchema = (t: TFunction) =>
       }
       if (data.dmButtonUrl?.trim() && !data.dmButtonTitle?.trim()) {
         ctx.addIssue({ code: 'custom', path: ['dmButtonTitle'], message: t('required', { ns: 'validation' }) });
+      }
+      if (data.requiresFollow) {
+        if (data.notFollowingCommentReplies.filter((r) => r.trim()).length === 0) {
+          ctx.addIssue({ code: 'custom', path: ['notFollowingCommentReplies'], message: t('required', { ns: 'validation' }) });
+        }
+        if (!data.notFollowingDmText?.trim()) {
+          ctx.addIssue({ code: 'custom', path: ['notFollowingDmText'], message: t('required', { ns: 'validation' }) });
+        }
       }
     });
 

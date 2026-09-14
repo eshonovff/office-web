@@ -49,7 +49,11 @@ function makeRule(overrides: Partial<AutomationRuleListItem> = {}): AutomationRu
     isActive: true,
     triggerType: 'instagram_comment',
     triggerConfig: { matchMode: 'keyword', keywords: ['нарх'], postScope: 'all', postIds: [] },
-    actionConfig: { commentReplies: ['Ташаккур!'], dmText: 'Салом дар DM', dmButtonUrl: null, dmButtonTitle: null },
+    conditionConfig: { requiresFollow: false },
+    actionConfig: {
+      onMatch: { commentReplies: ['Ташаккур!'], dmText: 'Салом дар DM', dmButtonUrl: null, dmButtonTitle: null },
+      onNotFollowing: null,
+    },
     cooldownMinutes: 60,
     createdAt: new Date().toISOString(),
     runCount: 3,

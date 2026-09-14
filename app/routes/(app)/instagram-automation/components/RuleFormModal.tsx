@@ -1,12 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Controller } from 'react-hook-form';
+import { Controller, type Control } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { ChipInput } from '~/components/shared/ChipInput';
 import { CustomSelect } from '~/components/shared/CustomSelect';
 import { Modal } from '~/components/shared/Modal';
 import { Button } from '~/components/ui/button';
+import { Checkbox } from '~/components/ui/checkbox';
 import { FormInput } from '~/components/ui/form/FormInput';
 import { FormTextarea } from '~/components/ui/form/FormTextarea';
 import { Input } from '~/components/ui/input';
@@ -39,11 +40,14 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
       keywords: rule?.triggerConfig.keywords ?? [],
       postScope: rule?.triggerConfig.postScope ?? 'all',
       postIds: rule?.triggerConfig.postIds ?? [],
-      commentReplies: rule?.actionConfig.commentReplies ?? [''],
-      dmText: rule?.actionConfig.dmText ?? '',
-      dmButtonUrl: rule?.actionConfig.dmButtonUrl ?? '',
-      dmButtonTitle: rule?.actionConfig.dmButtonTitle ?? '',
+      commentReplies: rule?.actionConfig.onMatch.commentReplies ?? [''],
+      dmText: rule?.actionConfig.onMatch.dmText ?? '',
+      dmButtonUrl: rule?.actionConfig.onMatch.dmButtonUrl ?? '',
+      dmButtonTitle: rule?.actionConfig.onMatch.dmButtonTitle ?? '',
       cooldownMinutes: String(rule?.cooldownMinutes ?? 60),
+      requiresFollow: rule?.conditionConfig.requiresFollow ?? false,
+      notFollowingCommentReplies: rule?.actionConfig.onNotFollowing?.commentReplies ?? [''],
+      notFollowingDmText: rule?.actionConfig.onNotFollowing?.dmText ?? '',
     },
   });
 
@@ -52,6 +56,7 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
   const postIds = watch('postIds');
   const keywords = watch('keywords');
   const dmButtonUrl = watch('dmButtonUrl');
+  const requiresFollow = watch('requiresFollow');
 
   function submit(data: CommentAutomationRuleForm) {
     onSave({
@@ -63,11 +68,22 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
         postScope: data.postScope,
         postIds: data.postIds,
       },
+      conditionConfig: { requiresFollow: data.requiresFollow },
       actionConfig: {
-        commentReplies: data.commentReplies.filter((r) => r.trim()),
-        dmText: data.dmText,
-        dmButtonUrl: data.dmButtonUrl?.trim() || null,
-        dmButtonTitle: data.dmButtonUrl?.trim() ? data.dmButtonTitle?.trim() || null : null,
+        onMatch: {
+          commentReplies: data.commentReplies.filter((r) => r.trim()),
+          dmText: data.dmText,
+          dmButtonUrl: data.dmButtonUrl?.trim() || null,
+          dmButtonTitle: data.dmButtonUrl?.trim() ? data.dmButtonTitle?.trim() || null : null,
+        },
+        onNotFollowing: data.requiresFollow
+          ? {
+              commentReplies: data.notFollowingCommentReplies.filter((r) => r.trim()),
+              dmText: data.notFollowingDmText ?? '',
+              dmButtonUrl: null,
+              dmButtonTitle: null,
+            }
+          : null,
       },
     });
   }
@@ -139,51 +155,64 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
             )}
           </div>
 
-          <div className="space-y-1.5">
-            <Label>{t('fields.commentReplies')}</Label>
+          <div className="space-y-1.5 rounded-lg border border-border p-3">
             <Controller
               control={control}
-              name="commentReplies"
+              name="requiresFollow"
               render={({ field }) => (
-                <div className="space-y-2">
-                  {field.value.map((reply, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <Input
-                        value={reply}
-                        onChange={(e) => {
-                          const next = [...field.value];
-                          next[index] = e.target.value;
-                          field.onChange(next);
-                        }}
-                        placeholder={t('commentReplyPlaceholder')}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        disabled={field.value.length <= 1}
-                        onClick={() => field.onChange(field.value.filter((_, i) => i !== index))}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => field.onChange([...field.value, ''])}>
-                    <Plus className="h-3.5 w-3.5" />
-                    {t('addReply')}
-                  </Button>
-                </div>
+                <label className="flex w-fit items-center gap-2 text-sm font-medium">
+                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                  {t('condition.requiresFollow')}
+                </label>
               )}
             />
+            <p className="text-muted-foreground text-2xs">{t('condition.hint')}</p>
           </div>
 
-          <FormTextarea control={control} name="dmText" label={t('fields.dmText')} required rows={3} />
+          <ReplyListField
+            control={control}
+            name="commentReplies"
+            label={requiresFollow ? t('fields.onMatchCommentReplies') : t('fields.commentReplies')}
+            addLabel={t('addReply')}
+            placeholder={t('commentReplyPlaceholder')}
+          />
+
+          <FormTextarea
+            control={control}
+            name="dmText"
+            label={requiresFollow ? t('fields.onMatchDmText') : t('fields.dmText')}
+            required
+            rows={3}
+          />
           <FormInput control={control} name="dmButtonUrl" label={t('fields.dmButtonUrl')} placeholder="https://..." />
           {dmButtonUrl?.trim() && (
             <FormInput control={control} name="dmButtonTitle" label={t('fields.dmButtonTitle')} maxLength={20} required />
           )}
+
+          {requiresFollow && (
+            <div className="space-y-4 rounded-lg border border-border p-3">
+              <p className="text-sm font-medium">{t('condition.notFollowingSectionTitle')}</p>
+              <ReplyListField
+                control={control}
+                name="notFollowingCommentReplies"
+                label={t('fields.notFollowingCommentReplies')}
+                addLabel={t('addReply')}
+                placeholder={t('commentReplyPlaceholder')}
+              />
+              <FormTextarea control={control} name="notFollowingDmText" label={t('fields.notFollowingDmText')} required rows={3} />
+            </div>
+          )}
+
           <FormInput control={control} name="cooldownMinutes" type="number" min={0} label={t('fields.cooldownMinutes')} required />
 
-          <DryRunPanel channelId={channelId} matchMode={matchMode} keywords={keywords} postScope={postScope} postIds={postIds} />
+          <DryRunPanel
+            channelId={channelId}
+            matchMode={matchMode}
+            keywords={keywords}
+            postScope={postScope}
+            postIds={postIds}
+            requiresFollow={requiresFollow}
+          />
         </form>
       </Modal>
 
@@ -200,5 +229,55 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
         />
       )}
     </>
+  );
+}
+
+interface ReplyListFieldProps {
+  control: Control<CommentAutomationRuleForm>;
+  name: 'commentReplies' | 'notFollowingCommentReplies';
+  label: string;
+  addLabel: string;
+  placeholder: string;
+}
+
+// Рӯйхати такрории матнҳои ҷавоб (+ илова/нест) — истифода барои ҳам OnMatch, ҳам OnNotFollowing.
+function ReplyListField({ control, name, label, addLabel, placeholder }: ReplyListFieldProps) {
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <Controller
+        control={control}
+        name={name}
+        render={({ field }) => (
+          <div className="space-y-2">
+            {field.value.map((reply, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Input
+                  value={reply}
+                  onChange={(e) => {
+                    const next = [...field.value];
+                    next[index] = e.target.value;
+                    field.onChange(next);
+                  }}
+                  placeholder={placeholder}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  disabled={field.value.length <= 1}
+                  onClick={() => field.onChange(field.value.filter((_, i) => i !== index))}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
+            <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => field.onChange([...field.value, ''])}>
+              <Plus className="h-3.5 w-3.5" />
+              {addLabel}
+            </Button>
+          </div>
+        )}
+      />
+    </div>
   );
 }

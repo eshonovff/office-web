@@ -16,6 +16,9 @@ function baseForm() {
     dmButtonUrl: '',
     dmButtonTitle: '',
     cooldownMinutes: '60',
+    requiresFollow: false,
+    notFollowingCommentReplies: [''],
+    notFollowingDmText: '',
   };
 }
 
@@ -112,6 +115,52 @@ describe('commentAutomationRuleSchema', () => {
 
   it('does not require dmButtonTitle when no dmButtonUrl is set', () => {
     const result = commentAutomationRuleSchema(t).safeParse({ ...baseForm(), dmButtonUrl: '', dmButtonTitle: '' });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('does not require the not-following branch when requiresFollow is off', () => {
+    const result = commentAutomationRuleSchema(t).safeParse({
+      ...baseForm(),
+      requiresFollow: false,
+      notFollowingCommentReplies: [],
+      notFollowingDmText: '',
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects an empty not-following comment-reply list when requiresFollow is on', () => {
+    const result = commentAutomationRuleSchema(t).safeParse({
+      ...baseForm(),
+      requiresFollow: true,
+      notFollowingCommentReplies: [],
+      notFollowingDmText: 'Обуна шавед',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.some((i) => i.path[0] === 'notFollowingCommentReplies')).toBe(true);
+  });
+
+  it('rejects a missing not-following DM text when requiresFollow is on', () => {
+    const result = commentAutomationRuleSchema(t).safeParse({
+      ...baseForm(),
+      requiresFollow: true,
+      notFollowingCommentReplies: ['Обуна шавед'],
+      notFollowingDmText: '',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.some((i) => i.path[0] === 'notFollowingDmText')).toBe(true);
+  });
+
+  it('accepts requiresFollow with both branches filled in', () => {
+    const result = commentAutomationRuleSchema(t).safeParse({
+      ...baseForm(),
+      requiresFollow: true,
+      notFollowingCommentReplies: ['Обуна шавед ва боз нависед'],
+      notFollowingDmText: 'Лутфан обуна шавед',
+    });
 
     expect(result.success).toBe(true);
   });
