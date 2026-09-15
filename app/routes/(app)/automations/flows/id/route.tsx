@@ -203,7 +203,7 @@ export default function FlowCanvasPage() {
 
   if (isLoading || !flow) {
     return (
-      <div className="flex flex-1 items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <Loader2 className="h-5 w-5 animate-spin" />
       </div>
     );
@@ -212,7 +212,7 @@ export default function FlowCanvasPage() {
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) ?? null;
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       <div className="border-border flex flex-wrap items-center justify-between gap-2 border-b p-3">
         <div className="flex min-w-0 items-center gap-2">
           <Button variant="ghost" size="icon" render={<Link to="/automations" />}>
@@ -251,7 +251,7 @@ export default function FlowCanvasPage() {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         <FlowCanvas
           nodes={nodes}
           edges={edges}
