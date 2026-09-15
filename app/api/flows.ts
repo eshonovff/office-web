@@ -1,0 +1,42 @@
+import { apiClient } from '~/lib/client';
+import type {
+  CreateFlowRequest,
+  FlowDetail,
+  FlowListItem,
+  FlowStats,
+  UpdateFlowGraphRequest,
+  UpdateFlowRequest,
+} from '~/types/flow';
+
+export const flowsApi = {
+  list: async (channelId: string): Promise<FlowListItem[]> => {
+    const { data } = await apiClient.get<FlowListItem[]>(`/channels/${channelId}/flows`);
+    return data;
+  },
+  create: async (channelId: string, payload: CreateFlowRequest): Promise<FlowDetail> => {
+    const { data } = await apiClient.post<FlowDetail>(`/channels/${channelId}/flows`, payload);
+    return data;
+  },
+  get: async (id: string): Promise<FlowDetail> => {
+    const { data } = await apiClient.get<FlowDetail>(`/flows/${id}`);
+    return data;
+  },
+  update: async (id: string, payload: UpdateFlowRequest): Promise<FlowDetail> => {
+    const { data } = await apiClient.put<FlowDetail>(`/flows/${id}`, payload);
+    return data;
+  },
+  updateGraph: async (id: string, payload: UpdateFlowGraphRequest): Promise<FlowDetail> => {
+    const { data } = await apiClient.put<FlowDetail>(`/flows/${id}/graph`, payload);
+    return data;
+  },
+  setActive: async (id: string, isActive: boolean): Promise<void> => {
+    await apiClient.patch(`/flows/${id}/active`, { isActive });
+  },
+  remove: async (id: string): Promise<void> => {
+    await apiClient.delete(`/flows/${id}`);
+  },
+  stats: async (id: string): Promise<FlowStats> => {
+    const { data } = await apiClient.get<FlowStats>(`/flows/${id}/stats`);
+    return data;
+  },
+};

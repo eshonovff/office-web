@@ -154,13 +154,13 @@ export default function ChannelsPage() {
                     </Badge>
                   )}
                   {channel.requiresReconnect && (
-                    <Badge variant="destructive" className="gap-1 text-2xs">
+                    <Badge variant="destructive" className="text-2xs gap-1">
                       <AlertTriangle className="h-3 w-3" />
                       {t('requiresReconnect')}
                     </Badge>
                   )}
                   {channel.webhookSetupWarning && (
-                    <Badge variant="destructive" className="gap-1 text-2xs" title={channel.webhookSetupWarning}>
+                    <Badge variant="destructive" className="text-2xs gap-1" title={channel.webhookSetupWarning}>
                       <AlertTriangle className="h-3 w-3" />
                       {t('webhookSetupWarning')}
                     </Badge>
@@ -175,7 +175,11 @@ export default function ChannelsPage() {
                   <Pencil className="h-3.5 w-3.5" />
                   {t('actions.edit', { ns: 'common' })}
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setManagingChannelId(channel.id)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => setManagingChannelId(channel.id)}>
                   <Users className="h-3.5 w-3.5" />
                   {t('manageMembers')}
                 </Button>
@@ -190,7 +194,11 @@ export default function ChannelsPage() {
                   </Button>
                 )}
                 {channel.type === 'Instagram' && (
-                  <Button variant="outline" size="sm" className="gap-1.5" render={<Link to={`/instagram-automation?channel=${channel.id}`} />}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    render={<Link to={`/automations?channel=${channel.id}`} />}>
                     <Bot className="h-3.5 w-3.5" />
                     {t('automation')}
                   </Button>
@@ -244,11 +252,7 @@ export default function ChannelsPage() {
       )}
 
       {managingChannelId && (
-        <ChannelMembersModal
-          channelId={managingChannelId}
-          open
-          onClose={() => setManagingChannelId(null)}
-        />
+        <ChannelMembersModal channelId={managingChannelId} open onClose={() => setManagingChannelId(null)} />
       )}
 
       <ConfirmDialog
@@ -257,7 +261,9 @@ export default function ChannelsPage() {
         onConfirm={() => deactivatingChannel && deactivateChannel(deactivatingChannel.id)}
         type="danger"
         title={t('deactivateChannelTitle')}
-        description={deactivatingChannel ? t('deactivateChannelDescription', { name: deactivatingChannel.name }) : undefined}
+        description={
+          deactivatingChannel ? t('deactivateChannelDescription', { name: deactivatingChannel.name }) : undefined
+        }
         confirmText={t('deactivate')}
         isLoading={isDeactivating}
       />

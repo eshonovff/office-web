@@ -14,7 +14,15 @@ function renderPanel(props: Partial<React.ComponentProps<typeof DryRunPanel>> = 
   const queryClient = makeQueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <DryRunPanel channelId="ig1" matchMode="keyword" keywords={['нарх']} postScope="all" postIds={[]} requiresFollow={false} {...props} />
+      <DryRunPanel
+        channelId="ig1"
+        matchMode="keyword"
+        keywords={['нарх']}
+        postScope="all"
+        postIds={[]}
+        requiresFollow={false}
+        {...props}
+      />
     </QueryClientProvider>
   );
 }
@@ -31,7 +39,11 @@ describe('DryRunPanel', () => {
   });
 
   it('sends the current trigger config and typed comment text on Run', async () => {
-    vi.mocked(commentAutomationApi.dryRun).mockResolvedValue({ matched: true, matchedKeyword: 'нарх', followCheckResult: null });
+    vi.mocked(commentAutomationApi.dryRun).mockResolvedValue({
+      matched: true,
+      matchedKeyword: 'нарх',
+      followCheckResult: null,
+    });
     const user = userEvent.setup();
     renderPanel();
 
@@ -50,7 +62,11 @@ describe('DryRunPanel', () => {
   });
 
   it('shows the matched keyword when the dry run matches', async () => {
-    vi.mocked(commentAutomationApi.dryRun).mockResolvedValue({ matched: true, matchedKeyword: 'нарх', followCheckResult: null });
+    vi.mocked(commentAutomationApi.dryRun).mockResolvedValue({
+      matched: true,
+      matchedKeyword: 'нарх',
+      followCheckResult: null,
+    });
     const user = userEvent.setup();
     renderPanel();
 
@@ -61,7 +77,11 @@ describe('DryRunPanel', () => {
   });
 
   it('shows the not-matched message when the dry run does not match', async () => {
-    vi.mocked(commentAutomationApi.dryRun).mockResolvedValue({ matched: false, matchedKeyword: null, followCheckResult: null });
+    vi.mocked(commentAutomationApi.dryRun).mockResolvedValue({
+      matched: false,
+      matchedKeyword: null,
+      followCheckResult: null,
+    });
     const user = userEvent.setup();
     renderPanel();
 
@@ -84,7 +104,11 @@ describe('DryRunPanel', () => {
   });
 
   it('shows the actor-id field when requiresFollow is on and sends it with the request', async () => {
-    vi.mocked(commentAutomationApi.dryRun).mockResolvedValue({ matched: true, matchedKeyword: 'нарх', followCheckResult: 'Following' });
+    vi.mocked(commentAutomationApi.dryRun).mockResolvedValue({
+      matched: true,
+      matchedKeyword: 'нарх',
+      followCheckResult: 'Following',
+    });
     const user = userEvent.setup();
     renderPanel({ requiresFollow: true });
 
@@ -101,7 +125,11 @@ describe('DryRunPanel', () => {
   });
 
   it('shows which branch fired when a follow-check result comes back', async () => {
-    vi.mocked(commentAutomationApi.dryRun).mockResolvedValue({ matched: true, matchedKeyword: 'нарх', followCheckResult: 'NotFollowing' });
+    vi.mocked(commentAutomationApi.dryRun).mockResolvedValue({
+      matched: true,
+      matchedKeyword: 'нарх',
+      followCheckResult: 'NotFollowing',
+    });
     const user = userEvent.setup();
     renderPanel({ requiresFollow: true });
 
@@ -113,7 +141,11 @@ describe('DryRunPanel', () => {
   });
 
   it('shows the "skipped" note when requiresFollow is on but no actor id was given', async () => {
-    vi.mocked(commentAutomationApi.dryRun).mockResolvedValue({ matched: true, matchedKeyword: 'нарх', followCheckResult: null });
+    vi.mocked(commentAutomationApi.dryRun).mockResolvedValue({
+      matched: true,
+      matchedKeyword: 'нарх',
+      followCheckResult: null,
+    });
     const user = userEvent.setup();
     renderPanel({ requiresFollow: true });
 

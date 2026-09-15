@@ -45,7 +45,9 @@ export function MediaPickerModal({ channelId, open, selectedIds, onClose, onConf
       className="sm:max-w-2xl"
       footer={
         <div className="flex w-full items-center justify-between">
-          <span className="text-muted-foreground text-2xs">{t('postsSelectedCount', { count: draftSelection.length })}</span>
+          <span className="text-muted-foreground text-2xs">
+            {t('postsSelectedCount', { count: draftSelection.length })}
+          </span>
           <Button
             type="button"
             onClick={() => {
@@ -59,7 +61,11 @@ export function MediaPickerModal({ channelId, open, selectedIds, onClose, onConf
         <Button type="button" size="sm" variant={tab === 'all' ? 'default' : 'outline'} onClick={() => setTab('all')}>
           {t('mediaPicker.allPosts')}
         </Button>
-        <Button type="button" size="sm" variant={tab === 'selected' ? 'default' : 'outline'} onClick={() => setTab('selected')}>
+        <Button
+          type="button"
+          size="sm"
+          variant={tab === 'selected' ? 'default' : 'outline'}
+          onClick={() => setTab('selected')}>
           {t('mediaPicker.selectedPosts')}
         </Button>
       </div>
@@ -106,7 +112,12 @@ export function MediaPickerModal({ channelId, open, selectedIds, onClose, onConf
 
           {tab === 'all' && hasNextPage && (
             <div className="mt-3 flex justify-center">
-              <Button type="button" variant="outline" size="sm" disabled={isFetchingNextPage} onClick={() => fetchNextPage()}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isFetchingNextPage}
+                onClick={() => fetchNextPage()}>
                 {t('mediaPicker.loadMore')}
               </Button>
             </div>

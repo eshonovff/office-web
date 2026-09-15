@@ -46,7 +46,7 @@ export function DryRunPanel({ channelId, matchMode, keywords, postScope, postIds
   });
 
   return (
-    <div className="space-y-2 rounded-lg border border-border p-3">
+    <div className="border-border space-y-2 rounded-lg border p-3">
       <p className="text-sm font-medium">{t('dryRun.title')}</p>
       <p className="text-muted-foreground text-2xs">{t('dryRun.notice')}</p>
       <Textarea
@@ -57,17 +57,29 @@ export function DryRunPanel({ channelId, matchMode, keywords, postScope, postIds
       />
       {requiresFollow && (
         <div className="space-y-1">
-          <Input value={actorId} onChange={(e) => setActorId(e.target.value)} placeholder={t('dryRun.actorIdPlaceholder')} />
+          <Input
+            value={actorId}
+            onChange={(e) => setActorId(e.target.value)}
+            placeholder={t('dryRun.actorIdPlaceholder')}
+          />
           <p className="text-muted-foreground text-2xs">{t('dryRun.actorIdHint')}</p>
         </div>
       )}
-      <Button type="button" variant="outline" size="sm" disabled={isPending || !commentText.trim()} onClick={() => mutate()}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={isPending || !commentText.trim()}
+        onClick={() => mutate()}>
         {t('dryRun.run')}
       </Button>
 
       {data && (
         <div className="space-y-1">
-          <p className={data.matched ? 'text-sm text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground text-sm'}>
+          <p
+            className={
+              data.matched ? 'text-sm text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground text-sm'
+            }>
             {data.matched
               ? t('dryRun.matched', { keyword: data.matchedKeyword ?? t('dryRun.anyComment') })
               : t('dryRun.notMatched')}

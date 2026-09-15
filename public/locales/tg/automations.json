@@ -1,0 +1,36 @@
+{
+  "pageTitle": "Автоматизатсияҳо",
+  "noItems": "Ҳанӯз ягон автоматизатсия сохта нашудааст",
+  "searchPlaceholder": "Ҷустуҷӯ бо ном...",
+  "openCanvas": "Кушодани конструктор",
+  "contactCount_one": "{{count}} контакт",
+  "contactCount_other": "{{count}} контакт",
+  "conversion": "{{percent}}% анҷом ёфт",
+  "byKeyword": {
+    "title": "Автоматизатсия бо калимаи калидӣ",
+    "hint": "Ҷавоби худкор ба коментарий/DM аз рӯи калимаи калидӣ"
+  },
+  "constructor": {
+    "title": "Конструктор",
+    "hint": "Занҷираи визуалии паём/шарт/амал (мисли ManyChat)"
+  },
+  "sort": {
+    "default": "Нав дар боло",
+    "name": "Аз рӯи ном",
+    "conversion": "Аз рӯи конверсия"
+  },
+  "templatePicker": {
+    "title": "Интихоби шаблон",
+    "configureTitle": "Танзими flow",
+    "back": "Бозгашт",
+    "create": "Сохтан",
+    "created": "Flow сохта шуд",
+    "blankTitle": "Аз сифр",
+    "blankHint": "Canvas-и холӣ — худатон нодҳоро илова мекунед",
+    "triggerTypeLabel": "Триггер",
+    "triggerType": {
+      "instagram_comment": "Коментарии Instagram",
+      "instagram_dm": "DM-и Instagram"
+    }
+  }
+}

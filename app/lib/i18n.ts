@@ -23,6 +23,8 @@ export const i18nConfig = {
     'notifications',
     'dashboard',
     'instagramAutomation',
+    'automations',
+    'flows',
   ],
   detection: {
     order: ['localStorage'],

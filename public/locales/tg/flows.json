@@ -1,0 +1,122 @@
+{
+  "nodes": {
+    "message": "Паём",
+    "condition": "Шарт",
+    "action": "Амал",
+    "note": "Қайд"
+  },
+  "panel": {
+    "selectHint": "Барои таҳрир як нодро дар canvas интихоб кунед"
+  },
+  "toolbar": {
+    "undo": "Бекор кардан",
+    "redo": "Такрор кардан",
+    "settings": "Танзимот",
+    "settingsSaved": "Танзимот сабт шуд",
+    "stats": "Омор",
+    "saving": "Сабт мешавад...",
+    "saved": "Сабт шуд",
+    "saveError": "Хатогӣ дар сабт"
+  },
+  "stats": {
+    "total": "Ҳамагӣ сессия",
+    "finished": "Анҷомёфта",
+    "active": "Ҷорӣ/интизор",
+    "failed": "Ноком",
+    "perNode": "Дар ҳар нод"
+  },
+  "nodePanels": {
+    "continue": "Давом",
+    "message": {
+      "empty": "Матн холӣ аст",
+      "blockCount": "{{count}} блоки дигар (дар ин фаза дастгирӣ намешавад)",
+      "textLabel": "Матни паём",
+      "textPlaceholder": "Матнро дар ин ҷо нависед...",
+      "interpolationHint": "{{name}} — тағйирёбандаро дар матн истифода баред",
+      "buttonsLabel": "Тугмаҳо (то 3)",
+      "buttonTitlePlaceholder": "Сарлавҳаи тугма",
+      "buttonAction": {
+        "next": "Давом додани flow",
+        "url": "Кушодани пайванд"
+      },
+      "allowRepeat": "Пахши такрорӣ низ иҷозат дода шавад",
+      "addButton": "Иловаи тугма",
+      "untitledButton": "Тугма"
+    },
+    "condition": {
+      "empty": "Ягон қоида илова нашудааст — ҳамеша \"мувофиқ\"",
+      "matchLabel": "Тарзи мувофиқат",
+      "matchAll": "Ҳамаи қоидаҳо",
+      "matchAny": "Яке аз қоидаҳо",
+      "match": "Мувофиқ",
+      "nomatch": "Номувофиқ",
+      "summary": {
+        "all": "{{count}} қоида (ҳама бояд рост бошанд)",
+        "any": "{{count}} қоида (яке кофист)"
+      },
+      "field": {
+        "subscription": "Обуна",
+        "tags": "Тег",
+        "time": "Вақт",
+        "date": "Сана",
+        "weekday": "Рӯзи ҳафта",
+        "variable": "Тағйирёбанда..."
+      },
+      "subscriptionHint": "Санҷиш: контакт ба аккаунт обуна ҳаст",
+      "tagPlaceholder": "Номи тег",
+      "variableNamePlaceholder": "Номи тағйирёбанда",
+      "valuePlaceholder": "Қимат",
+      "op": {
+        "equals": "Баробар аст",
+        "not_equals": "Баробар нест",
+        "contains": "Дар бар мегирад",
+        "has": "Дорад",
+        "not_has": "Надорад",
+        "before": "Пеш аз",
+        "after": "Баъд аз"
+      },
+      "weekday": {
+        "Monday": "Душанбе",
+        "Tuesday": "Сешанбе",
+        "Wednesday": "Чоршанбе",
+        "Thursday": "Панҷшанбе",
+        "Friday": "Ҷумъа",
+        "Saturday": "Шанбе",
+        "Sunday": "Якшанбе"
+      },
+      "addRule": "Иловаи қоида"
+    },
+    "action": {
+      "kindLabel": "Навъи амал",
+      "kind": {
+        "delay": "Таъхир",
+        "add_tags": "Иловаи тег",
+        "remove_tags": "Нест кардани тег",
+        "set_variable": "Танзими тағйирёбанда",
+        "collect_input": "Гирифтани ҷавоби корбар",
+        "http_request": "Дархости HTTP",
+        "goto_flow": "Гузариш ба flow-и дигар"
+      },
+      "delayMinutesLabel": "Таъхир (дақиқа)",
+      "tagsLabel": "Тегҳо",
+      "variableKeyLabel": "Номи тағйирёбанда",
+      "variableValueLabel": "Қимат",
+      "collectInputHint": "Ҷавоби навбатии корбар дар ин тағйирёбанда захира мешавад",
+      "httpUrlLabel": "URL (танҳо https)",
+      "httpMethodLabel": "Метод",
+      "httpBodyLabel": "Матни дархост (JSON)",
+      "targetFlowLabel": "Flow-и мақсад",
+      "gotoFlowHint": "Ин нод сессияро анҷом медиҳад — на ба flow-и дигар мегузарад",
+      "empty": "Танзим нашудааст",
+      "summary": {
+        "delay": "{{count}} дақиқа таъхир",
+        "collectInput": "Захира дар: {{key}}",
+        "gotoFlow": "Сессия анҷом меёбад"
+      }
+    },
+    "note": {
+      "empty": "Қайди холӣ",
+      "placeholder": "Қайди худро дар ин ҷо нависед..."
+    }
+  }
+}
