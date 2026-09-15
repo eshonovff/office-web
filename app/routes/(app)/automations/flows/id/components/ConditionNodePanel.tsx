@@ -27,18 +27,20 @@ interface ConditionNodePanelProps {
 
 export function ConditionNodePanel({ config, onChange }: ConditionNodePanelProps) {
   const { t } = useTranslation('flows');
+  // Ҳимояи дифоъӣ: config-и маълумоти кӯҳна/вайроншуда метавонад ин майдонҳоро надошта бошад.
+  const rules = config.rules ?? [];
+  const match = config.match ?? 'all';
 
   function updateRule(index: number, patch: Partial<ConditionRule>) {
-    const rules = config.rules.map((r, i) => (i === index ? { ...r, ...patch } : r));
-    onChange({ ...config, rules });
+    onChange({ ...config, rules: rules.map((r, i) => (i === index ? { ...r, ...patch } : r)) });
   }
 
   function addRule() {
-    onChange({ ...config, rules: [...config.rules, { field: 'subscription', op: 'equals', value: '' }] });
+    onChange({ ...config, rules: [...rules, { field: 'subscription', op: 'equals', value: '' }] });
   }
 
   function removeRule(index: number) {
-    onChange({ ...config, rules: config.rules.filter((_, i) => i !== index) });
+    onChange({ ...config, rules: rules.filter((_, i) => i !== index) });
   }
 
   return (
@@ -50,13 +52,13 @@ export function ConditionNodePanel({ config, onChange }: ConditionNodePanelProps
             { value: 'all', label: t('nodePanels.condition.matchAll') },
             { value: 'any', label: t('nodePanels.condition.matchAny') },
           ]}
-          value={config.match}
+          value={match}
           onChange={(v) => onChange({ ...config, match: (v as 'all' | 'any') ?? 'all' })}
         />
       </div>
 
       <div className="space-y-3">
-        {config.rules.map((rule, index) => {
+        {rules.map((rule, index) => {
           const field = isFixedField(rule.field) ? rule.field : 'variable';
           return (
             <div key={index} className="border-border space-y-2 rounded-lg border p-2.5">

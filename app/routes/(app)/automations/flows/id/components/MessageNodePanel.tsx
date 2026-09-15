@@ -18,24 +18,25 @@ interface MessageNodePanelProps {
 // ниёз доранд ва UI-и боркунӣ ҳанӯз нест (ниг. FlowEngine.ExecuteMessageNodeAsync).
 export function MessageNodePanel({ config, onChange }: MessageNodePanelProps) {
   const { t } = useTranslation('flows');
-  const text = config.blocks.find((b) => b.type === 'text')?.text ?? '';
+  // Ҳимояи дифоъӣ: config-и маълумоти кӯҳна/вайроншуда метавонад ин майдонҳоро надошта бошад.
+  const buttons = config.buttons ?? [];
+  const text = (config.blocks ?? []).find((b) => b.type === 'text')?.text ?? '';
 
   function setText(value: string) {
     onChange({ ...config, blocks: [{ type: 'text', text: value, mediaId: null }] });
   }
 
   function updateButton(index: number, patch: Partial<MessageButton>) {
-    const buttons = config.buttons.map((b, i) => (i === index ? { ...b, ...patch } : b));
-    onChange({ ...config, buttons });
+    onChange({ ...config, buttons: buttons.map((b, i) => (i === index ? { ...b, ...patch } : b)) });
   }
 
   function addButton() {
-    if (config.buttons.length >= 3) return; // Messenger button template max
-    onChange({ ...config, buttons: [...config.buttons, { title: '', action: 'next', url: null, allowRepeat: false }] });
+    if (buttons.length >= 3) return; // Messenger button template max
+    onChange({ ...config, buttons: [...buttons, { title: '', action: 'next', url: null, allowRepeat: false }] });
   }
 
   function removeButton(index: number) {
-    onChange({ ...config, buttons: config.buttons.filter((_, i) => i !== index) });
+    onChange({ ...config, buttons: buttons.filter((_, i) => i !== index) });
   }
 
   return (
@@ -53,7 +54,7 @@ export function MessageNodePanel({ config, onChange }: MessageNodePanelProps) {
 
       <div className="space-y-2">
         <Label>{t('nodePanels.message.buttonsLabel')}</Label>
-        {config.buttons.map((button, index) => (
+        {buttons.map((button, index) => (
           <div key={index} className="border-border space-y-2 rounded-lg border p-2.5">
             <div className="flex items-center gap-2">
               <Input
@@ -91,7 +92,7 @@ export function MessageNodePanel({ config, onChange }: MessageNodePanelProps) {
             </label>
           </div>
         ))}
-        {config.buttons.length < 3 && (
+        {buttons.length < 3 && (
           <Button type="button" variant="outline" size="sm" className="w-full gap-1.5" onClick={addButton}>
             <Plus className="h-3.5 w-3.5" />
             {t('nodePanels.message.addButton')}

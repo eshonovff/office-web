@@ -8,8 +8,11 @@ import { NodeShell } from './NodeShell';
 export function MessageNodeCard({ data, selected }: NodeProps<FlowCanvasNode>) {
   const { t } = useTranslation('flows');
   const config = data.config as MessageNodeConfig;
-  const firstText = config.blocks.find((b) => b.type === 'text')?.text;
-  const ports = getOutputPorts('message', config);
+  // Ҳимояи дифоъӣ: config-и маълумоти кӯҳна/вайроншуда метавонад ин майдонҳоро надошта бошад.
+  const blocks = config.blocks ?? [];
+  const buttons = config.buttons ?? [];
+  const firstText = blocks.find((b) => b.type === 'text')?.text;
+  const ports = getOutputPorts('message', { ...config, blocks, buttons });
 
   return (
     <NodeShell
@@ -18,19 +21,19 @@ export function MessageNodeCard({ data, selected }: NodeProps<FlowCanvasNode>) {
       title={t('nodes.message')}
       selected={selected}
       outputs={
-        config.buttons.length > 0
-          ? config.buttons.map((button, index) => ({
+        buttons.length > 0
+          ? buttons.map((button, index) => ({
               id: ports[index],
               label: button.title || t('nodePanels.message.untitledButton'),
             }))
           : [{ id: 'default', label: t('nodePanels.continue') }]
       }>
-      {config.blocks.length === 0 ? (
+      {blocks.length === 0 ? (
         <p className="italic">{t('nodePanels.message.empty')}</p>
       ) : (
         <>
           {firstText && <p className="line-clamp-3">{firstText}</p>}
-          {config.blocks.length > 1 && <p>{t('nodePanels.message.blockCount', { count: config.blocks.length })}</p>}
+          {blocks.length > 1 && <p>{t('nodePanels.message.blockCount', { count: blocks.length })}</p>}
         </>
       )}
     </NodeShell>

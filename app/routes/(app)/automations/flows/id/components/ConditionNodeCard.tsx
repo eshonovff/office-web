@@ -8,6 +8,10 @@ import { NodeShell } from './NodeShell';
 export function ConditionNodeCard({ data, selected }: NodeProps<FlowCanvasNode>) {
   const { t } = useTranslation('flows');
   const config = data.config as ConditionNodeConfig;
+  // Ҳимояи дифоъӣ: агар config-и як нод (маълумоти кӯҳна/вайроншуда) майдонҳои
+  // интизоршударо надошта бошад, як карта набояд тамоми canvas-ро бишиканад.
+  const rules = config.rules ?? [];
+  const match = config.match ?? 'all';
 
   return (
     <NodeShell
@@ -19,10 +23,10 @@ export function ConditionNodeCard({ data, selected }: NodeProps<FlowCanvasNode>)
         { id: FLOW_PORT_MATCH, label: t('nodePanels.condition.match') },
         { id: FLOW_PORT_NOMATCH, label: t('nodePanels.condition.nomatch') },
       ]}>
-      {config.rules.length === 0 ? (
+      {rules.length === 0 ? (
         <p className="italic">{t('nodePanels.condition.empty')}</p>
       ) : (
-        <p>{t(`nodePanels.condition.summary.${config.match}`, { count: config.rules.length })}</p>
+        <p>{t(`nodePanels.condition.summary.${match}`, { count: rules.length })}</p>
       )}
     </NodeShell>
   );
