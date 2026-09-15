@@ -41,12 +41,14 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
       postScope: rule?.triggerConfig.postScope ?? 'all',
       postIds: rule?.triggerConfig.postIds ?? [],
       commentReplies: rule?.actionConfig.onMatch.commentReplies ?? [''],
+      sendDm: rule ? !!rule.actionConfig.onMatch.dmText : true,
       dmText: rule?.actionConfig.onMatch.dmText ?? '',
       dmButtonUrl: rule?.actionConfig.onMatch.dmButtonUrl ?? '',
       dmButtonTitle: rule?.actionConfig.onMatch.dmButtonTitle ?? '',
       cooldownMinutes: String(rule?.cooldownMinutes ?? 60),
       requiresFollow: rule?.conditionConfig.requiresFollow ?? false,
       notFollowingCommentReplies: rule?.actionConfig.onNotFollowing?.commentReplies ?? [''],
+      notFollowingSendDm: rule?.actionConfig.onNotFollowing ? !!rule.actionConfig.onNotFollowing.dmText : true,
       notFollowingDmText: rule?.actionConfig.onNotFollowing?.dmText ?? '',
     },
   });
@@ -55,8 +57,10 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
   const postScope = watch('postScope');
   const postIds = watch('postIds');
   const keywords = watch('keywords');
+  const sendDm = watch('sendDm');
   const dmButtonUrl = watch('dmButtonUrl');
   const requiresFollow = watch('requiresFollow');
+  const notFollowingSendDm = watch('notFollowingSendDm');
 
   function submit(data: CommentAutomationRuleForm) {
     onSave({
@@ -72,14 +76,14 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
       actionConfig: {
         onMatch: {
           commentReplies: data.commentReplies.filter((r) => r.trim()),
-          dmText: data.dmText,
-          dmButtonUrl: data.dmButtonUrl?.trim() || null,
-          dmButtonTitle: data.dmButtonUrl?.trim() ? data.dmButtonTitle?.trim() || null : null,
+          dmText: data.sendDm ? (data.dmText ?? '') : '',
+          dmButtonUrl: data.sendDm ? data.dmButtonUrl?.trim() || null : null,
+          dmButtonTitle: data.sendDm && data.dmButtonUrl?.trim() ? data.dmButtonTitle?.trim() || null : null,
         },
         onNotFollowing: data.requiresFollow
           ? {
               commentReplies: data.notFollowingCommentReplies.filter((r) => r.trim()),
-              dmText: data.notFollowingDmText ?? '',
+              dmText: data.notFollowingSendDm ? (data.notFollowingDmText ?? '') : '',
               dmButtonUrl: null,
               dmButtonTitle: null,
             }
@@ -177,16 +181,30 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
             placeholder={t('commentReplyPlaceholder')}
           />
 
-          <FormTextarea
+          <Controller
             control={control}
-            name="dmText"
-            label={requiresFollow ? t('fields.onMatchDmText') : t('fields.dmText')}
-            required
-            rows={3}
+            name="sendDm"
+            render={({ field }) => (
+              <label className="flex w-fit items-center gap-2 text-sm">
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                {t('sendDm')}
+              </label>
+            )}
           />
-          <FormInput control={control} name="dmButtonUrl" label={t('fields.dmButtonUrl')} placeholder="https://..." />
-          {dmButtonUrl?.trim() && (
-            <FormInput control={control} name="dmButtonTitle" label={t('fields.dmButtonTitle')} maxLength={20} required />
+          {sendDm && (
+            <>
+              <FormTextarea
+                control={control}
+                name="dmText"
+                label={requiresFollow ? t('fields.onMatchDmText') : t('fields.dmText')}
+                required
+                rows={3}
+              />
+              <FormInput control={control} name="dmButtonUrl" label={t('fields.dmButtonUrl')} placeholder="https://..." />
+              {dmButtonUrl?.trim() && (
+                <FormInput control={control} name="dmButtonTitle" label={t('fields.dmButtonTitle')} maxLength={20} required />
+              )}
+            </>
           )}
 
           {requiresFollow && (
@@ -199,7 +217,19 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
                 addLabel={t('addReply')}
                 placeholder={t('commentReplyPlaceholder')}
               />
-              <FormTextarea control={control} name="notFollowingDmText" label={t('fields.notFollowingDmText')} required rows={3} />
+              <Controller
+                control={control}
+                name="notFollowingSendDm"
+                render={({ field }) => (
+                  <label className="flex w-fit items-center gap-2 text-sm">
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    {t('sendDm')}
+                  </label>
+                )}
+              />
+              {notFollowingSendDm && (
+                <FormTextarea control={control} name="notFollowingDmText" label={t('fields.notFollowingDmText')} required rows={3} />
+              )}
             </div>
           )}
 

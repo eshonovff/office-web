@@ -12,12 +12,14 @@ function baseForm() {
     postScope: 'all' as const,
     postIds: [],
     commentReplies: ['Ташаккур! DM-ро тафтиш кунед.'],
+    sendDm: true,
     dmText: 'Салом дар DM',
     dmButtonUrl: '',
     dmButtonTitle: '',
     cooldownMinutes: '60',
     requiresFollow: false,
     notFollowingCommentReplies: [''],
+    notFollowingSendDm: true,
     notFollowingDmText: '',
   };
 }
@@ -68,10 +70,28 @@ describe('commentAutomationRuleSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects a missing dmText', () => {
+  it('rejects a missing dmText when sendDm is on', () => {
     const result = commentAutomationRuleSchema(t).safeParse({ ...baseForm(), dmText: '' });
 
     expect(result.success).toBe(false);
+  });
+
+  it('does not require dmText when sendDm is off', () => {
+    const result = commentAutomationRuleSchema(t).safeParse({ ...baseForm(), sendDm: false, dmText: '' });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('does not require notFollowingDmText when notFollowingSendDm is off', () => {
+    const result = commentAutomationRuleSchema(t).safeParse({
+      ...baseForm(),
+      requiresFollow: true,
+      notFollowingCommentReplies: ['Обуна шавед'],
+      notFollowingSendDm: false,
+      notFollowingDmText: '',
+    });
+
+    expect(result.success).toBe(true);
   });
 
   it('rejects a non-numeric cooldownMinutes', () => {

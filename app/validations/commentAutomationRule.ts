@@ -13,7 +13,9 @@ export const commentAutomationRuleSchema = (t: TFunction) =>
       postScope: z.enum(POST_SCOPES),
       postIds: z.array(z.string()),
       commentReplies: z.array(z.string()),
-      dmText: z.string().min(1, t('required', { ns: 'validation' })),
+      // Ҳарду ихтиёрӣ — корбар метавонад DM-ро тамоман хомӯш кунад (танҳо ҷавоб дар коментарий).
+      sendDm: z.boolean(),
+      dmText: z.string().optional(),
       dmButtonUrl: z.string().optional(),
       // Instagram (Messenger Platform button template) сарлавҳаро то 20 ҳарф иҷозат медиҳад.
       dmButtonTitle: z.string().max(20, t('stringMax', { ns: 'validation', count: 20 })).optional(),
@@ -24,6 +26,7 @@ export const commentAutomationRuleSchema = (t: TFunction) =>
       // Фазаи 11 — тасдиқи обуна. Вақте фаъол аст, шохаи дуюм (бе тугма — тибқи спека) ҳатмист.
       requiresFollow: z.boolean(),
       notFollowingCommentReplies: z.array(z.string()),
+      notFollowingSendDm: z.boolean(),
       notFollowingDmText: z.string().optional(),
     })
     .superRefine((data, ctx) => {
@@ -36,6 +39,9 @@ export const commentAutomationRuleSchema = (t: TFunction) =>
       if (data.commentReplies.filter((r) => r.trim()).length === 0) {
         ctx.addIssue({ code: 'custom', path: ['commentReplies'], message: t('required', { ns: 'validation' }) });
       }
+      if (data.sendDm && !data.dmText?.trim()) {
+        ctx.addIssue({ code: 'custom', path: ['dmText'], message: t('required', { ns: 'validation' }) });
+      }
       if (data.dmButtonUrl?.trim() && !data.dmButtonTitle?.trim()) {
         ctx.addIssue({ code: 'custom', path: ['dmButtonTitle'], message: t('required', { ns: 'validation' }) });
       }
@@ -43,7 +49,7 @@ export const commentAutomationRuleSchema = (t: TFunction) =>
         if (data.notFollowingCommentReplies.filter((r) => r.trim()).length === 0) {
           ctx.addIssue({ code: 'custom', path: ['notFollowingCommentReplies'], message: t('required', { ns: 'validation' }) });
         }
-        if (!data.notFollowingDmText?.trim()) {
+        if (data.notFollowingSendDm && !data.notFollowingDmText?.trim()) {
           ctx.addIssue({ code: 'custom', path: ['notFollowingDmText'], message: t('required', { ns: 'validation' }) });
         }
       }

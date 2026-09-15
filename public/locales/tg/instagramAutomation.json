@@ -15,6 +15,7 @@
   "choosePosts": "Интихоби пост",
   "postsSelectedCount": "{{count}} пост интихоб шуд",
   "addReply": "Илова кардани ҷавоб",
+  "sendDm": "DM фиристода шавад",
   "commentReplyPlaceholder": "Матни ҷавоби комментарий",
   "matchModeAllWarning": "Диққат: ба ҲАМАИ комментарийҳо ҷавоб дода мешавад, на танҳо ба онҳое, ки калимаи калидӣ доранд.",
   "fields": {

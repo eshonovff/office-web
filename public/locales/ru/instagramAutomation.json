@@ -17,6 +17,7 @@
   "choosePosts": "Выбрать посты",
   "postsSelectedCount": "{{count}} публикаций выбрано",
   "addReply": "Добавить ответ",
+  "sendDm": "Отправлять DM",
   "commentReplyPlaceholder": "Текст ответа на комментарий",
   "matchModeAllWarning": "Внимание: ответ будет отправляться на ВСЕ комментарии, а не только на содержащие ключевое слово.",
   "fields": {

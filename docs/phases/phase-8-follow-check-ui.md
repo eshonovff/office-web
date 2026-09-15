@@ -34,12 +34,22 @@
 - `commentAutomation.test.ts`, `route.test.tsx`: шакли нави
   `AutomationActionConfig` дар mock-ҳо нав карда шуд.
 
+## Навсозӣ 2026-09-15: тугмаи "DM фиристода шавад"
+
+Корбар зинда санҷид ва хост: агар DM лозим набошад (танҳо ҷавоби
+коментарий), набояд ҳатмӣ бошад. Илова шуд: `sendDm`/`notFollowingSendDm`
+(checkbox, ду ҷо — барои ҳар шоха ҷудо). Вақте хомӯш, майдонҳои dmText/
+dmButtonUrl/dmButtonTitle пинҳон мешаванд ва холӣ фиристода мешаванд —
+backend (`Фазаи 11`-и навсозишуда) инро ҳамчун "DM қасдан хомӯш" мефаҳмад
+(`DmStatus=Disabled`, на хато). 4 тести нав дар `commentAutomationRule.test.ts`.
+
 ## Definition of Done
 
 - ✅ `npm run typecheck` — 0 хато
-- ✅ `npm run test` — 491/491 сабз
+- ✅ `npm run test` — 493/493 сабз (2 нав пас аз навсозии 2026-09-15)
 - ✅ `npm run lint` — 0 хато (0 огоҳии нав)
 - ✅ `npm run build` — муваффақ
 - ✅ Checkbox "Танҳо барои обунашудагон" бо огоҳии тавзеҳдиҳанда
 - ✅ Блоки дуюми ҷавоб танҳо вақте фаъол аст намоён, бе майдони тугма
 - ✅ Dry-run бо ID-и воқеӣ натиҷаи воқеии follow-check-ро нишон медиҳад
+- ✅ Checkbox "DM фиристода шавад" барои ҳар ду шоха
