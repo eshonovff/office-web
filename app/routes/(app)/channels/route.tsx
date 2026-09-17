@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Bot, Link2, Pencil, Plus, PowerOff, RotateCw, Users, Zap } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Bot, Link2, Pencil, Plus, PowerOff, RotateCw, Users, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router';
@@ -111,7 +111,12 @@ export default function ChannelsPage() {
   return (
     <div className="flex-1 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold tracking-tight">{t('channelsTitle')}</h1>
+        <div className="flex min-w-0 items-center gap-2">
+          <Button variant="ghost" size="icon" render={<Link to="/inbox" />}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-xl font-semibold tracking-tight">{t('channelsTitle')}</h1>
+        </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" className="gap-2" onClick={() => void instagramOAuth.begin()}>
             <Link2 className="h-4 w-4" />
