@@ -28,12 +28,16 @@ export function DeletableEdge({
 
   return (
     <>
-      {/* Роҳи васеи ноаён барои ҳовери осонтар — хати аслӣ хеле борик аст. */}
+      {/* Роҳи васеи ноаён барои ҳовери осонтар — хати аслӣ хеле борик аст. pointerEvents:
+          'stroke' ҲАТМӢ аст — қабати SVG-и edges-ҳои @xyflow/react пешфарз pointer-events: none
+          дорад (то кашидани canvas халал наёбад), ва <path>-и худсохта бе класс ин қоидаро
+          мерос мебарад — бе ин сатр, onMouseEnter ҳеҷ гоҳ оташ намегирад. */}
       <path
         d={edgePath}
         fill="none"
         strokeWidth={20}
         stroke="transparent"
+        style={{ pointerEvents: 'stroke' }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       />
