@@ -8,6 +8,9 @@
   "contactCount_many": "{{count}} контактов",
   "contactCount_other": "{{count}} контакта",
   "conversion": "{{percent}}% завершили",
+  "deleted": "Автоматизация удалена",
+  "deleteConfirmTitle": "Удалить автоматизацию?",
+  "deleteConfirmDescription": "«{{name}}» будет удалена без возможности восстановления, вместе со статистикой и историей срабатываний.",
   "byKeyword": {
     "title": "Автоматизация по ключевому слову",
     "hint": "Автоответ на комментарий/DM по ключевому слову"

@@ -26,13 +26,14 @@ vi.mock('~/api/commentAutomation', () => ({
     create: vi.fn(),
     update: vi.fn(),
     setActive: vi.fn(),
+    remove: vi.fn(),
     dryRun: vi.fn(),
     listInstagramMedia: vi.fn(),
   },
 }));
 
 vi.mock('~/api/flows', () => ({
-  flowsApi: { setActive: vi.fn() },
+  flowsApi: { setActive: vi.fn(), remove: vi.fn() },
 }));
 
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -141,6 +142,38 @@ describe('AutomationsPage', () => {
 
     await waitFor(() => expect(flowsApi.setActive).toHaveBeenCalledWith('f1', false));
     expect(commentAutomationApi.setActive).not.toHaveBeenCalled();
+  });
+
+  it('asks for confirmation, then deletes a simple item via commentAutomationApi.remove', async () => {
+    vi.mocked(channelsApi.list).mockResolvedValue([makeChannel()]);
+    vi.mocked(automationsApi.list).mockResolvedValue([makeItem({ id: 'a1', type: 'simple', name: 'Price question' })]);
+    vi.mocked(commentAutomationApi.remove).mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    renderPage();
+
+    await waitFor(() => screen.getByText('actions.delete'));
+    await user.click(screen.getByText('actions.delete'));
+    expect(commentAutomationApi.remove).not.toHaveBeenCalled(); // танҳо диалог кушода шуд, ҳанӯз тасдиқ нашуд
+
+    await user.click(screen.getByText('actions.confirm'));
+
+    await waitFor(() => expect(commentAutomationApi.remove).toHaveBeenCalledWith('ig1', 'a1'));
+    expect(flowsApi.remove).not.toHaveBeenCalled();
+  });
+
+  it('asks for confirmation, then deletes a flow item via flowsApi.remove', async () => {
+    vi.mocked(channelsApi.list).mockResolvedValue([makeChannel()]);
+    vi.mocked(automationsApi.list).mockResolvedValue([makeItem({ id: 'f1', type: 'flow', name: 'Lead magnet' })]);
+    vi.mocked(flowsApi.remove).mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    renderPage();
+
+    await waitFor(() => screen.getByText('actions.delete'));
+    await user.click(screen.getByText('actions.delete'));
+    await user.click(screen.getByText('actions.confirm'));
+
+    await waitFor(() => expect(flowsApi.remove).toHaveBeenCalledWith('f1'));
+    expect(commentAutomationApi.remove).not.toHaveBeenCalled();
   });
 
   it('selects the channel named in ?channel= when several Instagram channels exist', async () => {

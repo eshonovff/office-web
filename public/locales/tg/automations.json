@@ -6,6 +6,9 @@
   "contactCount_one": "{{count}} контакт",
   "contactCount_other": "{{count}} контакт",
   "conversion": "{{percent}}% анҷом ёфт",
+  "deleted": "Автоматизатсия нест карда шуд",
+  "deleteConfirmTitle": "Автоматизатсия нест карда шавад?",
+  "deleteConfirmDescription": "«{{name}}» бе имконияти барқарорсозӣ, ҳамроҳи омор ва таърихи корбурдаш нест карда мешавад.",
   "byKeyword": {
     "title": "Автоматизатсия бо калимаи калидӣ",
     "hint": "Ҷавоби худкор ба коментарий/DM аз рӯи калимаи калидӣ"

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { GitBranch, MessageSquareText, Pencil, Power, PowerOff, Search, Sparkles } from 'lucide-react';
+import { GitBranch, MessageSquareText, Pencil, Power, PowerOff, Search, Sparkles, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -8,6 +8,7 @@ import { automationsApi } from '~/api/automations';
 import { channelsApi } from '~/api/channels';
 import { commentAutomationApi } from '~/api/commentAutomation';
 import { flowsApi } from '~/api/flows';
+import { ConfirmDialog } from '~/components/shared/ConfirmDialog';
 import { CustomInput } from '~/components/shared/CustomInput';
 import { CustomSelect } from '~/components/shared/CustomSelect';
 import { EmptyState } from '~/components/shared/EmptyState';
@@ -32,6 +33,7 @@ export default function AutomationsPage() {
   const [creatingRule, setCreatingRule] = useState(false);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [pickingTemplate, setPickingTemplate] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<AutomationListItem | null>(null);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<AutomationSort | undefined>(undefined);
   const debouncedSearch = useDebounce(search, 300);
@@ -111,6 +113,16 @@ export default function AutomationsPage() {
     if (item.type === 'simple') toggleSimpleActive({ ruleId: item.id, isActive: !item.isActive });
     else toggleFlowActive({ flowId: item.id, isActive: !item.isActive });
   }
+
+  const { mutate: deleteItem, isPending: isDeleting } = useMutation({
+    mutationFn: (item: AutomationListItem) =>
+      item.type === 'simple' ? commentAutomationApi.remove(channelId!, item.id) : flowsApi.remove(item.id),
+    onSuccess: () => {
+      invalidateAll();
+      toast.success(t('deleted'));
+      setDeletingItem(null);
+    },
+  });
 
   return (
     <div className="flex-1 space-y-4">
@@ -235,6 +247,14 @@ export default function AutomationsPage() {
                         ? t('disable', { ns: 'instagramAutomation' })
                         : t('enable', { ns: 'instagramAutomation' })}
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive hover:text-destructive gap-1.5"
+                      onClick={() => setDeletingItem(item)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                      {t('actions.delete', { ns: 'common' })}
+                    </Button>
                   </div>
                 </Panel>
               ))}
@@ -277,6 +297,16 @@ export default function AutomationsPage() {
           }}
         />
       )}
+
+      <ConfirmDialog
+        open={deletingItem !== null}
+        onOpenChange={(open) => !open && setDeletingItem(null)}
+        onConfirm={() => deletingItem && deleteItem(deletingItem)}
+        isLoading={isDeleting}
+        type="danger"
+        title={t('deleteConfirmTitle')}
+        description={deletingItem ? t('deleteConfirmDescription', { name: deletingItem.name }) : undefined}
+      />
     </div>
   );
 }

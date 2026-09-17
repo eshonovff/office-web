@@ -24,6 +24,9 @@ export const commentAutomationApi = {
   setActive: async (channelId: string, ruleId: string, isActive: boolean): Promise<void> => {
     await apiClient.patch(`/channels/${channelId}/automation-rules/${ruleId}/active`, { isActive });
   },
+  remove: async (channelId: string, ruleId: string): Promise<void> => {
+    await apiClient.delete(`/channels/${channelId}/automation-rules/${ruleId}`);
+  },
   dryRun: async (channelId: string, payload: DryRunAutomationRuleRequest): Promise<DryRunAutomationRuleResult> => {
     const { data } = await apiClient.post<DryRunAutomationRuleResult>(`/channels/${channelId}/automation-rules/dry-run`, payload);
     return data;
