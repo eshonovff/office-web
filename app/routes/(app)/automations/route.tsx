@@ -292,6 +292,7 @@ export default function AutomationsPage() {
           open={pickingTemplate}
           onClose={() => setPickingTemplate(false)}
           onCreated={(flow) => {
+            invalidateAll();
             setPickingTemplate(false);
             navigate(`/automations/flows/${flow.id}`);
           }}
