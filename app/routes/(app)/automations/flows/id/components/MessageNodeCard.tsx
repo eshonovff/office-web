@@ -12,6 +12,7 @@ export function MessageNodeCard({ data, selected }: NodeProps<FlowCanvasNode>) {
   const blocks = config.blocks ?? [];
   const buttons = config.buttons ?? [];
   const firstText = blocks.find((b) => b.type === 'text')?.text;
+  const mediaBlock = blocks.find((b) => b.type !== 'text');
   const ports = getOutputPorts('message', { ...config, blocks, buttons });
 
   return (
@@ -33,7 +34,7 @@ export function MessageNodeCard({ data, selected }: NodeProps<FlowCanvasNode>) {
       ) : (
         <>
           {firstText && <p className="line-clamp-3">{firstText}</p>}
-          {blocks.length > 1 && <p>{t('nodePanels.message.blockCount', { count: blocks.length })}</p>}
+          {mediaBlock && <p className="text-muted-foreground">📎 {t(`nodePanels.message.mediaType.${mediaBlock.type}`)}</p>}
         </>
       )}
     </NodeShell>

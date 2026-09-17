@@ -29,10 +29,26 @@
     "continue": "Продолжить",
     "message": {
       "empty": "Текст пуст",
-      "blockCount": "ещё {{count}} блок(ов) (не поддерживается в этой версии)",
       "textLabel": "Текст сообщения",
       "textPlaceholder": "Введите текст...",
-      "interpolationHint": "{{name}} — используйте переменную в тексте",
+      "insertVariable": "Вставить переменную",
+      "builtInVariables": "Данные контакта",
+      "customVariables": "Собранные в этом flow",
+      "mediaLabel": "Вложение (фото/видео/голосовое)",
+      "mediaType": {
+        "image": "Фото прикреплено",
+        "video": "Видео прикреплено",
+        "audio": "Голосовое прикреплено",
+        "file": "Файл прикреплён"
+      },
+      "mediaAttachedNoPreview": "Загружено ранее — превью недоступно после перезагрузки",
+      "mediaDisabledWithButtons": "Вложение и кнопки нельзя использовать вместе — уберите кнопки, чтобы прикрепить файл",
+      "attachFile": "Прикрепить фото/видео",
+      "recordVoice": "Записать голосовое",
+      "uploadFailed": "Не удалось загрузить файл",
+      "fileTooLarge": "Файл слишком большой. Максимум для Instagram: {{max}}",
+      "voiceUnsupported": "Браузер не поддерживает запись голоса",
+      "voicePermissionDenied": "Нет доступа к микрофону",
       "buttonsLabel": "Кнопки (до 3)",
       "buttonTitlePlaceholder": "Текст кнопки",
       "buttonAction": {

@@ -29,10 +29,26 @@
     "continue": "Давом",
     "message": {
       "empty": "Матн холӣ аст",
-      "blockCount": "{{count}} блоки дигар (дар ин фаза дастгирӣ намешавад)",
       "textLabel": "Матни паём",
       "textPlaceholder": "Матнро дар ин ҷо нависед...",
-      "interpolationHint": "{{name}} — тағйирёбандаро дар матн истифода баред",
+      "insertVariable": "Иловаи тағйирёбанда",
+      "builtInVariables": "Маълумоти контакт",
+      "customVariables": "Дар ин flow ҷамъшуда",
+      "mediaLabel": "Замима (сурат/видео/овоз)",
+      "mediaType": {
+        "image": "Сурат замима шуд",
+        "video": "Видео замима шуд",
+        "audio": "Паёми овозӣ замима шуд",
+        "file": "Файл замима шуд"
+      },
+      "mediaAttachedNoPreview": "Пештар боркарда шудааст — пас аз аз нав кушодан пешнамоиш дастрас нест",
+      "mediaDisabledWithButtons": "Замима ва тугмаҳо якҷоя истифода намешаванд — барои замима кардани файл аввал тугмаҳоро нест кунед",
+      "attachFile": "Замимаи сурат/видео",
+      "recordVoice": "Сабти паёми овозӣ",
+      "uploadFailed": "Файл фиристода нашуд",
+      "fileTooLarge": "Файл аз ҳад калон аст. Ҳадди аксар барои Instagram: {{max}}",
+      "voiceUnsupported": "Браузер сабти овозро дастгирӣ намекунад",
+      "voicePermissionDenied": "Ба микрофон дастрасӣ дода нашуд",
       "buttonsLabel": "Тугмаҳо (то 3)",
       "buttonTitlePlaceholder": "Сарлавҳаи тугма",
       "buttonAction": {

@@ -1,3 +1,4 @@
+import type { AxiosProgressEvent } from 'axios';
 import { apiClient } from '~/lib/client';
 import type {
   CreateFlowRequest,
@@ -6,6 +7,7 @@ import type {
   FlowStats,
   UpdateFlowGraphRequest,
   UpdateFlowRequest,
+  UploadFlowMediaResult,
 } from '~/types/flow';
 
 export const flowsApi = {
@@ -34,6 +36,19 @@ export const flowsApi = {
   },
   remove: async (id: string): Promise<void> => {
     await apiClient.delete(`/flows/${id}`);
+  },
+  uploadMedia: async (
+    channelId: string,
+    file: File,
+    onUploadProgress?: (event: AxiosProgressEvent) => void
+  ): Promise<UploadFlowMediaResult> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const { data } = await apiClient.post<UploadFlowMediaResult>(`/channels/${channelId}/flows/media`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress,
+    });
+    return data;
   },
   stats: async (id: string): Promise<FlowStats> => {
     const { data } = await apiClient.get<FlowStats>(`/flows/${id}/stats`);

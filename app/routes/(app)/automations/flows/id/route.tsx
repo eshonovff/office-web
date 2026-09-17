@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addEdge, useEdgesState, useNodesState, type OnConnect } from '@xyflow/react';
+import { addEdge, reconnectEdge, useEdgesState, useNodesState, type OnConnect, type OnReconnect } from '@xyflow/react';
 import { ArrowLeft, Loader2, Power, PowerOff, Settings } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -151,6 +151,21 @@ export default function FlowCanvasPage() {
     markDirty();
   };
 
+  // Кашидани нӯги хати мавҷуда ба нодаи дигар (ба ҷои нест кардан + пайванди нав кашидан).
+  // oldEdge худаш аз "аллакай истифодашуда"-и canConnect бароварда мешавад — вагарна порти
+  // худи ҳамин хат ҳамеша "банд" ба назар мерасад ва reconnect ҳеҷ гоҳ иҷозат намеёбад.
+  const handleReconnect: OnReconnect<FlowCanvasEdge> = (oldEdge, newConnection) => {
+    const otherEdges = edgesRef.current.filter((e) => e.id !== oldEdge.id);
+    const validation = canConnect(nodesRef.current, otherEdges, newConnection);
+    if (!validation.ok) {
+      toast.error(validation.reason);
+      return;
+    }
+    history.push({ nodes: nodesRef.current, edges: edgesRef.current });
+    setEdges((eds) => reconnectEdge(oldEdge, newConnection, eds));
+    markDirty();
+  };
+
   function handleNodeDragStart() {
     preDragSnapshot.current = { nodes: nodesRef.current, edges: edgesRef.current };
   }
@@ -258,6 +273,7 @@ export default function FlowCanvasPage() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={handleConnect}
+          onReconnect={handleReconnect}
           onNodeDragStart={handleNodeDragStart}
           onNodeDragStop={handleNodeDragStop}
           onSelectionChange={({ nodeId, edgeId }) => {
@@ -269,7 +285,9 @@ export default function FlowCanvasPage() {
         <NodeSettingsPanel
           node={selectedNode}
           flowId={flowId}
+          channelId={flow.channelId}
           flows={siblingFlows}
+          nodes={nodes}
           onChange={handleNodeConfigChange}
           onDelete={handleDeleteNode}
         />

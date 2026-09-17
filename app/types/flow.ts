@@ -15,9 +15,14 @@ export function buttonPort(index: number): string {
 }
 
 export interface MessageBlock {
-  type: 'text' | 'image' | 'video' | 'file';
+  type: 'text' | 'image' | 'video' | 'audio' | 'file';
   text: string | null;
   mediaId: string | null;
+}
+
+export interface UploadFlowMediaResult {
+  mediaId: string;
+  blockType: 'image' | 'video' | 'audio' | 'file';
 }
 
 export interface MessageButton {

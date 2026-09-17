@@ -18,15 +18,28 @@ import { NotePanel } from './NotePanel';
 interface NodeSettingsPanelProps {
   node: FlowCanvasNode | null;
   flowId: string;
+  channelId: string;
   flows: FlowListItem[];
+  nodes: FlowCanvasNode[];
   onChange: (nodeId: string, config: FlowNodeConfig) => void;
   onDelete: (nodeId: string) => void;
+}
+
+// Тағйирёбандаҳое, ки нодҳои "Гирифтани ҷавоби корбар"/"Танзими тағйирёбанда" дар ҳамин
+// flow месозанд — барои рӯйхати иловаи тағйирёбандаи MessageNodePanel (ниг. ChatPlace-монанд
+// "клик карда илова кун"). Тартиби иҷрои flow ба назар гирифта намешавад — соддагии қасдона.
+function collectCustomVariableKeys(nodes: FlowCanvasNode[]): string[] {
+  const keys = nodes
+    .filter((n) => n.type === 'action')
+    .map((n) => (n.data.config as ActionNodeConfig).variableKey)
+    .filter((key): key is string => !!key);
+  return [...new Set(keys)];
 }
 
 // Панели доимии рост — dispatcher-и алгуи FilterField.tsx: як компонент бар рӯи
 // node.type шакл иваз мекунад. Sheet қасдан истифода нашуд (бо клики берун баста
 // мешавад, ки дар canvas рафтори муқаррарӣ аст — кашидани edge аз як нод ба дигар).
-export function NodeSettingsPanel({ node, flowId, flows, onChange, onDelete }: NodeSettingsPanelProps) {
+export function NodeSettingsPanel({ node, flowId, channelId, flows, nodes, onChange, onDelete }: NodeSettingsPanelProps) {
   const { t } = useTranslation('flows');
 
   if (!node) {
@@ -49,6 +62,8 @@ export function NodeSettingsPanel({ node, flowId, flows, onChange, onDelete }: N
         {node.type === 'message' && (
           <MessageNodePanel
             config={node.data.config as MessageNodeConfig}
+            channelId={channelId}
+            customVariableKeys={collectCustomVariableKeys(nodes)}
             onChange={(config) => onChange(node.id, config)}
           />
         )}

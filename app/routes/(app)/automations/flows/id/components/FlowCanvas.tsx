@@ -7,6 +7,7 @@ import {
   type EdgeChange,
   type NodeChange,
   type OnConnect,
+  type OnReconnect,
   type OnSelectionChangeFunc,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -31,6 +32,7 @@ interface FlowCanvasProps {
   onNodesChange: (changes: NodeChange<FlowCanvasNode>[]) => void;
   onEdgesChange: (changes: EdgeChange<FlowCanvasEdge>[]) => void;
   onConnect: OnConnect;
+  onReconnect: OnReconnect<FlowCanvasEdge>;
   onNodeDragStart: () => void;
   onNodeDragStop: () => void;
   onSelectionChange: (selection: { nodeId: string | null; edgeId: string | null }) => void;
@@ -43,6 +45,7 @@ export function FlowCanvas({
   onNodesChange,
   onEdgesChange,
   onConnect,
+  onReconnect,
   onNodeDragStart,
   onNodeDragStop,
   onSelectionChange,
@@ -63,6 +66,7 @@ export function FlowCanvas({
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onReconnect={onReconnect}
         onNodeDragStart={onNodeDragStart}
         onNodeDragStop={onNodeDragStop}
         onSelectionChange={handleSelectionChange}
