@@ -3,10 +3,12 @@ import { MessageSquareText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getOutputPorts, type FlowCanvasNode } from '~/lib/flowGraph';
 import type { MessageNodeConfig } from '~/types/flow';
+import { useNodeContactCount } from './flowStatsContext';
 import { NodeShell } from './NodeShell';
 
-export function MessageNodeCard({ data, selected }: NodeProps<FlowCanvasNode>) {
+export function MessageNodeCard({ id, data, selected }: NodeProps<FlowCanvasNode>) {
   const { t } = useTranslation('flows');
+  const contactCount = useNodeContactCount(id);
   const config = data.config as MessageNodeConfig;
   // Ҳимояи дифоъӣ: config-и маълумоти кӯҳна/вайроншуда метавонад ин майдонҳоро надошта бошад.
   const blocks = config.blocks ?? [];
@@ -21,6 +23,7 @@ export function MessageNodeCard({ data, selected }: NodeProps<FlowCanvasNode>) {
       accentClassName="text-blue-500"
       title={t('nodes.message')}
       selected={selected}
+      contactCount={contactCount}
       outputs={
         buttons.length > 0
           ? buttons.map((button, index) => ({

@@ -144,12 +144,19 @@ export interface FlowNodeStat {
   contactCount: number;
 }
 
+export interface FlowFailure {
+  sessionId: string;
+  error: string;
+  createdAt: string;
+}
+
 export interface FlowStats {
   totalSessions: number;
   finishedSessions: number;
   activeOrWaitingSessions: number;
   failedSessions: number;
   nodes: FlowNodeStat[];
+  recentFailures: FlowFailure[];
 }
 
 export interface FlowTemplateListItem {

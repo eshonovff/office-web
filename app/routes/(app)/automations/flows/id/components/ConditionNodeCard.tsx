@@ -3,10 +3,12 @@ import { GitFork } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FLOW_PORT_MATCH, FLOW_PORT_NOMATCH, type ConditionNodeConfig } from '~/types/flow';
 import type { FlowCanvasNode } from '~/lib/flowGraph';
+import { useNodeContactCount } from './flowStatsContext';
 import { NodeShell } from './NodeShell';
 
-export function ConditionNodeCard({ data, selected }: NodeProps<FlowCanvasNode>) {
+export function ConditionNodeCard({ id, data, selected }: NodeProps<FlowCanvasNode>) {
   const { t } = useTranslation('flows');
+  const contactCount = useNodeContactCount(id);
   const config = data.config as ConditionNodeConfig;
   // Ҳимояи дифоъӣ: агар config-и як нод (маълумоти кӯҳна/вайроншуда) майдонҳои
   // интизоршударо надошта бошад, як карта набояд тамоми canvas-ро бишиканад.
@@ -19,6 +21,7 @@ export function ConditionNodeCard({ data, selected }: NodeProps<FlowCanvasNode>)
       accentClassName="text-amber-500"
       title={t('nodes.condition')}
       selected={selected}
+      contactCount={contactCount}
       outputs={[
         { id: FLOW_PORT_MATCH, label: t('nodePanels.condition.match') },
         { id: FLOW_PORT_NOMATCH, label: t('nodePanels.condition.nomatch') },

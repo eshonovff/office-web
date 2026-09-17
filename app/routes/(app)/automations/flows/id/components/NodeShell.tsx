@@ -1,5 +1,7 @@
 import { Handle, Position } from '@xyflow/react';
+import { Users } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '~/lib/utils';
 
 interface NodeShellProps {
@@ -8,6 +10,8 @@ interface NodeShellProps {
   accentClassName: string;
   selected?: boolean;
   hasTarget?: boolean;
+  /** Шумораи контактҳое, ки то ин нод расидаанд (FlowStats) — undefined = нишон дода намешавад (масалан Note). */
+  contactCount?: number;
   outputs: { id: string; label: string }[];
   children: ReactNode;
 }
@@ -22,9 +26,11 @@ export function NodeShell({
   accentClassName,
   selected,
   hasTarget = true,
+  contactCount,
   outputs,
   children,
 }: NodeShellProps) {
+  const { t } = useTranslation('flows');
   return (
     <div
       className={cn(
@@ -33,9 +39,19 @@ export function NodeShell({
       )}>
       {hasTarget && <Handle type="target" position={Position.Left} className="!bg-muted-foreground !h-2.5 !w-2.5" />}
 
-      <div className="border-border flex items-center gap-2 rounded-t-lg border-b px-3 py-2">
-        <span className={accentClassName}>{icon}</span>
-        <span className="truncate text-sm font-semibold">{title}</span>
+      <div className="border-border flex items-center justify-between gap-2 rounded-t-lg border-b px-3 py-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className={accentClassName}>{icon}</span>
+          <span className="truncate text-sm font-semibold">{title}</span>
+        </div>
+        {contactCount !== undefined && (
+          <span
+            className="text-muted-foreground flex shrink-0 items-center gap-1 text-2xs"
+            title={t('stats.perNode')}>
+            <Users className="h-3 w-3" />
+            {contactCount}
+          </span>
+        )}
       </div>
 
       <div className="text-muted-foreground text-2xs space-y-1.5 p-3">{children}</div>

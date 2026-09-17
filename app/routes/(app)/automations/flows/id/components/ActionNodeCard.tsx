@@ -3,10 +3,12 @@ import { Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getOutputPorts, type FlowCanvasNode } from '~/lib/flowGraph';
 import type { ActionNodeConfig } from '~/types/flow';
+import { useNodeContactCount } from './flowStatsContext';
 import { NodeShell } from './NodeShell';
 
-export function ActionNodeCard({ data, selected }: NodeProps<FlowCanvasNode>) {
+export function ActionNodeCard({ id, data, selected }: NodeProps<FlowCanvasNode>) {
   const { t } = useTranslation('flows');
+  const contactCount = useNodeContactCount(id);
   const config = data.config as ActionNodeConfig;
   const ports = getOutputPorts('action', config);
 
@@ -16,6 +18,7 @@ export function ActionNodeCard({ data, selected }: NodeProps<FlowCanvasNode>) {
       accentClassName="text-violet-500"
       title={t(`nodePanels.action.kind.${config.kind}`, { defaultValue: t('nodes.action') })}
       selected={selected}
+      contactCount={contactCount}
       outputs={ports.length > 0 ? [{ id: ports[0], label: t('nodePanels.continue') }] : []}>
       <ActionSummary config={config} />
     </NodeShell>

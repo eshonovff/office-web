@@ -268,12 +268,14 @@ export default function FlowCanvasPage() {
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <FlowCanvas
+          flowId={flowId}
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={handleConnect}
           onReconnect={handleReconnect}
+          onDeleteEdge={handleDeleteEdge}
           onNodeDragStart={handleNodeDragStart}
           onNodeDragStop={handleNodeDragStop}
           onSelectionChange={({ nodeId, edgeId }) => {

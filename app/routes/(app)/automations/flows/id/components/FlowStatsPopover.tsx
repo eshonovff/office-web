@@ -72,6 +72,16 @@ function FlowStatsBody({ flowId, nodes }: { flowId: string; nodes: FlowCanvasNod
           ))}
         </div>
       )}
+      {stats.recentFailures.length > 0 && (
+        <div className="border-border space-y-1.5 border-t pt-2">
+          <p className="text-destructive font-medium">{t('stats.recentFailures')}</p>
+          {stats.recentFailures.map((failure) => (
+            <p key={failure.sessionId} className="text-muted-foreground border-destructive/30 border-l-2 pl-1.5">
+              {failure.error}
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

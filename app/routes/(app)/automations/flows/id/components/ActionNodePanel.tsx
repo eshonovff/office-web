@@ -1,4 +1,6 @@
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { flowsApi } from '~/api/flows';
 import { ChipInput } from '~/components/shared/ChipInput';
 import { CustomSelect } from '~/components/shared/CustomSelect';
 import { Input } from '~/components/ui/input';
@@ -25,6 +27,21 @@ interface ActionNodePanelProps {
 
 export function ActionNodePanel({ config, flows, currentFlowId, onChange }: ActionNodePanelProps) {
   const { t } = useTranslation('flows');
+
+  // Санҷиши сабуки ҳалқа: танҳо як қадам ба пеш (target→ин flow мустақим) — на занҷири
+  // пурраи бисёрқадама. Backend (FlowEngine.StartAsync) ҳамаи дарозиро бехатар дастгирӣ
+  // мекунад (ниг. gotoChain) — ин ҷо танҳо огоҳии ЗУДИ UI барои маврди маъмулитарин (A↔B).
+  const targetFlowId = config.kind === 'goto_flow' ? config.targetFlowId : null;
+  const { data: targetFlow } = useQuery({
+    queryKey: ['flows', targetFlowId],
+    queryFn: () => flowsApi.get(targetFlowId!),
+    enabled: !!targetFlowId,
+  });
+  const targetLoopsBack = !!targetFlow?.nodes.some((n) => {
+    if (n.type !== 'action') return false;
+    const actionConfig = n.config as ActionNodeConfig;
+    return actionConfig.kind === 'goto_flow' && actionConfig.targetFlowId === currentFlowId;
+  });
 
   function changeKind(kind: ActionKind) {
     // Иваз кардани kind майдонҳои дигарро тоза мекунад — то config-и кӯҳна аз навъи қаблӣ
@@ -130,6 +147,7 @@ export function ActionNodePanel({ config, flows, currentFlowId, onChange }: Acti
             onChange={(v) => onChange({ ...config, targetFlowId: (v as string) ?? null })}
           />
           <p className="text-muted-foreground text-2xs">{t('nodePanels.action.gotoFlowHint')}</p>
+          {targetLoopsBack && <p className="text-destructive text-2xs">{t('nodePanels.action.gotoFlowLoopWarning')}</p>}
         </div>
       )}
     </div>
