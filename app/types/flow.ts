@@ -18,11 +18,16 @@ export interface MessageBlock {
   type: 'text' | 'image' | 'video' | 'audio' | 'file';
   text: string | null;
   mediaId: string | null;
+  // Small base64 thumbnail generated server-side at upload time — mediaId (Meta's
+  // attachment_id) is opaque and can't be fetched back as a viewable image, so this
+  // is the only way to show a preview after a page reload.
+  previewDataUri?: string | null;
 }
 
 export interface UploadFlowMediaResult {
   mediaId: string;
   blockType: 'image' | 'video' | 'audio' | 'file';
+  previewDataUri?: string | null;
 }
 
 export interface MessageButton {

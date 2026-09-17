@@ -75,7 +75,7 @@ export function MessageNodePanel({ config, channelId, customVariableKeys, onChan
       }),
     onSuccess: (result) => {
       setUploadProgress(0);
-      setMediaBlockValue({ type: result.blockType, text: null, mediaId: result.mediaId });
+      setMediaBlockValue({ type: result.blockType, text: null, mediaId: result.mediaId, previewDataUri: result.previewDataUri ?? null });
     },
     onError: () => {
       setUploadProgress(0);
@@ -265,9 +265,16 @@ export function MessageNodePanel({ config, channelId, customVariableKeys, onChan
             {previewUrl && mediaBlock.type === 'video' && (
               <video src={previewUrl} muted className="h-12 w-12 shrink-0 rounded object-cover" />
             )}
+            {/* previewUrl (blob-и локалӣ) фақат дар давоми ҳамин сессия зинда аст — баъд аз reload,
+                previewDataUri-и захирашуда (thumbnail-и статикӣ, ҳатто барои видео) ҷои онро мегирад. */}
+            {!previewUrl && mediaBlock.previewDataUri && (
+              <img src={mediaBlock.previewDataUri} alt="" className="h-12 w-12 shrink-0 rounded object-cover" />
+            )}
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">{t(`nodePanels.message.mediaType.${mediaBlock.type}`)}</p>
-              {!previewUrl && <p className="text-muted-foreground text-2xs">{t('nodePanels.message.mediaAttachedNoPreview')}</p>}
+              {!previewUrl && !mediaBlock.previewDataUri && (
+                <p className="text-muted-foreground text-2xs">{t('nodePanels.message.mediaAttachedNoPreview')}</p>
+              )}
             </div>
             <Button type="button" variant="ghost" size="icon-sm" onClick={removeMedia}>
               <X className="h-3.5 w-3.5" />

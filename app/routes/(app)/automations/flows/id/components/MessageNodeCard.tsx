@@ -37,7 +37,16 @@ export function MessageNodeCard({ id, data, selected }: NodeProps<FlowCanvasNode
       ) : (
         <>
           {firstText && <p className="line-clamp-3">{firstText}</p>}
-          {mediaBlock && <p className="text-muted-foreground">📎 {t(`nodePanels.message.mediaType.${mediaBlock.type}`)}</p>}
+          {mediaBlock && (
+            <div className="flex items-center gap-1.5">
+              {mediaBlock.previewDataUri ? (
+                <img src={mediaBlock.previewDataUri} alt="" className="h-6 w-6 shrink-0 rounded object-cover" />
+              ) : (
+                <span>📎</span>
+              )}
+              <p className="text-muted-foreground">{t(`nodePanels.message.mediaType.${mediaBlock.type}`)}</p>
+            </div>
+          )}
         </>
       )}
     </NodeShell>
