@@ -1,7 +1,5 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
 import { customerAuthApi } from '~/api/customerAuth';
 import { Avatar, AvatarFallback } from '~/components/ui/avatar';
 import {
@@ -13,14 +11,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
+import { leaveCustomerArea } from '~/lib/customerSession';
 import { useCustomerAuthStore } from '~/store/useCustomerAuthStore';
 
 // Mirrors UserNav (staff) — own store, own logout call, and shows email instead of
 // @username (a Customer has no username).
 export function CustomerUserNav() {
   const { t } = useTranslation('customerAuth');
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const customer = useCustomerAuthStore((s) => s.customer);
 
   const initials = customer?.fullName
@@ -36,9 +33,7 @@ export function CustomerUserNav() {
     try {
       await customerAuthApi.logout();
     } finally {
-      useCustomerAuthStore.getState().clear();
-      queryClient.clear();
-      navigate('/');
+      leaveCustomerArea();
     }
   }
 

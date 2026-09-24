@@ -13,7 +13,8 @@ import {
   type OnSelectionChangeFunc,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useMemo } from 'react';
+import { useTheme } from 'next-themes';
+import { useMemo, type CSSProperties } from 'react';
 import type { FlowCanvasEdge, FlowCanvasNode } from '~/lib/flowGraph';
 import type { FlowNodeType } from '~/types/flow';
 import { ActionNodeCard } from './ActionNodeCard';
@@ -63,6 +64,7 @@ export function FlowCanvas({
   onAddNode,
 }: FlowCanvasProps) {
   const flowApi = useFlowBuilderApi();
+  const { resolvedTheme } = useTheme();
   const handleSelectionChange: OnSelectionChangeFunc = ({ nodes: selectedNodes, edges: selectedEdges }) =>
     onSelectionChange({
       nodeId: selectedNodes[0]?.id ?? null,
@@ -89,6 +91,10 @@ export function FlowCanvas({
     <div className="relative flex-1">
       <FlowNodeStatsProvider value={nodeCountById}>
         <ReactFlow
+          // Follow the app theme — without it the zoom controls and minimap stay light in dark mode.
+          colorMode={resolvedTheme === 'dark' ? 'dark' : 'light'}
+          // …but keep the page's own background instead of React Flow's stock grey.
+          style={{ '--xy-background-color': 'var(--background)' } as CSSProperties}
           nodes={nodes}
           edges={renderedEdges}
           nodeTypes={nodeTypes}

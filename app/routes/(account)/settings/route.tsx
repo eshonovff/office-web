@@ -18,6 +18,7 @@ import { cn } from '~/lib/utils';
 import { useCustomerAuthStore } from '~/store/useCustomerAuthStore';
 import type { CustomerChannel } from '~/types/customerChannels';
 import { SUBSCRIPTION_CATALOG_QUERY_KEY } from '../billing/queryKeys';
+import { DeleteAccountSection } from './DeleteAccountSection';
 import { CUSTOMER_CHANNELS_QUERY_KEY, useInstagramConnect } from './useInstagramConnect';
 
 export default function CustomerSettingsPage() {
@@ -110,6 +111,8 @@ export default function CustomerSettingsPage() {
           )}
         </CardContent>
       </Card>
+
+      <DeleteAccountSection />
 
       <Modal
         open={connect.phase === 'accounts' || connect.phase === 'connecting'}

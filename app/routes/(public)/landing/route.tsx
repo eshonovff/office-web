@@ -1,9 +1,20 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
+import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 
 export default function LandingPage() {
   const { t } = useTranslation('customerAuth');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Set by leaveCustomerArea after an account deletion (a full page load, so no toast could
+  // survive it) — shown once, then dropped from the URL so a reload doesn't repeat it.
+  useEffect(() => {
+    if (searchParams.get('accountDeleted') !== '1') return;
+    toast.success(t('settings.danger.deleted'), { id: 'account-deleted' });
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams, t]);
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">

@@ -24,6 +24,10 @@ export const customerAuthApi = {
   logout: async (): Promise<void> => {
     await customerApiClient.post('/auth/logout');
   },
+  /** Irreversible: the backend deletes only if confirmEmail equals the account's email. */
+  deleteAccount: async (confirmEmail: string): Promise<void> => {
+    await customerApiClient.post('/account/delete', { confirmEmail });
+  },
   me: async (): Promise<CustomerMeResponse> => {
     const { data } = await customerApiClient.get<CustomerMeResponse>('/auth/me');
     return data;
