@@ -11,6 +11,8 @@ export interface SubscriptionPlan {
 
 export interface PaymentCard {
   bank: string;
+  /** "dc", "alif", … — maps to a logo in BANK_LOGOS; unknown codes just show no logo. */
+  bankCode: string;
   cardNumber: string;
   holderName: string;
 }

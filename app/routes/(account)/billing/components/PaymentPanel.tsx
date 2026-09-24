@@ -17,6 +17,12 @@ import { CopyButton } from './CopyButton';
 const RECEIPT_ACCEPT = '.jpg,.jpeg,.png,.webp,.pdf';
 const RECEIPT_MAX_BYTES = 10 * 1024 * 1024;
 
+// Keyed by the backend's Subscriptions:PaymentCards[].BankCode; files live in public/banks/.
+const BANK_LOGOS: Record<string, string> = {
+  dc: '/banks/dc.svg',
+  alif: '/banks/alif.svg',
+};
+
 interface PaymentPanelProps {
   request: SubscriptionRequest;
   catalog: SubscriptionCatalog;
@@ -125,10 +131,17 @@ export function PaymentPanel({ request, catalog, onChangePlan }: PaymentPanelPro
           ) : (
             <ul className="space-y-2">
               {catalog.paymentCards.map((card) => (
-                <li key={card.cardNumber} className="flex items-center gap-2 rounded-xl border p-3">
+                <li key={card.cardNumber} className="flex items-center gap-3 rounded-xl border p-3">
+                  {BANK_LOGOS[card.bankCode] && (
+                    // Always on white: both official logos have dark-on-light wordmarks
+                    // (Alif's is #222) that vanish on the dark theme's background.
+                    <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-lg bg-white px-1.5 sm:w-20">
+                      <img src={BANK_LOGOS[card.bankCode]} alt={card.bank} className="max-h-7 w-full object-contain" />
+                    </span>
+                  )}
                   <div className="min-w-0">
                     <p className="text-muted-foreground text-xs">{card.bank}</p>
-                    <p className="font-mono text-base font-semibold tabular-nums">
+                    <p className="font-mono text-sm font-semibold tabular-nums sm:text-base">
                       {formatCardNumber(card.cardNumber)}
                     </p>
                     <p className="text-muted-foreground truncate text-xs">{card.holderName}</p>
