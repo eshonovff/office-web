@@ -3,6 +3,7 @@ import { authApi } from "~/api/auth";
 import { AppSidebar } from "~/components/layout/Sidebar";
 import Header from "~/components/layout/Header";
 import { useRealtimeConnection } from "~/hooks/useRealtimeConnection";
+import { isSessionRejected, ServerUnreachableError, withTransientRetry } from "~/lib/authFailure";
 import { refreshAccessToken } from "~/lib/client";
 import { SidebarProvider } from "~/components/ui/sidebar";
 import { canAccessRoute } from "~/config/permissions";
@@ -22,19 +23,25 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
 
   // On a hard refresh the access token only lives in memory and is gone —
   // refresh it via the httpOnly cookie first so /auth/me never has to fire
-  // (and 401) without a token, then quietly bounce to /login if the
-  // refresh cookie itself is dead.
+  // (and 401) without a token. Only a REFUSED session goes to /login: if the
+  // server is merely unreachable (a restart, a deploy) retry, then show the
+  // "server unavailable" page — sending a logged-in user to /login for that
+  // is what kicked people out every time the API restarted.
   if (!useAuthStore.getState().accessToken) {
     try {
-      await refreshAccessToken();
-    } catch {
-      return redirect("/login");
+      await withTransientRetry(refreshAccessToken);
+    } catch (error) {
+      if (isSessionRejected(error)) return redirect("/login");
+      throw new ServerUnreachableError(error);
     }
   }
 
-  const me = await authApi.me().catch(() => null);
-  if (!me) {
-    return redirect("/login");
+  let me;
+  try {
+    me = await withTransientRetry(() => authApi.me());
+  } catch (error) {
+    if (isSessionRejected(error)) return redirect("/login");
+    throw new ServerUnreachableError(error);
   }
 
   useAuthStore.getState().setUser(me);

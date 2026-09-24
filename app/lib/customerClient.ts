@@ -1,6 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 import i18next from 'i18next';
 import { toast } from 'sonner';
+import { isSessionRejected, withCrossTabLock } from '~/lib/authFailure';
 import { useCustomerAuthStore } from '~/store/useCustomerAuthStore';
 import type { CustomerRefreshResponse } from '~/types/customerAuth';
 
@@ -30,8 +31,9 @@ let refreshPromise: Promise<string> | null = null;
 
 export function refreshCustomerAccessToken(): Promise<string> {
   if (!refreshPromise) {
-    refreshPromise = refreshClient
-      .post<CustomerRefreshResponse>('/auth/refresh')
+    refreshPromise = withCrossTabLock('office-customer-refresh', () =>
+      refreshClient.post<CustomerRefreshResponse>('/auth/refresh')
+    )
       .then(({ data }) => {
         useCustomerAuthStore.getState().setAccessToken(data.accessToken);
         return data.accessToken;
@@ -101,7 +103,12 @@ customerApiClient.interceptors.response.use(
         return customerApiClient(config);
       } catch (refreshError) {
         onRefreshed(null);
-        customerLogout();
+        // Same rule as the staff client: only a refused refresh ends the session.
+        if (isSessionRejected(refreshError)) {
+          customerLogout();
+        } else {
+          toast.error(i18next.t('errors.noConnection', { ns: 'common' }), { id: 'no-connection' });
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -113,7 +120,7 @@ customerApiClient.interceptors.response.use(
     }
 
     if (!error.response) {
-      toast.error(i18next.t('errors.noConnection', { ns: 'common' }));
+      toast.error(i18next.t('errors.noConnection', { ns: 'common' }), { id: 'no-connection' });
       return Promise.reject(error);
     }
 

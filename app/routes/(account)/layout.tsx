@@ -3,6 +3,7 @@ import { customerAuthApi } from '~/api/customerAuth';
 import { CustomerHeader } from '~/components/customerLayout/CustomerHeader';
 import { CustomerSidebar } from '~/components/customerLayout/CustomerSidebar';
 import { SidebarProvider } from '~/components/ui/sidebar';
+import { isSessionRejected, ServerUnreachableError, withTransientRetry } from '~/lib/authFailure';
 import { refreshCustomerAccessToken } from '~/lib/customerClient';
 import { useCustomerAuthStore } from '~/store/useCustomerAuthStore';
 
@@ -10,17 +11,23 @@ import { useCustomerAuthStore } from '~/store/useCustomerAuthStore';
 // layout inherits it. Runs before the child route's own loader/component, so by the time
 // those run, useCustomerAuthStore already has the current customer.
 export async function clientLoader() {
+  // Same rule as (app)/layout.tsx: only a refused session goes to the login page; an
+  // unreachable server is retried, then shown as "server unavailable".
   if (!useCustomerAuthStore.getState().accessToken) {
     try {
-      await refreshCustomerAccessToken();
-    } catch {
-      return redirect('/account/login');
+      await withTransientRetry(refreshCustomerAccessToken);
+    } catch (error) {
+      if (isSessionRejected(error)) return redirect('/account/login');
+      throw new ServerUnreachableError(error);
     }
   }
 
-  const customer = await customerAuthApi.me().catch(() => null);
-  if (!customer) {
-    return redirect('/account/login');
+  let customer;
+  try {
+    customer = await withTransientRetry(() => customerAuthApi.me());
+  } catch (error) {
+    if (isSessionRejected(error)) return redirect('/account/login');
+    throw new ServerUnreachableError(error);
   }
 
   useCustomerAuthStore.getState().setCustomer(customer);
