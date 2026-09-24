@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
+import { useFlowBuilderApi } from '~/lib/flowBuilderApi';
 import { BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { flowsApi } from '~/api/flows';
 import { Button } from '~/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { Skeleton } from '~/components/ui/skeleton';
@@ -35,10 +35,11 @@ export function FlowStatsPopover({ flowId, nodes }: FlowStatsPopoverProps) {
 }
 
 function FlowStatsBody({ flowId, nodes }: { flowId: string; nodes: FlowCanvasNode[] }) {
+  const flowApi = useFlowBuilderApi();
   const { t } = useTranslation('flows');
   const { data: stats, isLoading } = useQuery({
     queryKey: ['flows', flowId, 'stats'],
-    queryFn: () => flowsApi.stats(flowId),
+    queryFn: () => flowApi.flows.stats(flowId),
   });
 
   if (isLoading || !stats) {

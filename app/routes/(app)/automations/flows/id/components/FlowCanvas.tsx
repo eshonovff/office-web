@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useFlowBuilderApi } from '~/lib/flowBuilderApi';
 import {
   Background,
   Controls,
@@ -13,7 +14,6 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useMemo } from 'react';
-import { flowsApi } from '~/api/flows';
 import type { FlowCanvasEdge, FlowCanvasNode } from '~/lib/flowGraph';
 import type { FlowNodeType } from '~/types/flow';
 import { ActionNodeCard } from './ActionNodeCard';
@@ -62,6 +62,7 @@ export function FlowCanvas({
   onSelectionChange,
   onAddNode,
 }: FlowCanvasProps) {
+  const flowApi = useFlowBuilderApi();
   const handleSelectionChange: OnSelectionChangeFunc = ({ nodes: selectedNodes, edges: selectedEdges }) =>
     onSelectionChange({
       nodeId: selectedNodes[0]?.id ?? null,
@@ -71,7 +72,10 @@ export function FlowCanvas({
   // Ҳамон queryKey-и FlowStatsPopover — React Query кэшро мубодила мекунад, дархости
   // такрории шабака намеравад. Аломати "чанд кас то кадом қадам расид"-ро рост дар рӯи
   // ҳар корт нишон медиҳад (на танҳо дар popover-и алоҳида).
-  const { data: stats } = useQuery({ queryKey: ['flows', flowId, 'stats'], queryFn: () => flowsApi.stats(flowId) });
+  const { data: stats } = useQuery({
+    queryKey: ['flows', flowId, 'stats'],
+    queryFn: () => flowApi.flows.stats(flowId),
+  });
   const nodeCountById = useMemo(() => new Map(stats?.nodes.map((n) => [n.nodeId, n.contactCount]) ?? []), [stats]);
 
   // onDelete тавассути data мегузарад (на мустақим ба edges-и аслӣ навишта мешавад) — то

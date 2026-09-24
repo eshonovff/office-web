@@ -1,8 +1,8 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useFlowBuilderApi } from '~/lib/flowBuilderApi';
 import { Check, Film } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { commentAutomationApi } from '~/api/commentAutomation';
 import { Modal } from '~/components/shared/Modal';
 import { UniversalImage } from '~/components/shared/UniversalImage';
 import { Button } from '~/components/ui/button';
@@ -18,13 +18,14 @@ interface MediaPickerModalProps {
 }
 
 export function MediaPickerModal({ channelId, open, selectedIds, onClose, onConfirm }: MediaPickerModalProps) {
+  const flowApi = useFlowBuilderApi();
   const { t } = useTranslation('instagramAutomation');
   const [draftSelection, setDraftSelection] = useState<string[]>(selectedIds);
   const [tab, setTab] = useState<'all' | 'selected'>('all');
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['instagram-media', channelId],
-    queryFn: ({ pageParam }: { pageParam?: string }) => commentAutomationApi.listInstagramMedia(channelId, pageParam),
+    queryFn: ({ pageParam }: { pageParam?: string }) => flowApi.listInstagramMedia(channelId, pageParam),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: open,

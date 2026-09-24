@@ -41,7 +41,9 @@ export function CustomerNavMain({ items }: CustomerNavMainProps) {
 
         return (
           <SidebarMenuItem key={item.title}>
-            <NavLink to={item.url || '#'} end className="block w-full">
+            {/* `end` only for the home item: /account is a prefix of every мизоҷ URL, while
+                "Автоматизатсияҳо" must stay highlighted inside the flow editor below it. */}
+            <NavLink to={item.url || '#'} end={item.url === '/account'} className="block w-full">
               {({ isActive }) => (
                 <SidebarMenuButton isActive={isActive} tooltip={item.title}>
                   {content}

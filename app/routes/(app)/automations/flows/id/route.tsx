@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useFlowBuilderApi } from '~/lib/flowBuilderApi';
 import { addEdge, reconnectEdge, useEdgesState, useNodesState, type OnConnect, type OnReconnect } from '@xyflow/react';
 import { ArrowLeft, Loader2, Power, PowerOff, Settings } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import { toast } from 'sonner';
-import { flowsApi } from '~/api/flows';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { useDebounce } from '~/hooks/useDebounce';
@@ -33,18 +33,19 @@ function isEditableElement(target: EventTarget | null): boolean {
 }
 
 export default function FlowCanvasPage() {
+  const flowApi = useFlowBuilderApi();
   const { id } = useParams<{ id: string }>();
   const flowId = id!;
   const { t } = useTranslation(['flows', 'automations', 'common']);
   const queryClient = useQueryClient();
   const history = useFlowHistoryStore();
 
-  const { data: flow, isLoading } = useQuery({ queryKey: ['flows', flowId], queryFn: () => flowsApi.get(flowId) });
+  const { data: flow, isLoading } = useQuery({ queryKey: ['flows', flowId], queryFn: () => flowApi.flows.get(flowId) });
   // For the goto_flow action's target picker (ActionNodePanel) — needs every other flow on
   // this flow's channel, so it only fires once the channel is known.
   const { data: siblingFlows = [] } = useQuery({
     queryKey: ['channels', flow?.channelId, 'flows'],
-    queryFn: () => flowsApi.list(flow!.channelId),
+    queryFn: () => flowApi.flows.list(flow!.channelId),
     enabled: !!flow?.channelId,
   });
 
@@ -84,7 +85,7 @@ export default function FlowCanvasPage() {
   useEffect(() => {
     if (!hydratedForFlowId.current || debouncedDirtyTick === 0) return;
     setSaveStatus('saving');
-    flowsApi
+    flowApi.flows
       .updateGraph(flowId, toGraphRequest(nodesRef.current, edgesRef.current))
       .then(() => setSaveStatus('saved'))
       .catch(() => {
@@ -95,7 +96,7 @@ export default function FlowCanvasPage() {
   }, [debouncedDirtyTick]);
 
   const { mutate: updateFlowSettings, isPending: isSavingSettings } = useMutation({
-    mutationFn: (payload: UpdateFlowRequest) => flowsApi.update(flowId, payload),
+    mutationFn: (payload: UpdateFlowRequest) => flowApi.flows.update(flowId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['flows', flowId] });
       queryClient.invalidateQueries({ queryKey: ['automations'] });
@@ -105,7 +106,7 @@ export default function FlowCanvasPage() {
   });
 
   const { mutate: toggleActive } = useMutation({
-    mutationFn: (isActive: boolean) => flowsApi.setActive(flowId, isActive),
+    mutationFn: (isActive: boolean) => flowApi.flows.setActive(flowId, isActive),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['flows', flowId] });
       queryClient.invalidateQueries({ queryKey: ['automations'] });
@@ -230,7 +231,7 @@ export default function FlowCanvasPage() {
     <div className="flex h-full min-h-0 flex-col">
       <div className="border-border flex flex-wrap items-center justify-between gap-2 border-b p-3">
         <div className="flex min-w-0 items-center gap-2">
-          <Button variant="ghost" size="icon" render={<Link to="/automations" />}>
+          <Button variant="ghost" size="icon" render={<Link to={flowApi.paths.list} />}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <span className="truncate font-semibold">{flow.name}</span>

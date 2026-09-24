@@ -11,6 +11,9 @@ export default [
   layout('routes/(account)/layout.tsx', [
     route('account', 'routes/(account)/account/route.tsx'),
     route('account/billing', 'routes/(account)/billing/route.tsx'),
+    route('account/automations', 'routes/(account)/automations/route.tsx'),
+    route('account/automations/flows/:id', 'routes/(account)/automations/flows/id/route.tsx'),
+    route('account/settings', 'routes/(account)/settings/route.tsx'),
   ]),
 
   layout('routes/(auth)/layout.tsx', [route('login', 'routes/(auth)/login/route.tsx')]),
