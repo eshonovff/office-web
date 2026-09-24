@@ -7,11 +7,11 @@
 > Хулосаи ин сабт танҳо кори охирин аст, на ҳамаи он давра.
 
 **feat/fe-phase-13-subscriptions (аз `feat/fe-customer-registration` бурида шуд, ҳарду ҳанӯз ба
-`dev` merge нашудаанд):** Обунаи мизоз — backend: office-api `feat/phase-13-subscriptions`
+`dev` merge нашудаанд):** Обунаи мизоҷ — backend: office-api `feat/phase-13-subscriptions`
 (нақша ва тасмимҳо: `office-api/docs/phases/phase-13-subscriptions.md`).
 - `/account/billing` — интихоби тариф ва муддат → маблағи ягона (мас. 200.84) + кортҳо (бо
   тугмаи нусха) → бор кардани чек → "дар санҷиш" → таърихи дархостҳо (сабаби рад намоён)
-- Footer-и sidebar-и мизоз: trial (N рӯз монд) / тариф то сана / мӯҳлат гузашт + пайванд ба billing
+- Footer-и sidebar-и мизоҷ: trial (N рӯз монд) / тариф то сана / мӯҳлат гузашт + пайванд ба billing
 - `CustomerMeResponse.access` (аз `/me`), `app/lib/customerSubscription.ts` (pure + тест)
 - Staff: `Permissions.Subscriptions.Manage` + тарҷумаи `roles.json` (саҳифаи модератор — баъдтар)
 - Ҳоло `Subscriptions:PaymentCards` дар backend холист → UI "пардохт ҳоло қабул намешавад"
@@ -21,12 +21,12 @@
   иваз кардани тариф — desktop ва 390px
 
 **feat/fe-customer-registration (кор дар ин бранч, ҳанӯз ба `dev` merge нашуда):**
-Сабти худии мизоз — office-api-и `feat(customer-auth)` (email+parol, коди 6-рақама,
+Сабти худии мизоҷ — office-api-и `feat(customer-auth)` (email+parol, коди 6-рақама,
 `/api/public/auth/*`, JWT scheme-и худ) акнун frontend дорад:
 - `/` дигар паси login-и корманд нест — саҳифаи ҷамъиятии landing шуд (`(public)/*`)
 - `/register` → `/verify-email?email=` (коди 6-рақама, cooldown 60с) → `/account`
-- `/account/login` — вуруди мизоз; 403 (email тасдиқнашуда) → пайванд ба verify-email
-- `/account` — placeholder-и хурд (салом + баромадан), чун "мизоз баъд аз вуруд чӣ мебинад"
+- `/account/login` — вуруди мизоҷ; 403 (email тасдиқнашуда) → пайванд ба verify-email
+- `/account` — placeholder-и хурд (салом + баромадан), чун "мизоҷ баъд аз вуруд чӣ мебинад"
   ҳанӯз ҳалнашуда монд (ниг. чати қаблӣ)
 - `useCustomerAuthStore`/`customerClient.ts`/`api/customerAuth.ts` — комилан ҷудо аз
   ҳамтои кормандон (`useAuthStore`/`client.ts`/`api/auth.ts`): токен, cookie, interceptor,

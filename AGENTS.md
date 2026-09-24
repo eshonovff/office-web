@@ -23,7 +23,7 @@ Frontend-и платформаи дохилии SMARTWEB TJ. Backend аллак�
 
 > 2026-09: `/` дигар паси login нест — саҳифаи ҷамъиятии landing аст, бо
 > `(public)/*` (landing, register, verify-email, account/login, account) барои
-> мизозони худсабтшуда. Кормандон бетағйир — `(auth)/login` → `(app)/*`,
+> мизоҷони худсабтшуда. Кормандон бетағйир — `(auth)/login` → `(app)/*`,
 > ҳама паси login монда. Ду системаи корбар комилан ҷудо: `office-api`-и
 > `Customer` бо JWT scheme-и худ, ҳеҷ гоҳ бо `User`/роль омехта намешавад.
 
