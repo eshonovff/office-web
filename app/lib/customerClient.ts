@@ -1,20 +1,20 @@
-import axios, { type InternalAxiosRequestConfig } from "axios";
-import i18next from "i18next";
-import { toast } from "sonner";
-import { useCustomerAuthStore } from "~/store/useCustomerAuthStore";
-import type { CustomerRefreshResponse } from "~/types/customerAuth";
+import axios, { type InternalAxiosRequestConfig } from 'axios';
+import i18next from 'i18next';
+import { toast } from 'sonner';
+import { useCustomerAuthStore } from '~/store/useCustomerAuthStore';
+import type { CustomerRefreshResponse } from '~/types/customerAuth';
 
 // Deliberately its own axios instance, not a parameterized apiClient — customer requests
 // carry a different bearer token (useCustomerAuthStore, signed with a different backend key),
 // a different refresh cookie (customer_refresh_token), and a 401 here must never trigger the
 // staff logout()/redirect-to-/login in client.ts.
-const baseURL = (import.meta.env.VITE_API_URL || "") + "/api/public";
+const baseURL = (import.meta.env.VITE_API_URL || '') + '/api/public';
 
 export const customerApiClient = axios.create({
   baseURL,
   withCredentials: true,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 });
 
@@ -31,7 +31,7 @@ let refreshPromise: Promise<string> | null = null;
 export function refreshCustomerAccessToken(): Promise<string> {
   if (!refreshPromise) {
     refreshPromise = refreshClient
-      .post<CustomerRefreshResponse>("/auth/refresh")
+      .post<CustomerRefreshResponse>('/auth/refresh')
       .then(({ data }) => {
         useCustomerAuthStore.getState().setAccessToken(data.accessToken);
         return data.accessToken;
@@ -44,7 +44,7 @@ export function refreshCustomerAccessToken(): Promise<string> {
 }
 
 // These forms all show their own inline error — no duplicate toast on top.
-const SILENT_URLS = ["/auth/register", "/auth/verify-email", "/auth/resend-code", "/auth/login"];
+const SILENT_URLS = ['/auth/register', '/auth/verify-email', '/auth/resend-code', '/auth/login'];
 const isSilent = (url?: string): boolean => SILENT_URLS.some((silent) => url?.includes(silent));
 
 customerApiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
@@ -65,7 +65,7 @@ function onRefreshed(token: string | null) {
 
 function customerLogout() {
   useCustomerAuthStore.getState().clear();
-  window.location.href = "/account/login";
+  window.location.href = '/account/login';
 }
 
 type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
@@ -113,15 +113,15 @@ customerApiClient.interceptors.response.use(
     }
 
     if (!error.response) {
-      toast.error(i18next.t("errors.noConnection", { ns: "common" }));
+      toast.error(i18next.t('errors.noConnection', { ns: 'common' }));
       return Promise.reject(error);
     }
 
     const serverMessage: string | undefined = error.response.data?.detail || error.response.data?.title;
-    const message = serverMessage || i18next.t("errors.unknown", { ns: "common" });
+    const message = serverMessage || i18next.t('errors.unknown', { ns: 'common' });
 
     toast.error(message, { id: requestUrl ?? message });
 
     return Promise.reject(error);
-  },
+  }
 );

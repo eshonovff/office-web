@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { loadScript } from "~/lib/loadScript";
+import { useEffect, useRef } from 'react';
+import { loadScript } from '~/lib/loadScript';
 
 // Google's own type isn't published as a lightweight package worth adding — this is the
 // minimal shape Google Identity Services actually exposes on window.
@@ -8,10 +8,7 @@ declare global {
     google?: {
       accounts: {
         id: {
-          initialize: (config: {
-            client_id: string;
-            callback: (response: { credential: string }) => void;
-          }) => void;
+          initialize: (config: { client_id: string; callback: (response: { credential: string }) => void }) => void;
           renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
         };
       };
@@ -36,7 +33,7 @@ export function GoogleSignInButton({ onIdToken }: GoogleSignInButtonProps) {
     if (!CLIENT_ID) return;
     let cancelled = false;
 
-    loadScript("https://accounts.google.com/gsi/client").then(() => {
+    loadScript('https://accounts.google.com/gsi/client').then(() => {
       if (cancelled || !window.google || !containerRef.current) return;
 
       window.google.accounts.id.initialize({
@@ -44,8 +41,8 @@ export function GoogleSignInButton({ onIdToken }: GoogleSignInButtonProps) {
         callback: (response) => onIdTokenRef.current(response.credential),
       });
       window.google.accounts.id.renderButton(containerRef.current, {
-        theme: "outline",
-        size: "large",
+        theme: 'outline',
+        size: 'large',
         width: 320,
       });
     });

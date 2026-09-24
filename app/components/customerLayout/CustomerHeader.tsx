@@ -1,7 +1,7 @@
-import { LanguageSwitcher } from "~/components/layout/LanguageSwitcher";
-import { ModeToggle } from "~/components/layout/ModeToggle";
-import { SidebarTrigger } from "~/components/ui/sidebar";
-import { CustomerUserNav } from "./CustomerUserNav";
+import { LanguageSwitcher } from '~/components/layout/LanguageSwitcher';
+import { ModeToggle } from '~/components/layout/ModeToggle';
+import { SidebarTrigger } from '~/components/ui/sidebar';
+import { CustomerUserNav } from './CustomerUserNav';
 
 // Mirrors Header (staff) — no breadcrumbs (one destination so far, nothing to trail) and no
 // NotificationBell (no notification system exists for customers yet).

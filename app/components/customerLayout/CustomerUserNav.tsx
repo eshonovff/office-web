@@ -1,9 +1,9 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, LogOut } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router";
-import { customerAuthApi } from "~/api/customerAuth";
-import { Avatar, AvatarFallback } from "~/components/ui/avatar";
+import { useQueryClient } from '@tanstack/react-query';
+import { ChevronDown, LogOut } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import { customerAuthApi } from '~/api/customerAuth';
+import { Avatar, AvatarFallback } from '~/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,25 +12,25 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
-import { useCustomerAuthStore } from "~/store/useCustomerAuthStore";
+} from '~/components/ui/dropdown-menu';
+import { useCustomerAuthStore } from '~/store/useCustomerAuthStore';
 
 // Mirrors UserNav (staff) — own store, own logout call, and shows email instead of
 // @username (a Customer has no username).
 export function CustomerUserNav() {
-  const { t } = useTranslation("customerAuth");
+  const { t } = useTranslation('customerAuth');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const customer = useCustomerAuthStore((s) => s.customer);
 
   const initials = customer?.fullName
     ? customer.fullName
-        .split(" ")
+        .split(' ')
         .map((n) => n[0])
-        .join("")
+        .join('')
         .toUpperCase()
         .slice(0, 2)
-    : "U";
+    : 'U';
 
   async function handleLogout() {
     try {
@@ -38,7 +38,7 @@ export function CustomerUserNav() {
     } finally {
       useCustomerAuthStore.getState().clear();
       queryClient.clear();
-      navigate("/");
+      navigate('/');
     }
   }
 
@@ -83,7 +83,7 @@ export function CustomerUserNav() {
             onClick={handleLogout}
             className="text-destructive focus:text-destructive focus:bg-destructive/5 cursor-pointer rounded-md px-3 py-2">
             <LogOut className="mr-2 h-4 w-4" />
-            <span className="text-sm font-medium">{t("account.logout")}</span>
+            <span className="text-sm font-medium">{t('account.logout')}</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

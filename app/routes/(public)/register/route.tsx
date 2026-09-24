@@ -1,20 +1,20 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { AlertCircle, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router";
-import { customerAuthApi } from "~/api/customerAuth";
-import { ExternalAuthButtons } from "~/components/auth/ExternalAuthButtons";
-import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
-import { FormInput } from "~/components/ui/form/FormInput";
-import { useForm } from "~/hooks/useForm";
-import { createRegisterSchema, type RegisterForm } from "~/validations/customerAuth";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link, useNavigate } from 'react-router';
+import { customerAuthApi } from '~/api/customerAuth';
+import { ExternalAuthButtons } from '~/components/auth/ExternalAuthButtons';
+import { Button } from '~/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
+import { FormInput } from '~/components/ui/form/FormInput';
+import { useForm } from '~/hooks/useForm';
+import { createRegisterSchema, type RegisterForm } from '~/validations/customerAuth';
 
 export default function RegisterPage() {
-  const { t } = useTranslation("customerAuth");
-  const { t: tVal } = useTranslation("validation");
+  const { t } = useTranslation('customerAuth');
+  const { t: tVal } = useTranslation('validation');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
@@ -25,7 +25,7 @@ export default function RegisterPage() {
     formState: { isSubmitting: isFormSubmitting },
   } = useForm<RegisterForm>({
     resolver: zodResolver(schema),
-    defaultValues: { fullName: "", email: "", password: "" },
+    defaultValues: { fullName: '', email: '', password: '' },
   });
 
   const {
@@ -48,18 +48,24 @@ export default function RegisterPage() {
     <div className="flex flex-1 items-center justify-center px-4 py-12">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">{t("register.title")}</CardTitle>
-          <CardDescription>{t("register.subtitle")}</CardDescription>
+          <CardTitle className="text-2xl">{t('register.title')}</CardTitle>
+          <CardDescription>{t('register.subtitle')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit((data) => mutate(data))} className="space-y-4">
-            <FormInput control={control} name="fullName" label={t("register.fullName")} type="text" autoComplete="name" />
-            <FormInput control={control} name="email" label={t("register.email")} type="email" autoComplete="email" />
+            <FormInput
+              control={control}
+              name="fullName"
+              label={t('register.fullName')}
+              type="text"
+              autoComplete="name"
+            />
+            <FormInput control={control} name="email" label={t('register.email')} type="email" autoComplete="email" />
             <FormInput
               control={control}
               name="password"
-              label={t("register.password")}
-              type={showPassword ? "text" : "password"}
+              label={t('register.password')}
+              type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
               endIcon={
                 showPassword ? (
@@ -78,13 +84,13 @@ export default function RegisterPage() {
             )}
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? t("register.submitting") : t("register.submit")}
+              {isSubmitting ? t('register.submitting') : t('register.submit')}
             </Button>
 
             <p className="text-muted-foreground text-center text-sm">
-              {t("register.haveAccount")}{" "}
+              {t('register.haveAccount')}{' '}
               <Link to="/account/login" className="text-primary hover:underline">
-                {t("register.loginLink")}
+                {t('register.loginLink')}
               </Link>
             </p>
           </form>

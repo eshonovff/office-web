@@ -6,7 +6,7 @@ export function loadScript(src: string): Promise<void> {
   let promise = loadedScripts.get(src);
   if (!promise) {
     promise = new Promise((resolve, reject) => {
-      const script = document.createElement("script");
+      const script = document.createElement('script');
       script.src = src;
       script.async = true;
       script.onload = () => resolve();

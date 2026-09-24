@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import type { CustomerMeResponse } from "~/types/customerAuth";
+import { create } from 'zustand';
+import type { CustomerMeResponse } from '~/types/customerAuth';
 
 interface CustomerAuthState {
   accessToken: string | null;

@@ -1,16 +1,11 @@
-import { useEffect, useRef } from "react";
-import { loadScript } from "~/lib/loadScript";
+import { useEffect, useRef } from 'react';
+import { loadScript } from '~/lib/loadScript';
 
 declare global {
   interface Window {
     AppleID?: {
       auth: {
-        init: (config: {
-          clientId: string;
-          scope: string;
-          redirectURI: string;
-          usePopup: boolean;
-        }) => void;
+        init: (config: { clientId: string; scope: string; redirectURI: string; usePopup: boolean }) => void;
       };
     };
   }
@@ -42,13 +37,13 @@ export function AppleSignInButton({ onIdToken }: AppleSignInButtonProps) {
       if (idToken) onIdTokenRef.current(idToken);
     };
 
-    document.addEventListener("AppleIDSignInOnSuccess", handleSuccess);
+    document.addEventListener('AppleIDSignInOnSuccess', handleSuccess);
 
-    loadScript("https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js").then(() => {
+    loadScript('https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js').then(() => {
       if (cancelled || !window.AppleID) return;
       window.AppleID.auth.init({
         clientId: CLIENT_ID,
-        scope: "name email",
+        scope: 'name email',
         redirectURI: REDIRECT_URI,
         usePopup: true,
       });
@@ -56,7 +51,7 @@ export function AppleSignInButton({ onIdToken }: AppleSignInButtonProps) {
 
     return () => {
       cancelled = true;
-      document.removeEventListener("AppleIDSignInOnSuccess", handleSuccess);
+      document.removeEventListener('AppleIDSignInOnSuccess', handleSuccess);
     };
   }, []);
 
