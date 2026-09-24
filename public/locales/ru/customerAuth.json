@@ -89,7 +89,25 @@
       "cancel": "Отмена",
       "noPlans": "Тарифы пока недоступны.",
       "noCards": "Оплата пока не принимается — карты ещё не настроены. Пожалуйста, свяжитесь с нами.",
-      "backToPayment": "Вернуться к оплате"
+      "backToPayment": "Вернуться к оплате",
+      "tagline": {
+        "Pro": "Для магазинов и сферы услуг",
+        "Creator": "Для активного бизнеса и блогеров",
+        "Premium": "Для SMM-агентств — безлимит аккаунтов"
+      },
+      "features": {
+        "automations": "Активные автоматизации",
+        "accounts": "Аккаунты",
+        "accountsHint": "Instagram, Facebook или WhatsApp",
+        "teamMembers": "Сотрудники в чатах",
+        "contacts": "Контакты и чаты",
+        "broadcasts": "Рассылки в Instagram и Facebook",
+        "whatsAppBroadcasts": "Рассылки в WhatsApp",
+        "unlimited": "Безлимит",
+        "included": "Включено",
+        "notIncluded": "Не включено"
+      },
+      "addOnsNote": "ИИ-менеджер и Virale — дополнительные услуги: скоро их можно будет подключить к любому тарифу."
     },
     "payment": {
       "title": "Оплата",

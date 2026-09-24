@@ -5,6 +5,7 @@ import { customerAuthApi } from '~/api/customerAuth';
 import { customerSubscriptionsApi } from '~/api/customerSubscriptions';
 import { Skeleton } from '~/components/ui/skeleton';
 import { findOpenRequest } from '~/lib/customerSubscription';
+import { cn } from '~/lib/utils';
 import { useCustomerAuthStore } from '~/store/useCustomerAuthStore';
 import { PaymentPanel } from './components/PaymentPanel';
 import { PlanPicker } from './components/PlanPicker';
@@ -51,7 +52,8 @@ export default function BillingPage() {
   const showPicker = !openRequest || (isChangingPlan && openRequest.status === 'AwaitingPayment');
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    // Wider while picking: three plan cards with feature lists don't fit a 3xl column.
+    <div className={cn('mx-auto space-y-6', showPicker ? 'max-w-5xl' : 'max-w-3xl')}>
       <div>
         <h1 className="text-2xl font-bold">{t('billing.title')}</h1>
         <p className="text-muted-foreground mt-1">{t('billing.subtitle')}</p>

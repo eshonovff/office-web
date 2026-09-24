@@ -14,9 +14,18 @@ export interface SubscriptionPrice {
   total: number;
 }
 
+/** Mirrors PlanLimitsOptions — a null count means unlimited. */
+export interface PlanLimits {
+  accounts: number | null;
+  activeAutomations: number | null;
+  teamMembers: number | null;
+  whatsAppBroadcasts: boolean;
+}
+
 export interface SubscriptionPlan {
   tier: CustomerPlanTier;
   monthlyPrice: number;
+  limits: PlanLimits;
   prices: SubscriptionPrice[];
 }
 

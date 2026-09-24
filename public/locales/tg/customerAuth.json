@@ -89,7 +89,25 @@
       "cancel": "Бекор кардан",
       "noPlans": "Тарифҳо ҳоло дастрас нестанд.",
       "noCards": "Пардохт ҳоло қабул намешавад — кортҳо ҳанӯз танзим нашудаанд. Лутфан бо мо тамос гиред.",
-      "backToPayment": "Бозгашт ба пардохт"
+      "backToPayment": "Бозгашт ба пардохт",
+      "tagline": {
+        "Pro": "Барои мағоза ва хизматрасонӣ",
+        "Creator": "Барои бизнеси фаъол ва блогерҳо",
+        "Premium": "Барои SMM-агентиҳо — аккаунтҳои беҳад"
+      },
+      "features": {
+        "automations": "Автоматизатсияи фаъол",
+        "accounts": "Аккаунтҳо",
+        "accountsHint": "Instagram, Facebook ё WhatsApp",
+        "teamMembers": "Кормандон дар чатҳо",
+        "contacts": "Контактҳо ва чатҳо",
+        "broadcasts": "Рассылка дар Instagram ва Facebook",
+        "whatsAppBroadcasts": "Рассылка дар WhatsApp",
+        "unlimited": "Беҳад",
+        "included": "Дохил аст",
+        "notIncluded": "Дохил нест"
+      },
+      "addOnsNote": "ИИ-менеҷер ва Virale — хизматҳои иловагӣ: ба зудӣ онҳоро ба ҳар тариф пайваст кардан мумкин мешавад."
     },
     "payment": {
       "title": "Пардохт",

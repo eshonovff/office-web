@@ -11,6 +11,7 @@ import { cn } from '~/lib/utils';
 import { useCustomerAuthStore } from '~/store/useCustomerAuthStore';
 import type { CustomerPlanTier, SubscriptionCatalog, SubscriptionRequest } from '~/types/customerSubscriptions';
 import { SUBSCRIPTION_REQUESTS_QUERY_KEY } from '../queryKeys';
+import { PlanCard } from './PlanCard';
 
 interface PlanPickerProps {
   catalog: SubscriptionCatalog;
@@ -70,25 +71,18 @@ export function PlanPicker({ catalog, current, onCancel, onCreated }: PlanPicker
       </CardHeader>
 
       <CardContent className="space-y-6">
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div role="radiogroup" aria-label={t('billing.plans.title')} className="grid gap-3 md:grid-cols-3">
           {catalog.plans.map((plan) => (
-            <button
+            <PlanCard
               key={plan.tier}
-              type="button"
-              onClick={() => setTier(plan.tier)}
-              aria-pressed={plan.tier === tier}
-              className={cn(
-                'rounded-xl border p-4 text-left transition-colors',
-                plan.tier === tier ? 'border-primary bg-primary/5 ring-primary ring-1' : 'hover:bg-muted/50'
-              )}>
-              <p className="font-semibold">{plan.tier}</p>
-              <p className="mt-2 text-2xl font-bold">
-                {formatPrice(plan.monthlyPrice, catalog.currency)}
-                <span className="text-muted-foreground text-sm font-normal"> {t('billing.plans.perMonth')}</span>
-              </p>
-            </button>
+              plan={plan}
+              currency={catalog.currency}
+              selected={plan.tier === tier}
+              onSelect={() => setTier(plan.tier)}
+            />
           ))}
         </div>
+        <p className="text-muted-foreground text-sm">{t('billing.plans.addOnsNote')}</p>
 
         <div className="space-y-2">
           <p className="text-sm font-medium">{t('billing.plans.duration')}</p>
