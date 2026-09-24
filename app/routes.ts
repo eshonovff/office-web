@@ -6,8 +6,9 @@ export default [
     route('register', 'routes/(public)/register/route.tsx'),
     route('verify-email', 'routes/(public)/verify-email/route.tsx'),
     route('account/login', 'routes/(public)/account-login/route.tsx'),
-    route('account', 'routes/(public)/account/route.tsx'),
   ]),
+
+  layout('routes/(account)/layout.tsx', [route('account', 'routes/(account)/account/route.tsx')]),
 
   layout('routes/(auth)/layout.tsx', [route('login', 'routes/(auth)/login/route.tsx')]),
 
