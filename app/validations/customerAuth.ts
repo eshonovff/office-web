@@ -32,16 +32,8 @@ export const createResendCodeSchema = (t: TFunction) =>
       .email(t('invalidEmail', { ns: 'validation' })),
   });
 
-export const createCustomerLoginSchema = (t: TFunction) =>
-  z.object({
-    email: z
-      .string()
-      .min(1, t('emailRequired', { ns: 'validation' }))
-      .email(t('invalidEmail', { ns: 'validation' })),
-    password: z.string().min(1, t('passwordRequired', { ns: 'validation' })),
-  });
-
 export type RegisterForm = z.infer<ReturnType<typeof createRegisterSchema>>;
 export type VerifyEmailForm = z.infer<ReturnType<typeof createVerifyEmailSchema>>;
 export type ResendCodeForm = z.infer<ReturnType<typeof createResendCodeSchema>>;
-export type CustomerLoginForm = z.infer<ReturnType<typeof createCustomerLoginSchema>>;
+/** Body of POST /api/public/auth/login — sent by the shared sign-in page (/login). */
+export type CustomerLoginForm = { email: string; password: string };

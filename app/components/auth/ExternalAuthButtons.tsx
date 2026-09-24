@@ -10,7 +10,7 @@ import { GoogleSignInButton } from './GoogleSignInButton';
 const hasGoogle = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
 const hasApple = Boolean(import.meta.env.VITE_APPLE_CLIENT_ID && import.meta.env.VITE_APPLE_REDIRECT_URI);
 
-// Shared by /register and /account/login — Google/Apple sign-in is register-or-login in one
+// Shared by /register and /login — Google/Apple sign-in is register-or-login in one
 // action, there's no separate "sign up with Google" step. Renders nothing at all (not even
 // the divider) when neither provider is configured, so an empty page section never shows up.
 export function ExternalAuthButtons() {
@@ -39,7 +39,7 @@ export function ExternalAuthButtons() {
           <span className="w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card text-muted-foreground px-2">{t('externalAuth.divider')}</span>
+          <span className="bg-background text-muted-foreground px-2">{t('externalAuth.divider')}</span>
         </div>
       </div>
 

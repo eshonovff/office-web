@@ -22,11 +22,13 @@ Frontend-и платформаи дохилии SMARTWEB TJ. Backend аллак�
 - SSR, server components — `ssr:false` мемонад (ниг. поён барои `/`)
 - Мобилӣ
 
-> 2026-09: `/` дигар паси login нест — саҳифаи ҷамъиятии landing аст, бо
-> `(public)/*` (landing, register, verify-email, account/login, account) барои
-> мизоҷони худсабтшуда. Кормандон бетағйир — `(auth)/login` → `(app)/*`,
-> ҳама паси login монда. Ду системаи корбар комилан ҷудо: `office-api`-и
-> `Customer` бо JWT scheme-и худ, ҳеҷ гоҳ бо `User`/роль омехта намешавад.
+> 2026-09: `/` дигар паси login нест — саҳифаи ҷамъиятии landing аст (`(public)/*`).
+> Вуруд ва сабти ном дар `(auth)/*` бо як тарҳ: `/login` — **як саҳифа барои ҳарду**
+> (корманд бо логин, мизоҷ бо email; "@" муайян мекунад, ниг. `app/lib/signIn.ts`),
+> `/register`, `/verify-email`. `/account/login`-и кӯҳна ба `/login` мегузарад.
+> Баъди вуруд: корманд → `(app)/*`, мизоҷ → `(account)/*`. Ду системаи корбар комилан
+> ҷудо мемонанд: `office-api`-и `Customer` бо JWT scheme, endpoint, cookie ва store-и
+> худ, ҳеҷ гоҳ бо `User`/роль омехта намешавад — танҳо дари вуруд умумист.
 
 ## Асос: Nizom CRM
 

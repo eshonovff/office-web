@@ -1,12 +1,15 @@
 import { type RouteConfig, index, layout, route } from '@react-router/dev/routes';
 
 export default [
-  layout('routes/(public)/layout.tsx', [
-    index('routes/(public)/landing/route.tsx'),
-    route('register', 'routes/(public)/register/route.tsx'),
-    route('verify-email', 'routes/(public)/verify-email/route.tsx'),
-    route('account/login', 'routes/(public)/account-login/route.tsx'),
+  layout('routes/(public)/layout.tsx', [index('routes/(public)/landing/route.tsx')]),
+
+  // One sign-in page for staff and мизоҷ alike, and the мизоҷ sign-up — all in one look.
+  layout('routes/(auth)/layout.tsx', [
+    route('login', 'routes/(auth)/login/route.tsx'),
+    route('register', 'routes/(auth)/register/route.tsx'),
+    route('verify-email', 'routes/(auth)/verify-email/route.tsx'),
   ]),
+  route('account/login', 'routes/account-login-redirect.tsx'),
 
   layout('routes/(account)/layout.tsx', [
     route('account', 'routes/(account)/account/route.tsx'),
@@ -15,8 +18,6 @@ export default [
     route('account/automations/flows/:id', 'routes/(account)/automations/flows/id/route.tsx'),
     route('account/settings', 'routes/(account)/settings/route.tsx'),
   ]),
-
-  layout('routes/(auth)/layout.tsx', [route('login', 'routes/(auth)/login/route.tsx')]),
 
   layout('routes/(app)/layout.tsx', [
     route('dashboard', 'routes/(app)/dashboard/route.tsx', [

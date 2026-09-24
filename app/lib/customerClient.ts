@@ -67,7 +67,7 @@ function onRefreshed(token: string | null) {
 
 function customerLogout() {
   useCustomerAuthStore.getState().clear();
-  window.location.href = '/account/login';
+  window.location.href = '/login';
 }
 
 type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };

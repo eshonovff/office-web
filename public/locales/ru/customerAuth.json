@@ -4,8 +4,7 @@
     "heroTitle": "Добро пожаловать на office.nizom.tj",
     "heroSubtitle": "Зарегистрируйтесь или войдите, чтобы продолжить.",
     "registerCta": "Регистрация",
-    "loginCta": "Войти",
-    "staffLoginLink": "Вход для сотрудников"
+    "loginCta": "Войти"
   },
   "register": {
     "title": "Регистрация",

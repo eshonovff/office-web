@@ -26,15 +26,9 @@ export default function LandingPage() {
           <Button size="lg" className="w-full sm:w-auto" render={<Link to="/register" />}>
             {t('landing.registerCta')}
           </Button>
-          <Button size="lg" variant="outline" className="w-full sm:w-auto" render={<Link to="/account/login" />}>
+          <Button size="lg" variant="outline" className="w-full sm:w-auto" render={<Link to="/login" />}>
             {t('landing.loginCta')}
           </Button>
-        </div>
-
-        <div className="pt-8">
-          <Link to="/login" className="text-muted-foreground text-sm hover:underline">
-            {t('landing.staffLoginLink')}
-          </Link>
         </div>
       </div>
     </div>

@@ -17,7 +17,7 @@ export async function clientLoader() {
     try {
       await withTransientRetry(refreshCustomerAccessToken);
     } catch (error) {
-      if (isSessionRejected(error)) return redirect('/account/login');
+      if (isSessionRejected(error)) return redirect('/login');
       throw new ServerUnreachableError(error);
     }
   }
@@ -26,7 +26,7 @@ export async function clientLoader() {
   try {
     customer = await withTransientRetry(() => customerAuthApi.me());
   } catch (error) {
-    if (isSessionRejected(error)) return redirect('/account/login');
+    if (isSessionRejected(error)) return redirect('/login');
     throw new ServerUnreachableError(error);
   }
 

@@ -70,7 +70,7 @@ describe('customerApiClient refresh failures', () => {
     await expect(apiClientMock._resRejected!(unauthorized('/subscriptions/requests'))).rejects.toBeTruthy();
 
     expect(useCustomerAuthStore.getState().accessToken).toBeNull();
-    expect(window.location.href).toBe('/account/login');
+    expect(window.location.href).toBe('/login');
   });
 
   it('keeps the session when the server is unreachable during refresh', async () => {

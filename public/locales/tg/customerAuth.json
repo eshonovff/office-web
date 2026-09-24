@@ -4,15 +4,14 @@
     "heroTitle": "Ба office.nizom.tj хуш омадед",
     "heroSubtitle": "Барои идома додан ҳисоби худро сабт кунед ё ворид шавед.",
     "registerCta": "Сабти ном",
-    "loginCta": "Ворид шудан",
-    "staffLoginLink": "Вуруди корманд"
+    "loginCta": "Ворид шудан"
   },
   "register": {
     "title": "Сабти ном",
     "subtitle": "Ҳисоби нав созед — коди тасдиқ ба email фиристода мешавад.",
     "fullName": "Ному насаб",
     "email": "Email",
-    "password": "Парол",
+    "password": "Рамз",
     "submit": "Сабти ном",
     "submitting": "Дар ҳоли боргузорӣ...",
     "haveAccount": "Аллакай ҳисоб доред?",

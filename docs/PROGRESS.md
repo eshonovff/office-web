@@ -1,6 +1,23 @@
 # PROGRESS — Frontend
 
-## Ҳолати имрӯза (2026-09-24)
+## Ҳолати имрӯза (2026-09-25)
+
+**Вуруди ягона ва тарҳи ягона (`feat/fe-phase-14-customer-automations`):**
+- `/login` — як саҳифа барои кормандон ва мизоҷон, бо як майдони "Email ё логин". Агар матн
+  "@" дошта бошад → `/api/public/auth/login` → `/account`; вагарна → `/api/auth/login` →
+  `/dashboard` (ё `/change-password`). Логини корманд ҳамеша рақами телефон ё `owner` аст
+  (backend: тести `PhoneNumber.Normalize_NeverYieldsAnythingButDigits`).
+- Амният: паёми хато барои ҳарду якхела ("Логин ё рамз нодуруст аст"); "email тасдиқ нашуд"
+  танҳо баъди рамзи дуруст; `?redirectTo` — корманд танҳо ба саҳифаи бо иҷозат, мизоҷ танҳо
+  ба `/account…` (`app/lib/signIn.ts` + тест). Endpoint, rate limit, токен ва cookie ҷудо.
+- `/register` ва `/verify-email` ба `(auth)/*` кӯчиданд — ҳамон тарҳи дусутунаи `/login`
+  (матни чап, форма рост, дар телефон танҳо форма), бо интихоби забон ва мавзӯъ.
+- `/account/login` → redirect ба `/login` (бо `?…`); landing — як тугмаи "Ворид шудан".
+- Зинда дар Chrome: корманд (→ `/change-password`), корманд бо рамзи хато, мизоҷ (email бо
+  ҳарфи калон ва фосила → `/account`), мизоҷ бо рамзи хато (ҳамон паём), email-и тасдиқнашуда
+  (паём + "Тасдиқ кунед"), `/account/login?redirectTo=//evil.com` → `/account`.
+
+## Ҳолати 2026-09-24
 
 > ⚠️ Сатрҳои 2026-08-18 то 2026-09-24 дар ин файл сабт НАШУДААНД (кор дар чатҳои дигар
 > давом ёфт — flows/automations, comment automation ва ғ., ниг. `git log` барои тафсил).

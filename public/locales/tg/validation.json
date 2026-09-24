@@ -17,5 +17,6 @@
   "emailRequired": "Email-ро ворид кунед",
   "codeRequired": "Кодро ворид кунед",
   "codeLength": "Код бояд аз 6 рақам иборат бошад",
-  "codeDigitsOnly": "Код бояд танҳо аз рақам иборат бошад"
+  "codeDigitsOnly": "Код бояд танҳо аз рақам иборат бошад",
+  "identifierRequired": "Email ё логинро ворид кунед"
 }

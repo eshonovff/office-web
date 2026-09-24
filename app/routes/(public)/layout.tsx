@@ -2,8 +2,8 @@ import { Link, Outlet } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ModeToggle } from '~/components/layout/ModeToggle';
 
-// No auth check here on purpose — unlike (app)/layout.tsx, this subtree (landing, register,
-// verify-email, account/login) must stay reachable by anyone, logged in or not.
+// No auth check here on purpose — unlike (app)/layout.tsx, the landing page must stay
+// reachable by anyone, logged in or not. Sign-in and sign-up live in (auth)/layout.tsx.
 export default function PublicLayout() {
   const { t } = useTranslation('customerAuth');
 
