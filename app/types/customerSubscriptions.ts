@@ -32,6 +32,9 @@ export interface SubscriptionRequest {
   expectedAmount: number;
   status: SubscriptionRequestStatus;
   hasReceipt: boolean;
+  /** The company card the customer chose when uploading the receipt (snapshot). */
+  paidToBank: string | null;
+  paidToCardNumber: string | null;
   createdAt: string;
   submittedAt: string | null;
   reviewedAt: string | null;

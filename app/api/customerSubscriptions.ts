@@ -21,10 +21,10 @@ export const customerSubscriptionsApi = {
     const { data } = await customerApiClient.post<SubscriptionRequest>('/subscriptions/requests', payload);
     return data;
   },
-  uploadReceipt: async (id: string, file: File): Promise<SubscriptionRequest> => {
+  uploadReceipt: async (id: string, file: File, cardNumber: string): Promise<SubscriptionRequest> => {
     const { data } = await customerApiClient.post<SubscriptionRequest>(
       `/subscriptions/requests/${id}/receipt`,
-      appendToFormData({ file }),
+      appendToFormData({ file, cardNumber }),
       { headers: MULTIPART_HEADERS }
     );
     return data;

@@ -39,6 +39,7 @@ export function RequestHistory({ requests, currency }: RequestHistoryProps) {
                 </p>
                 <p className="text-muted-foreground text-xs">
                   {formatDate(request.createdAt)} · {formatPaymentAmount(request.expectedAmount)} {currency}
+                  {request.paidToBank && ` · ${request.paidToBank}`}
                 </p>
                 {request.status === 'Rejected' && request.reviewNote && (
                   <p className="text-destructive mt-1 text-sm">

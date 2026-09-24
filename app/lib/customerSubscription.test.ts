@@ -18,6 +18,8 @@ function request(id: string, status: SubscriptionRequestStatus): SubscriptionReq
     expectedAmount: 200.37,
     status,
     hasReceipt: false,
+    paidToBank: null,
+    paidToCardNumber: null,
     createdAt: '2026-09-24T10:00:00Z',
     submittedAt: null,
     reviewedAt: null,
