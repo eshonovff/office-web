@@ -18,6 +18,12 @@ export const customerApiClient = axios.create({
   },
 });
 
+// /auth/google and /auth/apple authenticate via the PROVIDER's ID token as the bearer
+// token, not our own session — customerApiClient's request interceptor would clobber that
+// header with our stored access token (if any) before the request even leaves the browser,
+// so this bypasses it entirely with no interceptors of its own.
+export const externalLoginClient = axios.create({ baseURL, withCredentials: true });
+
 const refreshClient = axios.create({ baseURL, withCredentials: true });
 
 let refreshPromise: Promise<string> | null = null;

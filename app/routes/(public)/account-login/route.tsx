@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import { customerAuthApi } from "~/api/customerAuth";
+import { ExternalAuthButtons } from "~/components/auth/ExternalAuthButtons";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { FormInput } from "~/components/ui/form/FormInput";
@@ -99,6 +100,10 @@ export default function AccountLoginPage() {
               </Link>
             </p>
           </form>
+
+          <div className="mt-6">
+            <ExternalAuthButtons />
+          </div>
         </CardContent>
       </Card>
     </div>

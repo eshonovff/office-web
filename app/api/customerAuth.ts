@@ -1,4 +1,4 @@
-import { customerApiClient } from "~/lib/customerClient";
+import { customerApiClient, externalLoginClient } from "~/lib/customerClient";
 import type { CustomerAuthMessageResponse, CustomerAuthResponse, CustomerMeResponse } from "~/types/customerAuth";
 import type {
   CustomerLoginForm,
@@ -6,6 +6,8 @@ import type {
   ResendCodeForm,
   VerifyEmailForm,
 } from "~/validations/customerAuth";
+
+export type ExternalAuthProvider = "google" | "apple";
 
 export const customerAuthApi = {
   register: async (payload: RegisterForm): Promise<CustomerAuthMessageResponse> => {
@@ -29,6 +31,12 @@ export const customerAuthApi = {
   },
   me: async (): Promise<CustomerMeResponse> => {
     const { data } = await customerApiClient.get<CustomerMeResponse>("/auth/me");
+    return data;
+  },
+  externalLogin: async (provider: ExternalAuthProvider, idToken: string): Promise<CustomerAuthResponse> => {
+    const { data } = await externalLoginClient.post<CustomerAuthResponse>(`/auth/${provider}`, undefined, {
+      headers: { Authorization: `Bearer ${idToken}` },
+    });
     return data;
   },
 };
