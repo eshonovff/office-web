@@ -51,7 +51,8 @@
     "roles": "Ролҳо",
     "projects": "Проектҳо",
     "inbox": "Инбокс",
-    "settings": "Танзимот"
+    "settings": "Танзимот",
+    "subscriptions": "Обунаҳо"
   },
   "dashboard": {
     "greeting": "Салом"

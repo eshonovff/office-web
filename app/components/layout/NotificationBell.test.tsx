@@ -93,6 +93,26 @@ describe('NotificationBell', () => {
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/channels'));
   });
 
+  it('opens the moderation queue for a subscription_receipt notification', async () => {
+    vi.mocked(notificationsApi.list).mockResolvedValue([
+      makeNotification({
+        id: 'n1',
+        type: 'subscription_receipt',
+        payloadJson: JSON.stringify({ tier: 'Pro', amount: 564.37, currency: 'TJS' }),
+      }),
+    ]);
+    vi.mocked(notificationsApi.markRead).mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    renderBell();
+
+    await user.click(screen.getAllByRole('button')[0]);
+    const item = await screen.findByText('messages.subscriptionReceipt');
+    await user.click(item);
+
+    expect(tasksApi.get).not.toHaveBeenCalled();
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/subscriptions'));
+  });
+
   it('marks every notification as read via "mark all read"', async () => {
     vi.mocked(notificationsApi.list).mockResolvedValue([
       makeNotification({ id: 'n1', isRead: false }),

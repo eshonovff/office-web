@@ -36,6 +36,7 @@ export default [
     route('instagram-automation', 'routes/(app)/instagram-automation/redirect.tsx'),
     route('automations', 'routes/(app)/automations/route.tsx'),
     route('automations/flows/:id', 'routes/(app)/automations/flows/id/route.tsx'),
+    route('subscriptions', 'routes/(app)/subscriptions/route.tsx'),
   ]),
 
   ...(import.meta.env.DEV ? [route('kitchen-sink', 'routes/kitchen-sink.tsx')] : []),

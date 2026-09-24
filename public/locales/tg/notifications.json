@@ -6,6 +6,8 @@
     "taskAssigned": "Ба шумо вазифа таъин карда шуд: «{{title}}»",
     "deadlineTomorrow": "Мӯҳлати вазифа фардо тамом мешавад: «{{title}}»",
     "mention": "Шуморо дар як шарҳ зикр карданд",
-    "whatsappError": "Хатои пайвасти WhatsApp"
+    "whatsappError": "Хатои пайвасти WhatsApp",
+    "subscriptionReceipt": "Чеки нав барои тарифи {{tier}} — {{amount}}",
+    "subscriptionReceiptGeneric": "Чеки нави пардохт омад"
   }
 }

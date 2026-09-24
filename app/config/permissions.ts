@@ -55,6 +55,7 @@ export const ROUTE_PERMISSIONS: Record<string, PermissionKey> = {
   '/automations': Permissions.Channels.Manage,
   '/automations/flows/:id': Permissions.Channels.Manage,
   '/settings': Permissions.Templates.Manage,
+  '/subscriptions': Permissions.Subscriptions.Manage,
 };
 
 /**

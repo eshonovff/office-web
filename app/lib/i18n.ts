@@ -26,6 +26,7 @@ export const i18nConfig = {
     'instagramAutomation',
     'automations',
     'flows',
+    'subscriptions',
   ],
   detection: {
     order: ['localStorage'],

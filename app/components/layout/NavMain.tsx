@@ -4,6 +4,7 @@ import { NavLink, useLocation } from "react-router";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "~/components/ui/collapsible";
 import {
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -11,13 +12,14 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "~/components/ui/sidebar";
-import type { NavItem } from "~/config/navigation";
+import type { NavBadgeKey, NavItem } from "~/config/navigation";
 
 interface NavMainProps {
   items: NavItem[];
+  badges?: Partial<Record<NavBadgeKey, number>>;
 }
 
-export function NavMain({ items }: NavMainProps) {
+export function NavMain({ items, badges }: NavMainProps) {
   const { state, setOpen: setSidebarOpen } = useSidebar();
   const location = useLocation();
 
@@ -85,6 +87,8 @@ export function NavMain({ items }: NavMainProps) {
           );
         }
 
+        const badge = item.badgeKey ? badges?.[item.badgeKey] : undefined;
+
         return (
           <SidebarMenuItem key={item.title}>
             <NavLink to={item.url || "#"} end={item.url === "/"} className="block w-full" onClick={() => setOpenGroup(null)}>
@@ -95,6 +99,7 @@ export function NavMain({ items }: NavMainProps) {
                 </SidebarMenuButton>
               )}
             </NavLink>
+            {!!badge && <SidebarMenuBadge className="bg-primary text-primary-foreground top-1.5">{badge}</SidebarMenuBadge>}
           </SidebarMenuItem>
         );
       })}

@@ -51,7 +51,8 @@
     "roles": "Роли",
     "projects": "Проекты",
     "inbox": "Входящие",
-    "settings": "Настройки"
+    "settings": "Настройки",
+    "subscriptions": "Подписки"
   },
   "dashboard": {
     "greeting": "Здравствуйте"
