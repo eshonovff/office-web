@@ -1,0 +1,121 @@
+import axios, { type InternalAxiosRequestConfig } from "axios";
+import i18next from "i18next";
+import { toast } from "sonner";
+import { useCustomerAuthStore } from "~/store/useCustomerAuthStore";
+import type { CustomerRefreshResponse } from "~/types/customerAuth";
+
+// Deliberately its own axios instance, not a parameterized apiClient — customer requests
+// carry a different bearer token (useCustomerAuthStore, signed with a different backend key),
+// a different refresh cookie (customer_refresh_token), and a 401 here must never trigger the
+// staff logout()/redirect-to-/login in client.ts.
+const baseURL = (import.meta.env.VITE_API_URL || "") + "/api/public";
+
+export const customerApiClient = axios.create({
+  baseURL,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const refreshClient = axios.create({ baseURL, withCredentials: true });
+
+let refreshPromise: Promise<string> | null = null;
+
+export function refreshCustomerAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = refreshClient
+      .post<CustomerRefreshResponse>("/auth/refresh")
+      .then(({ data }) => {
+        useCustomerAuthStore.getState().setAccessToken(data.accessToken);
+        return data.accessToken;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
+
+// These forms all show their own inline error — no duplicate toast on top.
+const SILENT_URLS = ["/auth/register", "/auth/verify-email", "/auth/resend-code", "/auth/login"];
+const isSilent = (url?: string): boolean => SILENT_URLS.some((silent) => url?.includes(silent));
+
+customerApiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  const token = useCustomerAuthStore.getState().accessToken;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+let isRefreshing = false;
+let refreshWaiters: Array<(token: string | null) => void> = [];
+
+function onRefreshed(token: string | null) {
+  refreshWaiters.forEach((resolve) => resolve(token));
+  refreshWaiters = [];
+}
+
+function customerLogout() {
+  useCustomerAuthStore.getState().clear();
+  window.location.href = "/account/login";
+}
+
+type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
+customerApiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const status: number | undefined = error.response?.status;
+    const requestUrl: string | undefined = error.config?.url;
+    const config = error.config as RetriableConfig | undefined;
+
+    if (status === 401 && config && !config._retry && !isSilent(requestUrl)) {
+      config._retry = true;
+
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          refreshWaiters.push((token) => {
+            if (!token) {
+              reject(error);
+              return;
+            }
+            config.headers.Authorization = `Bearer ${token}`;
+            resolve(customerApiClient(config));
+          });
+        });
+      }
+
+      isRefreshing = true;
+      try {
+        const accessToken = await refreshCustomerAccessToken();
+        onRefreshed(accessToken);
+        config.headers.Authorization = `Bearer ${accessToken}`;
+        return customerApiClient(config);
+      } catch (refreshError) {
+        onRefreshed(null);
+        customerLogout();
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    if (isSilent(requestUrl)) {
+      return Promise.reject(error);
+    }
+
+    if (!error.response) {
+      toast.error(i18next.t("errors.noConnection", { ns: "common" }));
+      return Promise.reject(error);
+    }
+
+    const serverMessage: string | undefined = error.response.data?.detail || error.response.data?.title;
+    const message = serverMessage || i18next.t("errors.unknown", { ns: "common" });
+
+    toast.error(message, { id: requestUrl ?? message });
+
+    return Promise.reject(error);
+  },
+);

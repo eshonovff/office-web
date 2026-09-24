@@ -1,0 +1,50 @@
+{
+  "landing": {
+    "brand": "office.nizom.tj",
+    "heroTitle": "Добро пожаловать на office.nizom.tj",
+    "heroSubtitle": "Зарегистрируйтесь или войдите, чтобы продолжить.",
+    "registerCta": "Регистрация",
+    "loginCta": "Войти",
+    "staffLoginLink": "Вход для сотрудников"
+  },
+  "register": {
+    "title": "Регистрация",
+    "subtitle": "Создайте новый аккаунт — код подтверждения придёт на email.",
+    "fullName": "Имя и фамилия",
+    "email": "Email",
+    "password": "Пароль",
+    "submit": "Зарегистрироваться",
+    "submitting": "Загрузка...",
+    "haveAccount": "Уже есть аккаунт?",
+    "loginLink": "Войти"
+  },
+  "verifyEmail": {
+    "title": "Подтверждение email",
+    "subtitle": "Код из 6 цифр отправлен на {{email}}",
+    "code": "Код",
+    "codePlaceholder": "000000",
+    "submit": "Подтвердить",
+    "submitting": "Подтверждение...",
+    "resend": "Отправить код снова",
+    "resendCooldown": "Повторная отправка через {{seconds}} с.",
+    "resendSuccess": "Новый код отправлен",
+    "noEmail": "Сначала зарегистрируйтесь"
+  },
+  "accountLogin": {
+    "title": "Войти",
+    "subtitle": "Войдите с email и паролем.",
+    "email": "Email",
+    "password": "Пароль",
+    "submit": "Войти",
+    "submitting": "Загрузка...",
+    "noAccount": "Нет аккаунта?",
+    "registerLink": "Зарегистрируйтесь",
+    "notVerified": "Ваш email ещё не подтверждён.",
+    "goVerify": "Подтвердить"
+  },
+  "account": {
+    "welcome": "Добро пожаловать, {{name}}!",
+    "placeholder": "Полный профиль скоро будет доступен.",
+    "logout": "Выйти"
+  }
+}

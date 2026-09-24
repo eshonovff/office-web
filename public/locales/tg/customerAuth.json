@@ -1,0 +1,50 @@
+{
+  "landing": {
+    "brand": "office.nizom.tj",
+    "heroTitle": "Ба office.nizom.tj хуш омадед",
+    "heroSubtitle": "Барои идома додан ҳисоби худро сабт кунед ё ворид шавед.",
+    "registerCta": "Сабти ном",
+    "loginCta": "Ворид шудан",
+    "staffLoginLink": "Вуруди корманд"
+  },
+  "register": {
+    "title": "Сабти ном",
+    "subtitle": "Ҳисоби нав созед — коди тасдиқ ба email фиристода мешавад.",
+    "fullName": "Ному насаб",
+    "email": "Email",
+    "password": "Парол",
+    "submit": "Сабти ном",
+    "submitting": "Дар ҳоли боргузорӣ...",
+    "haveAccount": "Аллакай ҳисоб доред?",
+    "loginLink": "Ворид шавед"
+  },
+  "verifyEmail": {
+    "title": "Тасдиқи email",
+    "subtitle": "Коди 6-рақама ба {{email}} фиристода шуд",
+    "code": "Код",
+    "codePlaceholder": "000000",
+    "submit": "Тасдиқ",
+    "submitting": "Дар ҳоли тасдиқ...",
+    "resend": "Фиристодани дубора",
+    "resendCooldown": "Дубора фиристодан баъд аз {{seconds}} сония",
+    "resendSuccess": "Коди нав фиристода шуд",
+    "noEmail": "Аввал сабти ном кунед"
+  },
+  "accountLogin": {
+    "title": "Ворид шудан",
+    "subtitle": "Бо email ва пароли худ ворид шавед.",
+    "email": "Email",
+    "password": "Парол",
+    "submit": "Ворид шудан",
+    "submitting": "Дар ҳоли боргузорӣ...",
+    "noAccount": "Ҳисоб надоред?",
+    "registerLink": "Сабти ном кунед",
+    "notVerified": "Email-и шумо ҳанӯз тасдиқ нашудааст.",
+    "goVerify": "Тасдиқ кунед"
+  },
+  "account": {
+    "welcome": "Хуш омадед, {{name}}!",
+    "placeholder": "Профили пурра ба зудӣ дастрас мешавад.",
+    "logout": "Баромадан"
+  }
+}

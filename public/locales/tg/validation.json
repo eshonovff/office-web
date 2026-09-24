@@ -12,5 +12,10 @@
   "invalidEmail": "Email-и нодуруст",
   "avatarType": "Танҳо файли расм (.jpg, .jpeg, .png, .webp) иҷозат дода мешавад",
   "projectKeyPattern": "Калиди проект бояд танҳо аз ҳарфи калон, рақам, `_` ва `-` иборат бошад",
-  "channelCredentialsAllOrNothing": "Барои иваз кардани токен, WABA ID ва Access Token-ро якҷоя пур кунед (ё ҳардуро холӣ гузоред, то токени кӯҳна бимонад)"
+  "channelCredentialsAllOrNothing": "Барои иваз кардани токен, WABA ID ва Access Token-ро якҷоя пур кунед (ё ҳардуро холӣ гузоред, то токени кӯҳна бимонад)",
+  "fullNameRequired": "Ному насабро ворид кунед",
+  "emailRequired": "Email-ро ворид кунед",
+  "codeRequired": "Кодро ворид кунед",
+  "codeLength": "Код бояд аз 6 рақам иборат бошад",
+  "codeDigitsOnly": "Код бояд танҳо аз рақам иборат бошад"
 }

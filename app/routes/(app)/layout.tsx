@@ -14,7 +14,8 @@ import type { Route } from "./+types/layout";
 // access to /403 would be a dead end). /dashboard/stats is here too, but isn't actually open to
 // everyone — its own clientLoader (dashboard/stats/route.tsx) enforces the real Owner/Admin
 // check; a permission-string entry here wouldn't fit (it's a role check, not a permission one).
-const ALWAYS_ALLOWED = new Set(["/", "/dashboard", "/dashboard/stats", "/change-password", "/403"]);
+// "/" itself is no longer part of this layout — it's the public landing page now.
+const ALWAYS_ALLOWED = new Set(["/dashboard", "/dashboard/stats", "/change-password", "/403"]);
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const pathname = new URL(request.url).pathname;
@@ -42,7 +43,7 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
     return redirect("/change-password");
   }
   if (!me.mustChangePassword && pathname === "/change-password") {
-    return redirect("/");
+    return redirect("/dashboard");
   }
 
   if (!ALWAYS_ALLOWED.has(pathname) && !canAccessRoute(pathname, me.permissions)) {

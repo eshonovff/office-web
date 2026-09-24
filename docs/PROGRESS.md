@@ -1,5 +1,29 @@
 # PROGRESS — Frontend
 
+## Ҳолати имрӯза (2026-09-24)
+
+> ⚠️ Сатрҳои 2026-08-18 то 2026-09-24 дар ин файл сабт НАШУДААНД (кор дар чатҳои дигар
+> давом ёфт — flows/automations, comment automation ва ғ., ниг. `git log` барои тафсил).
+> Хулосаи ин сабт танҳо кори охирин аст, на ҳамаи он давра.
+
+**feat/fe-customer-registration (кор дар ин бранч, ҳанӯз ба `dev` merge нашуда):**
+Сабти худии мизоз — office-api-и `feat(customer-auth)` (email+parol, коди 6-рақама,
+`/api/public/auth/*`, JWT scheme-и худ) акнун frontend дорад:
+- `/` дигар паси login-и корманд нест — саҳифаи ҷамъиятии landing шуд (`(public)/*`)
+- `/register` → `/verify-email?email=` (коди 6-рақама, cooldown 60с) → `/account`
+- `/account/login` — вуруди мизоз; 403 (email тасдиқнашуда) → пайванд ба verify-email
+- `/account` — placeholder-и хурд (салом + баромадан), чун "мизоз баъд аз вуруд чӣ мебинад"
+  ҳанӯз ҳалнашуда монд (ниг. чати қаблӣ)
+- `useCustomerAuthStore`/`customerClient.ts`/`api/customerAuth.ts` — комилан ҷудо аз
+  ҳамтои кормандон (`useAuthStore`/`client.ts`/`api/auth.ts`): токен, cookie, interceptor,
+  ҳама алоҳида, то ду сессия дар як браузер омехта нашаванд
+- Кормандон бетағйир: `/login` ҳамон ҷо, вале fallback-и баъди вуруд ва баъди
+  `/change-password` акнун `/dashboard` аст (на `/`, чун он дигар қисми `(app)` нест);
+  `/403`-и "back home" низ ба `/dashboard` ислоҳ шуд
+- `npm run typecheck`/`lint`/`build`/`test` (520 тест) тоза. Дар браузери воқеӣ санҷида
+  НАШУД (ин муҳит абзори browser надорад) — танҳо `curl`-и dev server (200 ҳама роут)
+  ва тоза будани typecheck/build/test
+
 ## Ҳолати имрӯза (2026-08-18)
 
 **Тамом:** Фазаи 0–4 (setup, auth, users/роли, projects+Kanban, inbox+realtime) — ҳама дар `dev`. Илова бар нақша: блоки 2-и коллаборатсияи инбокс (read-only composer+takeover, auto-claim, фиристодани таъхирӣ бо cancel/failure-reason, ёддошти дохилӣ, таърихи таъинот), responsive (mobile/tablet/desktop), `/channels` CRUD, notifications bell, Board realtime (`/hubs/board`) — ҳамаи ин низ дар `dev`. 214 тест, `tsc`/`build` тоза.

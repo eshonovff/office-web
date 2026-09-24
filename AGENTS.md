@@ -18,8 +18,14 @@ Frontend-и платформаи дохилии SMARTWEB TJ. Backend аллак�
 - Молия, маош, HR
 - Telegram
 - Multi-tenant / `centerId` — ин **як** ширкат аст
-- SSR, SEO, server components — тамоми барнома паси login аст
+- SSR, server components — `ssr:false` мемонад (ниг. поён барои `/`)
 - Мобилӣ
+
+> 2026-09: `/` дигар паси login нест — саҳифаи ҷамъиятии landing аст, бо
+> `(public)/*` (landing, register, verify-email, account/login, account) барои
+> мизозони худсабтшуда. Кормандон бетағйир — `(auth)/login` → `(app)/*`,
+> ҳама паси login монда. Ду системаи корбар комилан ҷудо: `office-api`-и
+> `Customer` бо JWT scheme-и худ, ҳеҷ гоҳ бо `User`/роль омехта намешавад.
 
 ## Асос: Nizom CRM
 

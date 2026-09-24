@@ -13,6 +13,7 @@ export const i18nConfig = {
   ns: [
     defaultNS,
     'auth',
+    'customerAuth',
     'validation',
     'users',
     'roles',

@@ -46,7 +46,7 @@ export default function LoginPage() {
       }
 
       const redirectTo = searchParams.get("redirectTo");
-      const target = redirectTo && canAccessRoute(redirectTo, response.user.permissions) ? redirectTo : "/";
+      const target = redirectTo && canAccessRoute(redirectTo, response.user.permissions) ? redirectTo : "/dashboard";
       navigate(target);
     },
   });

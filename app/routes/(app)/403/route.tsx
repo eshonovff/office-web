@@ -13,7 +13,7 @@ export default function ForbiddenPage() {
         <h1 className="text-xl font-semibold">{t("forbidden.title")}</h1>
         <p className="text-muted-foreground text-sm">{t("forbidden.description")}</p>
       </div>
-      <Button render={<Link to="/" />}>{t("forbidden.backHome")}</Button>
+      <Button render={<Link to="/dashboard" />}>{t("forbidden.backHome")}</Button>
     </div>
   );
 }
