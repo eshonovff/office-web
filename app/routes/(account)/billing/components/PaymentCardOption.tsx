@@ -1,4 +1,5 @@
 import { CircleCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { formatCardNumber } from '~/lib/customerSubscription';
 import { cn } from '~/lib/utils';
 import type { PaymentCard } from '~/types/customerSubscriptions';
@@ -10,51 +11,57 @@ const BANK_LOGOS: Record<string, string> = {
   alif: '/banks/alif.svg',
 };
 
-interface PaymentCardOptionProps {
+interface BankOptionProps {
   card: PaymentCard;
   selected: boolean;
   onSelect: () => void;
 }
 
-// A radio option, not a <button>: it contains the copy button, and buttons can't nest.
-// Copying also selects (the click bubbles up) — copying a card's number is choosing it.
-export function PaymentCardOption({ card, selected, onSelect }: PaymentCardOptionProps) {
+// Step one of paying: only the bank, no number yet — the number appears once a bank is
+// chosen (PaymentCardDetails), so the customer copies from the card they actually picked.
+export function BankOption({ card, selected, onSelect }: BankOptionProps) {
   const logo = BANK_LOGOS[card.bankCode];
 
   return (
-    <div
+    <button
+      type="button"
       role="radio"
       aria-checked={selected}
-      tabIndex={0}
       onClick={onSelect}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onSelect();
-        }
-      }}
       className={cn(
-        'focus-visible:ring-ring flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors outline-none focus-visible:ring-2',
+        'focus-visible:ring-ring relative flex flex-col items-center gap-2 rounded-xl border p-3 transition-colors outline-none focus-visible:ring-2',
         selected ? 'border-primary bg-primary/5 ring-primary ring-1' : 'hover:bg-muted/50'
       )}>
+      {selected && <CircleCheck className="text-primary absolute top-2 right-2 size-4" />}
       {logo && (
         // Always on white: both official logos have dark-on-light wordmarks (Alif's is
         // #222) that vanish on the dark theme's background.
-        <span className="relative flex h-10 w-14 shrink-0 items-center justify-center rounded-lg bg-white px-1.5 sm:w-20">
-          <img src={logo} alt={card.bank} className="max-h-7 w-full object-contain" />
-          {selected && (
-            <CircleCheck className="text-primary bg-background absolute -top-1.5 -right-1.5 size-4 rounded-full" />
-          )}
+        <span className="flex h-10 w-20 items-center justify-center rounded-lg bg-white px-1.5">
+          <img src={logo} alt="" className="max-h-7 w-full object-contain" />
         </span>
       )}
-      <div className="min-w-0">
-        <p className="text-muted-foreground text-xs">{card.bank}</p>
-        <p className="font-mono text-sm font-semibold tabular-nums sm:text-base">{formatCardNumber(card.cardNumber)}</p>
-        <p className="text-muted-foreground truncate text-xs">{card.holderName}</p>
+      <span className="text-sm font-medium">{card.bank}</span>
+    </button>
+  );
+}
+
+interface PaymentCardDetailsProps {
+  card: PaymentCard;
+}
+
+export function PaymentCardDetails({ card }: PaymentCardDetailsProps) {
+  const { t } = useTranslation('customerAuth');
+
+  return (
+    <div className="bg-muted/50 space-y-1 rounded-xl border p-4">
+      <p className="text-muted-foreground text-xs">{t('billing.payment.transferTo', { bank: card.bank })}</p>
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-lg font-bold tabular-nums sm:text-xl">{formatCardNumber(card.cardNumber)}</span>
+        <div className="ml-auto">
+          <CopyButton value={card.cardNumber.replace(/\s+/g, '')} />
+        </div>
       </div>
-      <div className="ml-auto">
-        <CopyButton value={card.cardNumber.replace(/\s+/g, '')} />
-      </div>
+      <p className="text-muted-foreground text-sm">{card.holderName}</p>
     </div>
   );
 }

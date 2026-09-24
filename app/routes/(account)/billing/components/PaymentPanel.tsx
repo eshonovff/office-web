@@ -13,7 +13,7 @@ import { cn } from '~/lib/utils';
 import type { SubscriptionCatalog, SubscriptionRequest } from '~/types/customerSubscriptions';
 import { SUBSCRIPTION_REQUESTS_QUERY_KEY } from '../queryKeys';
 import { CopyButton } from './CopyButton';
-import { PaymentCardOption } from './PaymentCardOption';
+import { BankOption, PaymentCardDetails } from './PaymentCardOption';
 
 // Same limits as SubscriptionReceiptStorage on the backend — checked here only to fail fast
 // before a 10 MB upload, the server still enforces them.
@@ -41,6 +41,7 @@ export function PaymentPanel({ request, catalog, onChangePlan }: PaymentPanelPro
   // A Pending request shows a compact "under review" card; this reopens the steps to fix
   // the receipt or the chosen card (the backend accepts re-uploads until a decision).
   const [isEditing, setIsEditing] = useState(false);
+  const chosenCard = cards.find((c) => c.cardNumber === selectedCard) ?? null;
 
   const amount = formatPaymentAmount(request.expectedAmount);
   const isPending = request.status === 'Pending';
@@ -79,12 +80,12 @@ export function PaymentPanel({ request, catalog, onChangePlan }: PaymentPanelPro
   function handlePick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file || !selectedCard) return;
+    if (!file || !chosenCard) return;
     if (file.size > RECEIPT_MAX_BYTES) {
       toast.error(t('billing.payment.fileTooLarge'));
       return;
     }
-    upload({ file, cardNumber: selectedCard });
+    upload({ file, cardNumber: chosenCard.cardNumber });
   }
 
   const summary = t('billing.payment.summary', { tier: request.tier, count: request.durationMonths });
@@ -164,63 +165,77 @@ export function PaymentPanel({ request, catalog, onChangePlan }: PaymentPanelPro
         )}
 
         <section className="space-y-2">
-          <p className="text-sm font-medium">1. {t('billing.payment.step1')}</p>
-          <div className="bg-muted/50 flex items-center gap-2 rounded-xl border p-4">
-            <span className="text-3xl font-bold tracking-tight tabular-nums">{amount}</span>
-            <span className="text-muted-foreground text-lg">{catalog.currency}</span>
-            <div className="ml-auto">
-              <CopyButton value={amount} />
-            </div>
-          </div>
-          <p className="flex items-start gap-2 text-sm text-amber-600 dark:text-amber-500">
-            <CircleAlert className="mt-0.5 size-4 shrink-0" />
-            <span>{t('billing.payment.exactAmountHint')}</span>
-          </p>
-        </section>
-
-        <section className="space-y-2">
-          <p id="payment-card-label" className="text-sm font-medium">
-            2. {t('billing.payment.step2')}
+          <p id="payment-bank-label" className="text-sm font-medium">
+            1. {t('billing.payment.chooseBank')}
           </p>
           {cards.length === 0 ? (
             <p className="text-destructive text-sm">{t('billing.plans.noCards')}</p>
           ) : (
-            <div role="radiogroup" aria-labelledby="payment-card-label" className="space-y-2">
-              {cards.map((card) => (
-                <PaymentCardOption
-                  key={card.cardNumber}
-                  card={card}
-                  selected={card.cardNumber === selectedCard}
-                  onSelect={() => setSelectedCard(card.cardNumber)}
-                />
-              ))}
-            </div>
+            <>
+              <div role="radiogroup" aria-labelledby="payment-bank-label" className="grid grid-cols-2 gap-2">
+                {cards.map((card) => (
+                  <BankOption
+                    key={card.cardNumber}
+                    card={card}
+                    selected={card.cardNumber === selectedCard}
+                    onSelect={() => setSelectedCard(card.cardNumber)}
+                  />
+                ))}
+              </div>
+              {!chosenCard && <p className="text-muted-foreground text-sm">{t('billing.payment.chooseBankHint')}</p>}
+            </>
           )}
         </section>
 
-        <section className="space-y-2">
-          <p className="text-sm font-medium">3. {t('billing.payment.step3')}</p>
-          <p className="text-muted-foreground text-xs">{t('billing.payment.receiptHint')}</p>
-          {!selectedCard && cards.length > 0 && (
-            <p className="text-destructive text-sm">{t('billing.payment.selectCardFirst')}</p>
-          )}
-          <div className="flex flex-wrap gap-2">
-            <input ref={inputRef} type="file" accept={RECEIPT_ACCEPT} className="hidden" onChange={handlePick} />
-            <Button type="button" disabled={!selectedCard || isUploading} onClick={() => inputRef.current?.click()}>
-              <Upload />
-              {isUploading
-                ? t('billing.payment.uploading')
-                : isPending
-                  ? t('billing.payment.replaceReceipt')
-                  : t('billing.payment.upload')}
-            </Button>
-            {isPending && (
-              <Button type="button" variant="ghost" onClick={() => setIsEditing(false)} disabled={isUploading}>
-                {t('billing.plans.cancel')}
-              </Button>
-            )}
-          </div>
-        </section>
+        {/* Amount and card number only once a bank is chosen: the customer then copies both
+            from one block — "this much, to this card" — instead of picking from a list. */}
+        {chosenCard && (
+          <>
+            <section className="space-y-2">
+              <p className="text-sm font-medium">2. {t('billing.payment.step2')}</p>
+              <div className="bg-muted/50 flex items-center gap-2 rounded-xl border p-4">
+                <span className="text-3xl font-bold tracking-tight tabular-nums">{amount}</span>
+                <span className="text-muted-foreground text-lg">{catalog.currency}</span>
+                <div className="ml-auto">
+                  <CopyButton value={amount} />
+                </div>
+              </div>
+              <PaymentCardDetails card={chosenCard} />
+              <p className="flex items-start gap-2 text-sm text-amber-600 dark:text-amber-500">
+                <CircleAlert className="mt-0.5 size-4 shrink-0" />
+                <span>{t('billing.payment.exactAmountHint')}</span>
+              </p>
+            </section>
+
+            <section className="space-y-2">
+              <p className="text-sm font-medium">3. {t('billing.payment.step3')}</p>
+              <p className="text-muted-foreground text-xs">{t('billing.payment.receiptHint')}</p>
+              <div className="flex flex-wrap gap-2">
+                <input ref={inputRef} type="file" accept={RECEIPT_ACCEPT} className="hidden" onChange={handlePick} />
+                <Button type="button" disabled={isUploading} onClick={() => inputRef.current?.click()}>
+                  <Upload />
+                  {isUploading
+                    ? t('billing.payment.uploading')
+                    : isPending
+                      ? t('billing.payment.replaceReceipt')
+                      : t('billing.payment.upload')}
+                </Button>
+                {isPending && (
+                  <Button type="button" variant="ghost" onClick={() => setIsEditing(false)} disabled={isUploading}>
+                    {t('billing.plans.cancel')}
+                  </Button>
+                )}
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* Without a chosen bank there is no step 3 to reach "cancel" from. */}
+        {!chosenCard && isPending && (
+          <Button type="button" variant="ghost" onClick={() => setIsEditing(false)}>
+            {t('billing.plans.cancel')}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
