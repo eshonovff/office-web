@@ -3,14 +3,20 @@ import {
   daysLeft,
   findOpenRequest,
   formatCardNumber,
+  formatCountdown,
   formatPaymentAmount,
   formatPrice,
+  secondsUntil,
 } from '~/lib/customerSubscription';
 import type { SubscriptionRequest, SubscriptionRequestStatus } from '~/types/customerSubscriptions';
 
 const now = new Date('2026-09-24T12:00:00Z');
 
-function request(id: string, status: SubscriptionRequestStatus): SubscriptionRequest {
+function request(
+  id: string,
+  status: SubscriptionRequestStatus,
+  paymentDeadline: string | null = null
+): SubscriptionRequest {
   return {
     id,
     tier: 'Pro',
@@ -21,6 +27,7 @@ function request(id: string, status: SubscriptionRequestStatus): SubscriptionReq
     paidToBank: null,
     paidToCardNumber: null,
     createdAt: '2026-09-24T10:00:00Z',
+    paymentDeadline,
     submittedAt: null,
     reviewedAt: null,
     reviewNote: null,
@@ -47,13 +54,41 @@ describe('findOpenRequest', () => {
     expect(findOpenRequest(requests)?.id).toBe('b');
   });
 
-  it('treats AwaitingPayment as open too', () => {
-    expect(findOpenRequest([request('a', 'AwaitingPayment')])?.id).toBe('a');
+  it('treats AwaitingPayment as open while its deadline is ahead', () => {
+    expect(findOpenRequest([request('a', 'AwaitingPayment', '2026-09-24T12:03:00Z')], now)?.id).toBe('a');
+  });
+
+  it('drops an AwaitingPayment whose deadline has passed, before the backend marks it Expired', () => {
+    expect(findOpenRequest([request('a', 'AwaitingPayment', '2026-09-24T11:59:00Z')], now)).toBeNull();
   });
 
   it('returns null when everything is decided', () => {
-    const requests = [request('a', 'Approved'), request('b', 'Rejected'), request('c', 'Cancelled')];
-    expect(findOpenRequest(requests)).toBeNull();
+    const requests = [
+      request('a', 'Approved'),
+      request('b', 'Rejected'),
+      request('c', 'Cancelled'),
+      request('d', 'Expired'),
+    ];
+    expect(findOpenRequest(requests, now)).toBeNull();
+  });
+});
+
+describe('secondsUntil', () => {
+  it('counts down whole seconds, rounding a partial one up', () => {
+    expect(secondsUntil('2026-09-24T12:05:00Z', now)).toBe(300);
+    expect(secondsUntil('2026-09-24T12:00:00.200Z', now)).toBe(1);
+  });
+
+  it('is 0 once the deadline has passed', () => {
+    expect(secondsUntil('2026-09-24T11:59:00Z', now)).toBe(0);
+  });
+});
+
+describe('formatCountdown', () => {
+  it('formats as mm:ss', () => {
+    expect(formatCountdown(299)).toBe('04:59');
+    expect(formatCountdown(60)).toBe('01:00');
+    expect(formatCountdown(0)).toBe('00:00');
   });
 });
 

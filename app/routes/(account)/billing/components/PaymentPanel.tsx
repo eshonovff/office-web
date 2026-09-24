@@ -1,13 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { CircleAlert, Hourglass, Upload } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { ArrowLeft, CircleAlert, Hourglass, Timer, Upload } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { customerSubscriptionsApi } from '~/api/customerSubscriptions';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
-import { formatCardNumber, formatPaymentAmount } from '~/lib/customerSubscription';
+import { formatCardNumber, formatCountdown, formatPaymentAmount, secondsUntil } from '~/lib/customerSubscription';
 import { formatDate } from '~/lib/format';
+import { cn } from '~/lib/utils';
 import type { SubscriptionCatalog, SubscriptionRequest } from '~/types/customerSubscriptions';
 import { SUBSCRIPTION_REQUESTS_QUERY_KEY } from '../queryKeys';
 import { CopyButton } from './CopyButton';
@@ -27,6 +29,7 @@ interface PaymentPanelProps {
 export function PaymentPanel({ request, catalog, onChangePlan }: PaymentPanelProps) {
   const { t } = useTranslation('customerAuth');
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const cards = catalog.paymentCards;
@@ -51,6 +54,27 @@ export function PaymentPanel({ request, catalog, onChangePlan }: PaymentPanelPro
       toast.success(t('billing.payment.uploadSuccess'));
     },
   });
+
+  // Ticks once a second while there is a deadline. secondsLeft is derived, not stored, so a
+  // request that turns Pending (no deadline) can't leave a stale 0 behind to trigger the redirect.
+  const deadline = request.status === 'AwaitingPayment' ? request.paymentDeadline : null;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!deadline) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [deadline]);
+  const secondsLeft = deadline ? secondsUntil(deadline, new Date(now)) : null;
+
+  // Time's up → back to the account home; the backend expires the request on the refetch.
+  // Not mid-upload: that receipt may still land inside the backend's grace period, and if
+  // it doesn't, its 409 ends the upload and this runs then.
+  useEffect(() => {
+    if (secondsLeft !== 0 || isUploading) return;
+    toast.error(t('billing.payment.timeUp'), { id: 'payment-time-up' });
+    void queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_REQUESTS_QUERY_KEY });
+    navigate('/account');
+  }, [secondsLeft, isUploading, navigate, queryClient, t]);
 
   function handlePick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -103,11 +127,42 @@ export function PaymentPanel({ request, catalog, onChangePlan }: PaymentPanelPro
   return (
     <Card>
       <CardHeader>
+        {/* Top-left, where "back" is looked for — a customer who changes their mind after
+            seeing the amount must find the way out without scrolling past the whole form.
+            Not while editing a Pending request: the backend refuses a new plan then. */}
+        {!isPending && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="mb-1 -ml-2 w-fit"
+            onClick={onChangePlan}
+            disabled={isUploading}>
+            <ArrowLeft />
+            {t('billing.payment.backToPlans')}
+          </Button>
+        )}
         <CardTitle>{t('billing.payment.title')}</CardTitle>
         <CardDescription>{summary}</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-6">
+        {secondsLeft !== null && (
+          <div
+            role="timer"
+            className={cn(
+              'flex items-center gap-3 rounded-xl border p-3',
+              secondsLeft <= 60 ? 'border-destructive/40 bg-destructive/5 text-destructive' : 'bg-muted/50'
+            )}>
+            <Timer className="size-5 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">{t('billing.payment.timeLeft')}</p>
+              <p className="text-muted-foreground text-xs">{t('billing.payment.timeLeftHint')}</p>
+            </div>
+            <span className="text-2xl font-bold tabular-nums">{formatCountdown(secondsLeft)}</span>
+          </div>
+        )}
+
         <section className="space-y-2">
           <p className="text-sm font-medium">1. {t('billing.payment.step1')}</p>
           <div className="bg-muted/50 flex items-center gap-2 rounded-xl border p-4">
@@ -159,13 +214,9 @@ export function PaymentPanel({ request, catalog, onChangePlan }: PaymentPanelPro
                   ? t('billing.payment.replaceReceipt')
                   : t('billing.payment.upload')}
             </Button>
-            {isPending ? (
+            {isPending && (
               <Button type="button" variant="ghost" onClick={() => setIsEditing(false)} disabled={isUploading}>
                 {t('billing.plans.cancel')}
-              </Button>
-            ) : (
-              <Button type="button" variant="ghost" onClick={onChangePlan} disabled={isUploading}>
-                {t('billing.payment.changePlan')}
               </Button>
             )}
           </div>

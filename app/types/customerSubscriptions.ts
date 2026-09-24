@@ -2,7 +2,8 @@
 
 export type CustomerPlanTier = 'Pro' | 'Creator' | 'Premium';
 
-export type SubscriptionRequestStatus = 'AwaitingPayment' | 'Pending' | 'Approved' | 'Rejected' | 'Cancelled';
+export type SubscriptionRequestStatus =
+  'AwaitingPayment' | 'Pending' | 'Approved' | 'Rejected' | 'Cancelled' | 'Expired';
 
 export interface SubscriptionPlan {
   tier: CustomerPlanTier;
@@ -36,6 +37,8 @@ export interface SubscriptionRequest {
   paidToBank: string | null;
   paidToCardNumber: string | null;
   createdAt: string;
+  /** AwaitingPayment only: pay and upload the receipt before this, or the request expires. */
+  paymentDeadline: string | null;
   submittedAt: string | null;
   reviewedAt: string | null;
   reviewNote: string | null;

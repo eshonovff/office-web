@@ -11,6 +11,7 @@ const STATUS_VARIANT: Record<SubscriptionRequestStatus, 'default' | 'secondary' 
   Approved: 'default',
   Rejected: 'destructive',
   Cancelled: 'outline',
+  Expired: 'outline',
 };
 
 interface RequestHistoryProps {

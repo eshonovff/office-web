@@ -11,12 +11,32 @@ export function daysLeft(endsAt: string, now: Date = new Date()): number {
   return Math.max(0, Math.ceil(diff / DAY_MS));
 }
 
+/** Whole seconds until `deadline`, rounded up so the countdown hits 0 only once it has passed. */
+export function secondsUntil(deadline: string, now: Date = new Date()): number {
+  return Math.max(0, Math.ceil((new Date(deadline).getTime() - now.getTime()) / 1000));
+}
+
+/** 299 → "04:59" — the payment countdown. */
+export function formatCountdown(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
 /**
  * The one request still in flight (the backend keeps at most one: a new request cancels an
- * AwaitingPayment one, and is refused while one is Pending).
+ * AwaitingPayment one, and is refused while one is Pending). An AwaitingPayment past its
+ * deadline no longer counts — the backend marks it Expired on its next read, but the page
+ * must not show a finished countdown in the meantime.
  */
-export function findOpenRequest(requests: SubscriptionRequest[]): SubscriptionRequest | null {
-  return requests.find((r) => r.status === 'AwaitingPayment' || r.status === 'Pending') ?? null;
+export function findOpenRequest(requests: SubscriptionRequest[], now: Date = new Date()): SubscriptionRequest | null {
+  return (
+    requests.find(
+      (r) =>
+        r.status === 'Pending' ||
+        (r.status === 'AwaitingPayment' && (!r.paymentDeadline || secondsUntil(r.paymentDeadline, now) > 0))
+    ) ?? null
+  );
 }
 
 /** Transfer amounts are always shown with both dirams digits — "200.40", never "200.4". */

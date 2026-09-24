@@ -117,7 +117,7 @@ export function PlanPicker({ catalog, current, onCancel, onCreated }: PlanPicker
         <div className="flex gap-2">
           {onCancel && (
             <Button type="button" variant="ghost" onClick={onCancel} disabled={isPending}>
-              {t('billing.plans.cancel')}
+              {t('billing.plans.backToPayment')}
             </Button>
           )}
           <Button
