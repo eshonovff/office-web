@@ -23,7 +23,8 @@
     "tasks": "Таскҳо",
     "inbox": "Инбокс",
     "channels": "Каналҳо",
-    "templates": "Шаблонҳо"
+    "templates": "Шаблонҳо",
+    "subscriptions": "Обунаҳо"
   },
   "permissionLabels": {
     "users": {
@@ -58,6 +59,9 @@
     },
     "templates": {
       "manage": "Идоракунии шаблонҳо"
+    },
+    "subscriptions": {
+      "manage": "Тасдиқи пардохти обунаҳо"
     }
   }
 }

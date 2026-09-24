@@ -22,6 +22,7 @@ export const Permissions = {
   },
   Channels: { Manage: 'channels.manage' },
   Templates: { Manage: 'templates.manage' },
+  Subscriptions: { Manage: 'subscriptions.manage' },
 } as const;
 
 type ValueOf<T> = T[keyof T];

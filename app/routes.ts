@@ -8,7 +8,10 @@ export default [
     route('account/login', 'routes/(public)/account-login/route.tsx'),
   ]),
 
-  layout('routes/(account)/layout.tsx', [route('account', 'routes/(account)/account/route.tsx')]),
+  layout('routes/(account)/layout.tsx', [
+    route('account', 'routes/(account)/account/route.tsx'),
+    route('account/billing', 'routes/(account)/billing/route.tsx'),
+  ]),
 
   layout('routes/(auth)/layout.tsx', [route('login', 'routes/(auth)/login/route.tsx')]),
 
