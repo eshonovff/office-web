@@ -26,7 +26,12 @@ export function PlanPicker({ catalog, current, onCancel, onCreated }: PlanPicker
   const access = useCustomerAuthStore((s) => s.customer?.access);
 
   const [tier, setTier] = useState<CustomerPlanTier | undefined>(current?.tier ?? catalog.plans[0]?.tier);
-  const [months, setMonths] = useState<number | undefined>(current?.durationMonths ?? catalog.durationMonths[0]);
+  // Every plan offers the same durations; the current request's may have been dropped from
+  // the catalog since (e.g. 12 months), so fall back to the first one offered.
+  const durations = catalog.plans[0]?.prices.map((p) => p.months) ?? [];
+  const [months, setMonths] = useState<number | undefined>(
+    current && durations.includes(current.durationMonths) ? current.durationMonths : durations[0]
+  );
 
   const { mutate, isPending } = useMutation({
     mutationFn: customerSubscriptionsApi.createRequest,
@@ -49,8 +54,8 @@ export function PlanPicker({ catalog, current, onCancel, onCreated }: PlanPicker
     );
   }
 
-  const monthlyPrice = catalog.plans.find((p) => p.tier === tier)?.monthlyPrice;
-  const total = monthlyPrice !== undefined && months !== undefined ? monthlyPrice * months : undefined;
+  const selectedPlan = catalog.plans.find((p) => p.tier === tier);
+  const price = selectedPlan?.prices.find((p) => p.months === months);
   const hasCards = catalog.paymentCards.length > 0;
 
   return (
@@ -88,14 +93,23 @@ export function PlanPicker({ catalog, current, onCancel, onCreated }: PlanPicker
         <div className="space-y-2">
           <p className="text-sm font-medium">{t('billing.plans.duration')}</p>
           <div className="flex flex-wrap gap-2">
-            {catalog.durationMonths.map((m) => (
+            {(selectedPlan?.prices ?? []).map((p) => (
               <Button
-                key={m}
+                key={p.months}
                 type="button"
-                variant={m === months ? 'default' : 'outline'}
-                aria-pressed={m === months}
-                onClick={() => setMonths(m)}>
-                {t('billing.plans.months', { count: m })}
+                variant={p.months === months ? 'default' : 'outline'}
+                aria-pressed={p.months === months}
+                onClick={() => setMonths(p.months)}>
+                {t('billing.plans.months', { count: p.months })}
+                {p.discountPercent > 0 && (
+                  <span
+                    className={cn(
+                      'rounded px-1 text-xs font-semibold',
+                      p.months === months ? 'bg-primary-foreground/20' : 'bg-emerald-500/15 text-emerald-600'
+                    )}>
+                    −{p.discountPercent}%
+                  </span>
+                )}
               </Button>
             ))}
           </div>
@@ -112,7 +126,12 @@ export function PlanPicker({ catalog, current, onCancel, onCreated }: PlanPicker
       <CardFooter className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-lg">
           <span className="text-muted-foreground">{t('billing.plans.total')}: </span>
-          <span className="font-bold">{total !== undefined ? formatPrice(total, catalog.currency) : '—'}</span>
+          {price && price.discountPercent > 0 && (
+            <span className="text-muted-foreground mr-1.5 text-base line-through">
+              {formatPrice(price.fullPrice, catalog.currency)}
+            </span>
+          )}
+          <span className="font-bold">{price ? formatPrice(price.total, catalog.currency) : '—'}</span>
         </p>
         <div className="flex gap-2">
           {onCancel && (
@@ -122,8 +141,8 @@ export function PlanPicker({ catalog, current, onCancel, onCreated }: PlanPicker
           )}
           <Button
             type="button"
-            disabled={!hasCards || !tier || !months || isPending}
-            onClick={() => tier && months && mutate({ tier, months })}>
+            disabled={!hasCards || !tier || !price || isPending}
+            onClick={() => tier && price && mutate({ tier, months: price.months })}>
             {isPending ? t('billing.plans.submitting') : t('billing.plans.submit')}
           </Button>
         </div>

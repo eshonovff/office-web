@@ -5,9 +5,19 @@ export type CustomerPlanTier = 'Pro' | 'Creator' | 'Premium';
 export type SubscriptionRequestStatus =
   'AwaitingPayment' | 'Pending' | 'Approved' | 'Rejected' | 'Cancelled' | 'Expired';
 
+/** One duration of a plan, priced by the backend (SubscriptionPriceCalculator). */
+export interface SubscriptionPrice {
+  months: number;
+  discountPercent: number;
+  /** monthlyPrice × months, before the discount — shown struck through. */
+  fullPrice: number;
+  total: number;
+}
+
 export interface SubscriptionPlan {
   tier: CustomerPlanTier;
   monthlyPrice: number;
+  prices: SubscriptionPrice[];
 }
 
 export interface PaymentCard {
@@ -21,7 +31,6 @@ export interface PaymentCard {
 export interface SubscriptionCatalog {
   currency: string;
   trialDays: number;
-  durationMonths: number[];
   plans: SubscriptionPlan[];
   paymentCards: PaymentCard[];
 }
