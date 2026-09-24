@@ -51,5 +51,17 @@
   "externalAuth": {
     "divider": "или",
     "error": "Не удалось войти через этот сервис. Попробуйте ещё раз."
+  },
+  "sidebar": {
+    "automations": "Автоматизации",
+    "aiManager": "ИИ-менеджер",
+    "growthTools": "Инструменты роста",
+    "virale": "Virale",
+    "chats": "Чаты",
+    "contacts": "Контакты",
+    "analytics": "Аналитика",
+    "broadcasts": "Рассылки",
+    "training": "Обучение",
+    "new": "Новое"
   }
 }

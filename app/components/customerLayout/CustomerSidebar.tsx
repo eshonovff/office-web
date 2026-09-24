@@ -1,16 +1,14 @@
-import { User } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { NavMain } from "~/components/layout/NavMain";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarHeader } from "~/components/ui/sidebar";
-import type { NavItem } from "~/config/navigation";
+import { getCustomerSidebarConfig } from "~/config/customerNavigation";
+import { CustomerNavMain } from "./CustomerNavMain";
 
-// Mirrors AppSidebar (staff) — same shell, its own (much shorter, static — no permission
-// gating, a customer has none) menu. Only "Профил" exists as a real destination right now;
-// more items land here once the open "what does a customer actually do" question is answered.
+// Mirrors AppSidebar (staff) — same shell, its own menu (getCustomerSidebarConfig): static,
+// no permission gating (a customer has none), and mostly disabled — see that file for why.
 export function CustomerSidebar() {
   const { t } = useTranslation("customerAuth");
 
-  const items: NavItem[] = [{ title: t("account.profile"), url: "/account", icon: User }];
+  const items = getCustomerSidebarConfig(t);
 
   return (
     <Sidebar collapsible="icon" className="mt-2 border-none">
@@ -20,7 +18,7 @@ export function CustomerSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <NavMain items={items} />
+            <CustomerNavMain items={items} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

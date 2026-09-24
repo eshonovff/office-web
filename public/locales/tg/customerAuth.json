@@ -51,5 +51,17 @@
   "externalAuth": {
     "divider": "ё",
     "error": "Вуруд тавассути ин хидмат ноком шуд. Лутфан дубора кӯшиш кунед."
+  },
+  "sidebar": {
+    "automations": "Автоматизатсияҳо",
+    "aiManager": "AI-менеҷер",
+    "growthTools": "Абзорҳои рушд",
+    "virale": "Virale",
+    "chats": "Чатҳо",
+    "contacts": "Контактҳо",
+    "analytics": "Аналитика",
+    "broadcasts": "Рассылкаҳо",
+    "training": "Омӯзиш",
+    "new": "Нав"
   }
 }
