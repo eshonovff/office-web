@@ -1,3 +1,4 @@
+import { customerCommentRulesApi } from '~/api/customerCommentRules';
 import { createFlowTemplatesApi } from '~/api/flowTemplates';
 import { createFlowsApi } from '~/api/flows';
 import { customerApiClient } from '~/lib/customerClient';
@@ -41,5 +42,6 @@ export const customerFlowBuilderApi: FlowBuilderApi = {
   flows: customerFlowsApi,
   templates: customerFlowTemplatesApi,
   listInstagramMedia: customerChannelsApi.listInstagramMedia,
+  dryRunRule: (channelId, payload) => customerCommentRulesApi.dryRun(channelId, payload),
   paths: { list: '/account/automations', editor: (flowId) => `/account/automations/flows/${flowId}` },
 };

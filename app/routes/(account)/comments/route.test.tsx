@@ -4,11 +4,14 @@ import userEvent from '@testing-library/user-event';
 import { StrictMode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { commentAutomationApi } from '~/api/commentAutomation';
+import { customerCommentRulesApi } from '~/api/customerCommentRules';
 import { customerCommentsApi } from '~/api/customerComments';
 import { customerChannelsApi } from '~/api/customerFlows';
 import { useIsMobile } from '~/hooks/use-mobile';
 import { makeQueryClient } from '~/lib/query-client';
 import { useCustomerAuthStore } from '~/store/useCustomerAuthStore';
+import type { AutomationRuleListItem } from '~/types/commentAutomation';
 import type { CustomerChannel } from '~/types/customerChannels';
 import type { CustomerComment, CustomerCommentPost } from '~/types/customerComments';
 import CommentsPage from './route';
@@ -30,6 +33,23 @@ vi.mock('~/api/customerComments', async (importOriginal) => ({
 vi.mock('~/api/customerFlows', async (importOriginal) => ({
   ...(await importOriginal<typeof import('~/api/customerFlows')>()),
   customerChannelsApi: { list: vi.fn() },
+}));
+vi.mock('~/api/customerCommentRules', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('~/api/customerCommentRules')>()),
+  customerCommentRulesApi: {
+    list: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    setActive: vi.fn(),
+    remove: vi.fn(),
+    dryRun: vi.fn(),
+    listInstagramMedia: vi.fn(),
+  },
+}));
+// The staff rules API must never be touched from the мизоҷ page — spied on to prove it.
+vi.mock('~/api/commentAutomation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('~/api/commentAutomation')>()),
+  commentAutomationApi: { dryRun: vi.fn(), update: vi.fn(), setActive: vi.fn(), remove: vi.fn(), list: vi.fn() },
 }));
 vi.mock('~/hooks/use-mobile', () => ({ useIsMobile: vi.fn(() => false) }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -263,5 +283,136 @@ describe('CommentsPage', () => {
     await user.click(screen.getByRole('button', { name: 'comments.back' }));
 
     expect(await screen.findByRole('button', { name: /Коллексияи нав/ })).toBeInTheDocument();
+  });
+});
+
+function rule(overrides: Partial<AutomationRuleListItem> = {}): AutomationRuleListItem {
+  return {
+    id: 'r1',
+    name: 'Нарх',
+    isActive: true,
+    triggerType: 'instagram_comment',
+    triggerConfig: { matchMode: 'keyword', keywords: ['нарх'], postScope: 'all', postIds: [] },
+    conditionConfig: { requiresFollow: true },
+    actionConfig: {
+      onMatch: {
+        commentReplies: ['Ба Direct навиштем 📩'],
+        dmText: 'Нарх: 120 сомонӣ',
+        dmButtonUrl: null,
+        dmButtonTitle: null,
+      },
+      onNotFollowing: {
+        commentReplies: ['Аввал обуна шавед 🙏'],
+        dmText: 'Обуна шавед ва аз нав нависед',
+        dmButtonUrl: null,
+        dmButtonTitle: null,
+      },
+    },
+    cooldownMinutes: 60,
+    createdAt: '2026-09-25T10:00:00Z',
+    runCount: 3,
+    ...overrides,
+  };
+}
+
+describe('CommentsPage — auto-reply tab', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useIsMobile).mockReturnValue(false);
+    signIn(true);
+    vi.mocked(customerChannelsApi.list).mockResolvedValue([channel()]);
+    vi.mocked(customerCommentsApi.posts).mockResolvedValue({ items: [post()], nextCursor: null });
+    vi.mocked(customerCommentRulesApi.list).mockResolvedValue([rule()]);
+    vi.mocked(customerCommentRulesApi.setActive).mockResolvedValue();
+    vi.mocked(customerCommentRulesApi.remove).mockResolvedValue();
+    vi.mocked(customerCommentRulesApi.update).mockResolvedValue(rule());
+    vi.mocked(customerCommentRulesApi.dryRun).mockResolvedValue({
+      matched: true,
+      matchedKeyword: 'нарх',
+      followCheckResult: null,
+    });
+  });
+
+  it('lists the rules of the мизоҷ’s channel — and asks Instagram for no posts meanwhile', async () => {
+    renderPage('/account/comments?tab=auto');
+
+    expect(await screen.findByText('Нарх')).toBeInTheDocument();
+    expect(screen.getByText('comments.rules.followCheck')).toBeInTheDocument();
+    expect(customerCommentRulesApi.list).toHaveBeenCalledWith('ch1');
+    expect(customerCommentsApi.posts).not.toHaveBeenCalled();
+  });
+
+  it('is reached from the comments tab, on the same channel', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole('tab', { name: 'comments.tabs.autoReply' }));
+
+    expect(await screen.findByText('Нарх')).toBeInTheDocument();
+    expect(customerCommentRulesApi.list).toHaveBeenCalledWith('ch1');
+  });
+
+  it('switches a rule off through the мизоҷ API', async () => {
+    const user = userEvent.setup();
+    renderPage('/account/comments?tab=auto');
+
+    await user.click(await screen.findByRole('switch', { name: 'comments.rules.toggle' }));
+
+    await waitFor(() => expect(customerCommentRulesApi.setActive).toHaveBeenCalledWith('ch1', 'r1', false));
+    expect(commentAutomationApi.setActive).not.toHaveBeenCalled();
+  });
+
+  it('deletes a rule only after confirming', async () => {
+    const user = userEvent.setup();
+    renderPage('/account/comments?tab=auto');
+
+    await user.click(await screen.findByRole('button', { name: 'actions.delete' }));
+    expect(customerCommentRulesApi.remove).not.toHaveBeenCalled();
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'actions.delete' }));
+
+    await waitFor(() => expect(customerCommentRulesApi.remove).toHaveBeenCalledWith('ch1', 'r1'));
+  });
+
+  it('edits a rule — its test run and its save go to the мизоҷ API, never the staff one', async () => {
+    const user = userEvent.setup();
+    renderPage('/account/comments?tab=auto');
+
+    await user.click(await screen.findByRole('button', { name: 'actions.edit' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.type(within(dialog).getByPlaceholderText('dryRun.placeholder'), 'Нархаш чанд?');
+    await user.click(within(dialog).getByText('dryRun.run'));
+    await waitFor(() => expect(customerCommentRulesApi.dryRun).toHaveBeenCalledWith('ch1', expect.anything()));
+
+    await user.click(screen.getByRole('button', { name: 'actions.save' }));
+
+    await waitFor(() =>
+      expect(customerCommentRulesApi.update).toHaveBeenCalledWith(
+        'ch1',
+        'r1',
+        expect.objectContaining({
+          name: 'Нарх',
+          conditionConfig: { requiresFollow: true },
+          actionConfig: expect.objectContaining({
+            onNotFollowing: expect.objectContaining({ dmText: 'Обуна шавед ва аз нав нависед' }),
+          }),
+        })
+      )
+    );
+    expect(commentAutomationApi.dryRun).not.toHaveBeenCalled();
+    expect(commentAutomationApi.update).not.toHaveBeenCalled();
+  });
+
+  it('without a plan: no new rule, and a rule that is off stays off', async () => {
+    signIn(false);
+    vi.mocked(customerCommentRulesApi.list).mockResolvedValue([rule({ isActive: false })]);
+    renderPage('/account/comments?tab=auto');
+
+    // base-ui's switch is a span: disabled shows as aria-disabled.
+    expect(await screen.findByRole('switch', { name: 'comments.rules.toggle' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    expect(screen.getByRole('button', { name: 'createRule' })).toBeDisabled();
+    expect(screen.getByRole('link', { name: 'comments.choosePlan' })).toHaveAttribute('href', '/account/billing');
   });
 });
