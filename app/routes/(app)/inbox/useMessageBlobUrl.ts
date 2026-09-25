@@ -1,6 +1,6 @@
 import axios, { type AxiosProgressEvent } from 'axios';
 import { useEffect, useRef, useState } from 'react';
-import { conversationsApi } from '~/api/conversations';
+import { type InboxApi, staffInboxApi, useInboxApi } from './inboxApi';
 
 type BlobKind = 'media' | 'thumbnail';
 /** The terminal-failure subset shared between the auto hook and the gated one — neither ever resolves an error to 'loading'/'downloading'/'idle'/'ready'. */
@@ -40,18 +40,23 @@ function statusFromError(error: unknown): BlobErrorStatus {
   return 'error';
 }
 
-async function fetchObjectUrl(kind: BlobKind, path: string) {
-  const blob = kind === 'thumbnail' ? await conversationsApi.getThumbnailBlob(path) : await conversationsApi.getMediaBlob(path);
+async function fetchObjectUrl(kind: BlobKind, path: string, api: InboxApi) {
+  const blob = kind === 'thumbnail' ? await api.getThumbnailBlob(path) : await api.getMediaBlob(path);
   return URL.createObjectURL(blob);
 }
 
-export async function getMessageObjectUrl(kind: BlobKind, messageId: string, path: string): Promise<string> {
+export async function getMessageObjectUrl(
+  kind: BlobKind,
+  messageId: string,
+  path: string,
+  api: InboxApi = staffInboxApi
+): Promise<string> {
   const key = cacheKey(kind, messageId, path);
   const cached = blobCache.get(key);
   if (cached?.objectUrl) return cached.objectUrl;
   if (cached?.promise) return cached.promise;
 
-  const promise = fetchObjectUrl(kind, path)
+  const promise = fetchObjectUrl(kind, path, api)
     .then((objectUrl) => {
       blobCache.set(key, { objectUrl, status: 'ready' });
       return objectUrl;
@@ -67,6 +72,7 @@ export async function getMessageObjectUrl(kind: BlobKind, messageId: string, pat
 }
 
 export function useMessageBlobUrl(kind: BlobKind, messageId: string, path: string | null | undefined): BlobUrlResult {
+  const api = useInboxApi();
   const [state, setState] = useState<BlobUrlState>({ objectUrl: null, status: path ? 'loading' : 'idle' });
   // Bumped by retry() to force the effect below to run again — clearing the
   // cache alone wouldn't do that, since [kind, messageId, path] wouldn't
@@ -92,7 +98,7 @@ export function useMessageBlobUrl(kind: BlobKind, messageId: string, path: strin
       return;
     }
 
-    const promise = getMessageObjectUrl(kind, messageId, path);
+    const promise = getMessageObjectUrl(kind, messageId, path, api);
     setState({ objectUrl: null, status: 'loading' });
 
     promise
@@ -106,7 +112,7 @@ export function useMessageBlobUrl(kind: BlobKind, messageId: string, path: strin
     return () => {
       cancelled = true;
     };
-  }, [kind, messageId, path, attempt]);
+  }, [kind, messageId, path, attempt, api]);
 
   function retry() {
     if (path) blobCache.delete(cacheKey(kind, messageId, path));
@@ -142,6 +148,7 @@ export interface GatedMediaResult {
  * ServerMediaState/'pending').
  */
 export function useGatedMediaDownload(messageId: string, path: string | null | undefined): GatedMediaResult {
+  const api = useInboxApi();
   const [state, setState] = useState<{ status: GatedMediaStatus; objectUrl: string | null; progress: DownloadProgress | null }>(() => {
     const cached = path ? blobCache.get(cacheKey('media', messageId, path)) : undefined;
     if (cached?.objectUrl) return { status: 'ready', objectUrl: cached.objectUrl, progress: null };
@@ -176,7 +183,7 @@ export function useGatedMediaDownload(messageId: string, path: string | null | u
     abortRef.current = controller;
     setState({ status: 'downloading', objectUrl: null, progress: { loaded: 0, total: null } });
 
-    conversationsApi
+    api
       .getMediaBlob(path, {
         signal: controller.signal,
         onDownloadProgress: (event: AxiosProgressEvent) =>

@@ -20,6 +20,8 @@ export interface CustomerNavItem {
   icon: LucideIcon;
   disabled?: boolean;
   isNew?: boolean;
+  /** A live count next to the title (CustomerNavMain reads it from the `badges` it is given). */
+  badgeKey?: 'unreadChats';
 }
 
 // Static — a customer has no permissions to filter by (unlike getSidebarConfig for staff).
@@ -31,7 +33,12 @@ export const getCustomerSidebarConfig = (t: TFunction): CustomerNavItem[] => [
   { title: t('sidebar.aiManager', { ns: 'customerAuth' }), icon: Bot, disabled: true },
   { title: t('sidebar.growthTools', { ns: 'customerAuth' }), icon: Rocket, disabled: true },
   { title: t('sidebar.virale', { ns: 'customerAuth' }), icon: Flame, disabled: true },
-  { title: t('sidebar.chats', { ns: 'customerAuth' }), icon: MessageSquare, disabled: true },
+  {
+    title: t('sidebar.chats', { ns: 'customerAuth' }),
+    url: '/account/chats',
+    icon: MessageSquare,
+    badgeKey: 'unreadChats',
+  },
   { title: t('sidebar.contacts', { ns: 'customerAuth' }), icon: Contact, disabled: true },
   { title: t('sidebar.analytics', { ns: 'customerAuth' }), icon: ChartColumn, disabled: true },
   { title: t('sidebar.broadcasts', { ns: 'customerAuth' }), icon: Send, disabled: true },
