@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
+import { useFlowBuilderApi } from '~/lib/flowBuilderApi';
 import { useTranslation } from 'react-i18next';
-import { flowsApi } from '~/api/flows';
 import { ChipInput } from '~/components/shared/ChipInput';
 import { CustomSelect } from '~/components/shared/CustomSelect';
 import { Input } from '~/components/ui/input';
@@ -26,6 +26,7 @@ interface ActionNodePanelProps {
 }
 
 export function ActionNodePanel({ config, flows, currentFlowId, onChange }: ActionNodePanelProps) {
+  const flowApi = useFlowBuilderApi();
   const { t } = useTranslation('flows');
 
   // Санҷиши сабуки ҳалқа: танҳо як қадам ба пеш (target→ин flow мустақим) — на занҷири
@@ -34,7 +35,7 @@ export function ActionNodePanel({ config, flows, currentFlowId, onChange }: Acti
   const targetFlowId = config.kind === 'goto_flow' ? config.targetFlowId : null;
   const { data: targetFlow } = useQuery({
     queryKey: ['flows', targetFlowId],
-    queryFn: () => flowsApi.get(targetFlowId!),
+    queryFn: () => flowApi.flows.get(targetFlowId!),
     enabled: !!targetFlowId,
   });
   const targetLoopsBack = !!targetFlow?.nodes.some((n) => {

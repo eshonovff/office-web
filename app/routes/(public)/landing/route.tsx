@@ -1,0 +1,36 @@
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link, useSearchParams } from 'react-router';
+import { toast } from 'sonner';
+import { Button } from '~/components/ui/button';
+
+export default function LandingPage() {
+  const { t } = useTranslation('customerAuth');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Set by leaveCustomerArea after an account deletion (a full page load, so no toast could
+  // survive it) — shown once, then dropped from the URL so a reload doesn't repeat it.
+  useEffect(() => {
+    if (searchParams.get('accountDeleted') !== '1') return;
+    toast.success(t('settings.danger.deleted'), { id: 'account-deleted' });
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams, t]);
+
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="max-w-xl space-y-6">
+        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{t('landing.heroTitle')}</h1>
+        <p className="text-muted-foreground text-lg">{t('landing.heroSubtitle')}</p>
+
+        <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
+          <Button size="lg" className="w-full sm:w-auto" render={<Link to="/register" />}>
+            {t('landing.registerCta')}
+          </Button>
+          <Button size="lg" variant="outline" className="w-full sm:w-auto" render={<Link to="/login" />}>
+            {t('landing.loginCta')}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

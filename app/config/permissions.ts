@@ -22,6 +22,7 @@ export const Permissions = {
   },
   Channels: { Manage: 'channels.manage' },
   Templates: { Manage: 'templates.manage' },
+  Subscriptions: { Manage: 'subscriptions.manage' },
 } as const;
 
 type ValueOf<T> = T[keyof T];
@@ -54,6 +55,7 @@ export const ROUTE_PERMISSIONS: Record<string, PermissionKey> = {
   '/automations': Permissions.Channels.Manage,
   '/automations/flows/:id': Permissions.Channels.Manage,
   '/settings': Permissions.Templates.Manage,
+  '/subscriptions': Permissions.Subscriptions.Manage,
 };
 
 /**

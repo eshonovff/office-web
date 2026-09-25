@@ -51,7 +51,8 @@
     "roles": "Ролҳо",
     "projects": "Проектҳо",
     "inbox": "Инбокс",
-    "settings": "Танзимот"
+    "settings": "Танзимот",
+    "subscriptions": "Обунаҳо"
   },
   "dashboard": {
     "greeting": "Салом"
@@ -88,5 +89,11 @@
     "minutesAgo": "{{count}} дақ. пеш",
     "hoursAgo": "{{count}} соат пеш",
     "daysAgo": "{{count}} рӯз пеш"
-  }
+  },
+  "serverUnreachable": {
+    "title": "Сервер дастрас нест",
+    "description": "Пайвастро санҷед ё баъд аз чанд сония такрор кунед. Сессияи шумо боқӣ мондааст.",
+    "retry": "Такрор кардан"
+  },
+  "brand": "Office Nizom"
 }

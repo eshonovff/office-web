@@ -1,8 +1,8 @@
 import { useMutation } from '@tanstack/react-query';
+import { useFlowBuilderApi } from '~/lib/flowBuilderApi';
 import { Braces, Mic, Paperclip, Plus, Square, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { flowsApi } from '~/api/flows';
 import { CustomSelect } from '~/components/shared/CustomSelect';
 import { Button } from '~/components/ui/button';
 import { Checkbox } from '~/components/ui/checkbox';
@@ -40,6 +40,7 @@ interface MessageNodePanelProps {
 // зиёда: Send API-и Meta як message object мегирад (ниг. FlowEngine.ExecuteMessageNodeAsync).
 // Барои дуюм media, нодаи дигари паём илова кунед.
 export function MessageNodePanel({ config, channelId, customVariableKeys, onChange }: MessageNodePanelProps) {
+  const flowApi = useFlowBuilderApi();
   const { t } = useTranslation('flows');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -69,13 +70,18 @@ export function MessageNodePanel({ config, channelId, customVariableKeys, onChan
 
   const { mutate: uploadMedia, isPending: isUploading } = useMutation({
     mutationFn: (file: File) =>
-      flowsApi.uploadMedia(channelId, file, (event) => {
+      flowApi.flows.uploadMedia(channelId, file, (event) => {
         if (!event.total) return;
         setUploadProgress(Math.round((event.loaded / event.total) * 100));
       }),
     onSuccess: (result) => {
       setUploadProgress(0);
-      setMediaBlockValue({ type: result.blockType, text: null, mediaId: result.mediaId, previewDataUri: result.previewDataUri ?? null });
+      setMediaBlockValue({
+        type: result.blockType,
+        text: null,
+        mediaId: result.mediaId,
+        previewDataUri: result.previewDataUri ?? null,
+      });
     },
     onError: () => {
       setUploadProgress(0);
@@ -142,7 +148,9 @@ export function MessageNodePanel({ config, channelId, customVariableKeys, onChan
       recordingChunksRef.current = [];
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       recordingStreamRef.current = stream;
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : 'audio/webm';
       const recorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = recorder;
 

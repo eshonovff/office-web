@@ -385,6 +385,16 @@ body {
   gap: 32px;
 }
 
+.splash-mark {
+  width: 72px;
+  height: 72px;
+  padding: 10px;
+  border-radius: 18px;
+  background: #fff; /* the mark's dark-navy half needs a light ground in the dark theme too */
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+  margin-bottom: -16px; /* the column gap is 32px; mark and wordmark read as one logo */
+}
+
 .splash-logo {
   font-family: var(--font-sans), sans-serif;
   font-size: 1.625rem;

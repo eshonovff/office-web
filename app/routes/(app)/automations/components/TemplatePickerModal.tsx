@@ -1,10 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useFlowBuilderApi } from '~/lib/flowBuilderApi';
 import { ArrowLeft, FileText, GitBranch } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { flowTemplatesApi } from '~/api/flowTemplates';
-import { flowsApi } from '~/api/flows';
 import { CustomSelect } from '~/components/shared/CustomSelect';
 import { Modal } from '~/components/shared/Modal';
 import { TriggerConfigFields } from '~/components/shared/TriggerConfigFields';
@@ -25,6 +24,7 @@ interface TemplatePickerModalProps {
 }
 
 export function TemplatePickerModal({ channelId, open, onClose, onCreated }: TemplatePickerModalProps) {
+  const flowApi = useFlowBuilderApi();
   const { t } = useTranslation(['automations', 'instagramAutomation', 'common']);
   const [selected, setSelected] = useState<string | typeof BLANK | null>(null);
 
@@ -37,7 +37,7 @@ export function TemplatePickerModal({ channelId, open, onClose, onCreated }: Tem
 
   const { data: templates = [], isLoading } = useQuery({
     queryKey: ['flow-templates'],
-    queryFn: flowTemplatesApi.list,
+    queryFn: flowApi.templates.list,
     enabled: open,
   });
 
@@ -49,8 +49,8 @@ export function TemplatePickerModal({ channelId, open, onClose, onCreated }: Tem
         triggerConfig: { matchMode, keywords: keywords.filter((k) => k.trim()), postScope, postIds },
       };
       return selected === BLANK
-        ? flowsApi.create(channelId, payload)
-        : flowTemplatesApi.instantiate(channelId, selected!, payload);
+        ? flowApi.flows.create(channelId, payload)
+        : flowApi.templates.instantiate(channelId, selected!, payload);
     },
     onSuccess: (flow) => {
       toast.success(t('templatePicker.created'));

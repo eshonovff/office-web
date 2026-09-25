@@ -1,5 +1,72 @@
 # PROGRESS — Frontend
 
+## Ҳолати имрӯза (2026-09-25)
+
+**Вуруди ягона ва тарҳи ягона (`feat/fe-phase-14-customer-automations`):**
+- `/login` — як саҳифа барои кормандон ва мизоҷон, бо як майдони "Email ё логин". Агар матн
+  "@" дошта бошад → `/api/public/auth/login` → `/account`; вагарна → `/api/auth/login` →
+  `/dashboard` (ё `/change-password`). Логини корманд ҳамеша рақами телефон ё `owner` аст
+  (backend: тести `PhoneNumber.Normalize_NeverYieldsAnythingButDigits`).
+- Амният: паёми хато барои ҳарду якхела ("Логин ё рамз нодуруст аст"); "email тасдиқ нашуд"
+  танҳо баъди рамзи дуруст; `?redirectTo` — корманд танҳо ба саҳифаи бо иҷозат, мизоҷ танҳо
+  ба `/account…` (`app/lib/signIn.ts` + тест). Endpoint, rate limit, токен ва cookie ҷудо.
+- `/register` ва `/verify-email` ба `(auth)/*` кӯчиданд — ҳамон тарҳи дусутунаи `/login`
+  (матни чап, форма рост, дар телефон танҳо форма), бо интихоби забон ва мавзӯъ.
+- `/account/login` → redirect ба `/login` (бо `?…`); landing — як тугмаи "Ворид шудан".
+- Зинда дар Chrome: корманд (→ `/change-password`), корманд бо рамзи хато, мизоҷ (email бо
+  ҳарфи калон ва фосила → `/account`), мизоҷ бо рамзи хато (ҳамон паём), email-и тасдиқнашуда
+  (паём + "Тасдиқ кунед"), `/account/login?redirectTo=//evil.com` → `/account`.
+
+**Барқарор кардани рамзи мизоҷ:** `/login` → "Рамзро фаромӯш кардед?" (бо email-и навишташуда)
+→ `/forgot-password` (ҷавоби якхела, танаффуси 60 с, ишора барои кормандон) → email →
+`/reset-password#token=…` (токен аз fragment хонда шуда, фавран аз сатри суроға тоза мешавад; рамз
+ду бор) → `/login?passwordReset=1` (паём). Пайванди нодуруст/истифодашуда → "пайванди нав гиред".
+Backend ва таҳлили амният: `office-api/docs/phases/phase-14-customer-automations.md`.
+
+**Логотипи Office Nizom:** нишона (бе матн) дар плиткаи сафед — `components/shared/BrandLogo.tsx`
+(номи "Office Nizom" матни зинда аз `common:brand`, мувофиқи мавзӯ): вуруд/сабти ном, landing,
+sidebar-и кормандон ва мизоҷ (ҷамъшуда — танҳо нишона), экрани боргузорӣ. Favicon (ICO бо PNG-и
+32px), `icon-192`, `apple-touch-icon`, `<title>`. Файлҳо: `public/brand/`; асл ва нишонаи
+1024px барои App Review-и Meta — `docs/brand/` (ниг. README он ҷо).
+
+## Ҳолати 2026-09-24
+
+> ⚠️ Сатрҳои 2026-08-18 то 2026-09-24 дар ин файл сабт НАШУДААНД (кор дар чатҳои дигар
+> давом ёфт — flows/automations, comment automation ва ғ., ниг. `git log` барои тафсил).
+> Хулосаи ин сабт танҳо кори охирин аст, на ҳамаи он давра.
+
+**feat/fe-phase-13-subscriptions (аз `feat/fe-customer-registration` бурида шуд, ҳарду ҳанӯз ба
+`dev` merge нашудаанд):** Обунаи мизоҷ — backend: office-api `feat/phase-13-subscriptions`
+(нақша ва тасмимҳо: `office-api/docs/phases/phase-13-subscriptions.md`).
+- `/account/billing` — интихоби тариф ва муддат → маблағи ягона (мас. 200.84) + кортҳо (бо
+  тугмаи нусха) → бор кардани чек → "дар санҷиш" → таърихи дархостҳо (сабаби рад намоён)
+- Footer-и sidebar-и мизоҷ: trial (N рӯз монд) / тариф то сана / мӯҳлат гузашт + пайванд ба billing
+- `CustomerMeResponse.access` (аз `/me`), `app/lib/customerSubscription.ts` (pure + тест)
+- Staff: `Permissions.Subscriptions.Manage` + тарҷумаи `roles.json` (саҳифаи модератор — баъдтар)
+- Ҳоло `Subscriptions:PaymentCards` дар backend холист → UI "пардохт ҳоло қабул намешавад"
+  нишон медиҳад ва тугмаи харидро хомӯш мекунад, то кортҳои воқеӣ ворид шаванд
+- Дар Chrome-и headless (DevTools Protocol, бо корти тестии муваққатӣ) ҳар ҳолат дида шуд:
+  trial, қадами пардохт, чек дар санҷиш, тасдиқ → Active, рад бо сабаб, мӯҳлат гузашт,
+  иваз кардани тариф — desktop ва 390px
+
+**feat/fe-customer-registration (кор дар ин бранч, ҳанӯз ба `dev` merge нашуда):**
+Сабти худии мизоҷ — office-api-и `feat(customer-auth)` (email+parol, коди 6-рақама,
+`/api/public/auth/*`, JWT scheme-и худ) акнун frontend дорад:
+- `/` дигар паси login-и корманд нест — саҳифаи ҷамъиятии landing шуд (`(public)/*`)
+- `/register` → `/verify-email?email=` (коди 6-рақама, cooldown 60с) → `/account`
+- `/account/login` — вуруди мизоҷ; 403 (email тасдиқнашуда) → пайванд ба verify-email
+- `/account` — placeholder-и хурд (салом + баромадан), чун "мизоҷ баъд аз вуруд чӣ мебинад"
+  ҳанӯз ҳалнашуда монд (ниг. чати қаблӣ)
+- `useCustomerAuthStore`/`customerClient.ts`/`api/customerAuth.ts` — комилан ҷудо аз
+  ҳамтои кормандон (`useAuthStore`/`client.ts`/`api/auth.ts`): токен, cookie, interceptor,
+  ҳама алоҳида, то ду сессия дар як браузер омехта нашаванд
+- Кормандон бетағйир: `/login` ҳамон ҷо, вале fallback-и баъди вуруд ва баъди
+  `/change-password` акнун `/dashboard` аст (на `/`, чун он дигар қисми `(app)` нест);
+  `/403`-и "back home" низ ба `/dashboard` ислоҳ шуд
+- `npm run typecheck`/`lint`/`build`/`test` (520 тест) тоза. Дар браузери воқеӣ санҷида
+  НАШУД (ин муҳит абзори browser надорад) — танҳо `curl`-и dev server (200 ҳама роут)
+  ва тоза будани typecheck/build/test
+
 ## Ҳолати имрӯза (2026-08-18)
 
 **Тамом:** Фазаи 0–4 (setup, auth, users/роли, projects+Kanban, inbox+realtime) — ҳама дар `dev`. Илова бар нақша: блоки 2-и коллаборатсияи инбокс (read-only composer+takeover, auto-claim, фиристодани таъхирӣ бо cancel/failure-reason, ёддошти дохилӣ, таърихи таъинот), responsive (mobile/tablet/desktop), `/channels` CRUD, notifications bell, Board realtime (`/hubs/board`) — ҳамаи ин низ дар `dev`. 214 тест, `tsc`/`build` тоза.

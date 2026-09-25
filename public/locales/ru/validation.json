@@ -12,5 +12,12 @@
   "invalidEmail": "Некорректный email",
   "avatarType": "Разрешены только файлы изображений (.jpg, .jpeg, .png, .webp)",
   "projectKeyPattern": "Ключ проекта должен содержать только заглавные буквы, цифры, `_` и `-`",
-  "channelCredentialsAllOrNothing": "Чтобы изменить токен, заполните WABA ID и Access Token вместе (или оставьте оба пустыми, чтобы сохранить старый токен)"
+  "channelCredentialsAllOrNothing": "Чтобы изменить токен, заполните WABA ID и Access Token вместе (или оставьте оба пустыми, чтобы сохранить старый токен)",
+  "fullNameRequired": "Введите имя и фамилию",
+  "emailRequired": "Введите email",
+  "codeRequired": "Введите код",
+  "codeLength": "Код должен состоять из 6 цифр",
+  "codeDigitsOnly": "Код должен содержать только цифры",
+  "identifierRequired": "Введите email или логин",
+  "passwordMaxLength": "Пароль не должен быть длиннее 128 символов"
 }

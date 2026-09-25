@@ -51,7 +51,8 @@
     "roles": "Роли",
     "projects": "Проекты",
     "inbox": "Входящие",
-    "settings": "Настройки"
+    "settings": "Настройки",
+    "subscriptions": "Подписки"
   },
   "dashboard": {
     "greeting": "Здравствуйте"
@@ -88,5 +89,11 @@
     "minutesAgo": "{{count}} мин назад",
     "hoursAgo": "{{count}} ч назад",
     "daysAgo": "{{count}} дн назад"
-  }
+  },
+  "serverUnreachable": {
+    "title": "Сервер недоступен",
+    "description": "Проверьте подключение или повторите через несколько секунд. Ваша сессия сохранена.",
+    "retry": "Повторить"
+  },
+  "brand": "Office Nizom"
 }

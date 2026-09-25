@@ -22,4 +22,10 @@ describe("canAccessRoute", () => {
   it("matches dynamic segments", () => {
     expect(canAccessRoute("/users/123", [Permissions.Users.View])).toBe(true);
   });
+
+  it("opens the subscription moderation page only with subscriptions.manage", () => {
+    expect(canAccessRoute("/subscriptions", [])).toBe(false);
+    expect(canAccessRoute("/subscriptions", [Permissions.Channels.Manage, Permissions.Users.Manage])).toBe(false);
+    expect(canAccessRoute("/subscriptions", [Permissions.Subscriptions.Manage])).toBe(true);
+  });
 });

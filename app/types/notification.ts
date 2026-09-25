@@ -1,4 +1,5 @@
-export type NotificationType = 'task_assigned' | 'deadline_tomorrow' | 'mention' | 'whatsapp_error';
+export type NotificationType =
+  'task_assigned' | 'deadline_tomorrow' | 'mention' | 'whatsapp_error' | 'subscription_receipt';
 
 export interface NotificationDto {
   id: string;
