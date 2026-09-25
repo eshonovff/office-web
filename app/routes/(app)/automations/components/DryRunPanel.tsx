@@ -1,10 +1,10 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { commentAutomationApi } from '~/api/commentAutomation';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Textarea } from '~/components/ui/textarea';
+import { useFlowBuilderApi } from '~/lib/flowBuilderApi';
 import type { AutomationMatchMode, AutomationPostScope } from '~/types/commentAutomation';
 
 interface DryRunPanelProps {
@@ -26,10 +26,12 @@ export function DryRunPanel({ channelId, matchMode, keywords, postScope, postIds
   const { t } = useTranslation('instagramAutomation');
   const [commentText, setCommentText] = useState('');
   const [actorId, setActorId] = useState('');
+  // Staff or мизоҷ API — whichever area the rule form is in (FlowBuilderApiProvider).
+  const { dryRunRule } = useFlowBuilderApi();
 
   const { mutate, data, isPending } = useMutation({
     mutationFn: () =>
-      commentAutomationApi.dryRun(channelId, {
+      dryRunRule(channelId, {
         triggerConfig: {
           matchMode,
           keywords: keywords.filter((k) => k.trim()),

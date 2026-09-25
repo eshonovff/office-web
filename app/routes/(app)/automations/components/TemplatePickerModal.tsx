@@ -6,13 +6,11 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { CustomSelect } from '~/components/shared/CustomSelect';
 import { Modal } from '~/components/shared/Modal';
-import { PublicRepliesField } from '~/components/shared/PublicRepliesField';
 import { TriggerConfigFields } from '~/components/shared/TriggerConfigFields';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Skeleton } from '~/components/ui/skeleton';
-import { publicRepliesValid } from '~/lib/publicReplies';
 import type { AutomationMatchMode, AutomationPostScope } from '~/types/commentAutomation';
 import { FLOW_TRIGGER_TYPES, type FlowDetail, type FlowTemplateListItem, type FlowTriggerType } from '~/types/flow';
 
@@ -36,8 +34,6 @@ export function TemplatePickerModal({ channelId, open, onClose, onCreated }: Tem
   const [keywords, setKeywords] = useState<string[]>([]);
   const [postScope, setPostScope] = useState<AutomationPostScope>('all');
   const [postIds, setPostIds] = useState<string[]>([]);
-  const [publicReplies, setPublicReplies] = useState<string[]>([]);
-  const isComment = triggerType === 'instagram_comment';
 
   const { data: templates = [], isLoading } = useQuery({
     queryKey: ['flow-templates'],
@@ -50,13 +46,7 @@ export function TemplatePickerModal({ channelId, open, onClose, onCreated }: Tem
       const payload = {
         name,
         triggerType,
-        triggerConfig: {
-          matchMode,
-          keywords: keywords.filter((k) => k.trim()),
-          postScope,
-          postIds,
-          publicReplies: isComment ? publicReplies.map((r) => r.trim()) : [],
-        },
+        triggerConfig: { matchMode, keywords: keywords.filter((k) => k.trim()), postScope, postIds },
       };
       return selected === BLANK
         ? flowApi.flows.create(channelId, payload)
@@ -77,7 +67,6 @@ export function TemplatePickerModal({ channelId, open, onClose, onCreated }: Tem
     setKeywords([]);
     setPostScope('all');
     setPostIds([]);
-    setPublicReplies([]);
   }
 
   function close() {
@@ -88,8 +77,7 @@ export function TemplatePickerModal({ channelId, open, onClose, onCreated }: Tem
   const canCreate =
     name.trim().length > 0 &&
     (matchMode !== 'keyword' || keywords.some((k) => k.trim())) &&
-    (postScope !== 'selected' || postIds.length > 0) &&
-    (!isComment || publicRepliesValid(publicReplies));
+    (postScope !== 'selected' || postIds.length > 0);
 
   return (
     <Modal
@@ -174,8 +162,6 @@ export function TemplatePickerModal({ channelId, open, onClose, onCreated }: Tem
             postIds={postIds}
             onPostIdsChange={setPostIds}
           />
-
-          {isComment && <PublicRepliesField value={publicReplies} onChange={setPublicReplies} />}
         </div>
       )}
     </Modal>

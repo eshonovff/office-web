@@ -10,6 +10,7 @@
   "inactive": "Ғайрифаъол",
   "enable": "Фаъол кардан",
   "disable": "Хомӯш кардан",
+  "runCount": "{{count}} маротиба иҷро шуд",
   "runCount_one": "{{count}} маротиба иҷро шуд",
   "runCount_other": "{{count}} маротиба иҷро шуд",
   "choosePosts": "Интихоби пост",
