@@ -6,21 +6,28 @@ import type { CustomerNavItem } from '~/config/customerNavigation';
 
 interface CustomerNavMainProps {
   items: CustomerNavItem[];
+  badges?: Partial<Record<NonNullable<CustomerNavItem['badgeKey']>, number>>;
 }
 
 // Flat list, no collapsible sub-groups — unlike NavMain (staff), which needs those. Adds
 // disabled (greyed out, not a link — nothing to navigate to yet) and isNew (a small badge)
 // on top, neither of which the staff nav has ever needed.
-export function CustomerNavMain({ items }: CustomerNavMainProps) {
+export function CustomerNavMain({ items, badges }: CustomerNavMainProps) {
   const { t } = useTranslation('customerAuth');
 
   return (
     <SidebarMenu className="flex flex-col gap-1">
       {items.map((item) => {
+        const badge = item.badgeKey ? badges?.[item.badgeKey] : undefined;
         const content = (
           <>
             <item.icon />
             <span className="truncate">{item.title}</span>
+            {!!badge && (
+              <span className="bg-primary text-primary-foreground ml-auto shrink-0 rounded-md px-1.5 text-xs leading-5 tabular-nums group-data-[collapsible=icon]:hidden">
+                {badge}
+              </span>
+            )}
             {item.isNew && (
               <Badge variant="secondary" className="ml-auto shrink-0 px-1.5 py-0 text-[10px] leading-4">
                 {t('sidebar.new')}

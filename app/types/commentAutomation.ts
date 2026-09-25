@@ -6,6 +6,8 @@ export interface AutomationTriggerConfig {
   keywords: string[];
   postScope: AutomationPostScope;
   postIds: string[];
+  /** Flows with a comment trigger only: replies posted under the comment, in turn. */
+  publicReplies?: string[] | null;
 }
 
 export interface AutomationConditionConfig {

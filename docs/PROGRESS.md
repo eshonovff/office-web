@@ -17,6 +17,13 @@
   ҳарфи калон ва фосила → `/account`), мизоҷ бо рамзи хато (ҳамон паём), email-и тасдиқнашуда
   (паём + "Тасдиқ кунед"), `/account/login?redirectTo=//evil.com` → `/account`.
 
+**Фазаи 15 — Чатҳои мизоҷ (`feat/fe-phase-15-customer-chats`):** `/account/chats` — чатҳои
+Instagram-и худи мизоҷ: рӯйхат (ҷустуҷӯ, хонданашуда), чат, ҷавоби матнӣ бо бекоркунӣ, сабаби
+манъ (тариф / reconnect / 24 соат), realtime тавассути `/hubs/customer` ва нишонаи меню.
+`MessageBubble`-и кормандон тавассути `InboxApi` context (`inbox/inboxApi.ts`) такроран истифода
+мешавад — медиа ва "бекор" дар саҳифаи мизоҷ ба `/api/public` мераванд. Нақша ва натиҷа:
+`office-api/docs/phases/phase-15-customer-chats.md`.
+
 **Барқарор кардани рамзи мизоҷ:** `/login` → "Рамзро фаромӯш кардед?" (бо email-и навишташуда)
 → `/forgot-password` (ҷавоби якхела, танаффуси 60 с, ишора барои кормандон) → email →
 `/reset-password#token=…` (токен аз fragment хонда шуда, фавран аз сатри суроға тоза мешавад; рамз
