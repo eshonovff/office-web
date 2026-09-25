@@ -3,6 +3,7 @@ import { customerAuthApi } from '~/api/customerAuth';
 import { CustomerHeader } from '~/components/customerLayout/CustomerHeader';
 import { CustomerSidebar } from '~/components/customerLayout/CustomerSidebar';
 import { SidebarProvider } from '~/components/ui/sidebar';
+import { useCustomerRealtime } from '~/hooks/useCustomerRealtime';
 import { isSessionRejected, ServerUnreachableError, withTransientRetry } from '~/lib/authFailure';
 import { refreshCustomerAccessToken } from '~/lib/customerClient';
 import { useCustomerAuthStore } from '~/store/useCustomerAuthStore';
@@ -35,6 +36,8 @@ export async function clientLoader() {
 }
 
 export default function AccountLayout() {
+  useCustomerRealtime();
+
   return (
     <SidebarProvider className="bg-sidebar h-dvh">
       <CustomerSidebar />

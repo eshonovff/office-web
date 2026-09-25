@@ -1,7 +1,9 @@
 import * as signalR from '@microsoft/signalr';
 import { jwtDecode } from 'jwt-decode';
 import { refreshAccessToken } from '~/lib/client';
+import { refreshCustomerAccessToken } from '~/lib/customerClient';
 import { useAuthStore } from '~/store/useAuthStore';
+import { useCustomerAuthStore } from '~/store/useCustomerAuthStore';
 
 interface JwtWithExpiry {
   exp?: number;
@@ -24,15 +26,25 @@ export async function getHubAccessToken(): Promise<string> {
   return refreshAccessToken();
 }
 
+/** The мизоҷ's own token for /hubs/customer — never the staff one (two separate sessions). */
+export async function getCustomerHubAccessToken(): Promise<string> {
+  const token = useCustomerAuthStore.getState().accessToken;
+  if (token && !shouldRefreshToken(token)) return token;
+  return refreshCustomerAccessToken();
+}
+
 // SignalR's client SDK appends the token to the URL as `access_token=`
 // automatically for WebSocket transport when accessTokenFactory is set —
 // the transport itself can't carry an Authorization header.
-export function createHubConnection(hubPath: string): signalR.HubConnection {
+export function createHubConnection(
+  hubPath: string,
+  accessTokenFactory: () => Promise<string> = getHubAccessToken
+): signalR.HubConnection {
   const baseURL = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
 
   return new signalR.HubConnectionBuilder()
     .withUrl(`${baseURL}${hubPath}`, {
-      accessTokenFactory: getHubAccessToken,
+      accessTokenFactory,
     })
     .withAutomaticReconnect()
     .configureLogging(import.meta.env.DEV ? signalR.LogLevel.Warning : signalR.LogLevel.Error)

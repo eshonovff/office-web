@@ -20,7 +20,6 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { conversationsApi } from '~/api/conversations';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { formatDate } from '~/lib/format';
@@ -28,6 +27,7 @@ import { cn } from '~/lib/utils';
 import type { ChannelType } from '~/types/conversation';
 import type { Message, MessageType } from '~/types/message';
 import { formatBytes, formatDownloadProgress } from '../formatMediaSize';
+import { useInboxApi } from '../inboxApi';
 import { getServerMediaState } from '../mediaAvailability';
 import { classifyMessengerContent } from '../messengerContent';
 import { useGatedMediaDownload, useMessageBlobUrl, type GatedMediaStatus } from '../useMessageBlobUrl';
@@ -93,19 +93,20 @@ function usePendingCountdown(createdAt: string): number {
 function PendingSendControls({ message }: { message: Message }) {
   const { t } = useTranslation('inbox');
   const queryClient = useQueryClient();
+  const api = useInboxApi();
   const remaining = usePendingCountdown(message.createdAt);
 
   const { mutate: cancelSend, isPending: isCancelling } = useMutation({
-    mutationFn: () => conversationsApi.cancelMessage(message.conversationId, message.id),
+    mutationFn: () => api.cancelMessage(message.conversationId, message.id),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['conversations', message.conversationId, 'messages'] });
+      void queryClient.invalidateQueries({ queryKey: api.messagesQueryKey(message.conversationId) });
     },
     onError: (error: unknown) => {
       const status = (error as { response?: { status?: number } })?.response?.status;
       toast.error(status === 409 ? t('cancelTooLate') : t('cancelFailed'));
       // The job may have already run and changed the real status (Sent/Failed)
       // — refetch so the UI reflects what actually happened, not a stale Pending.
-      void queryClient.invalidateQueries({ queryKey: ['conversations', message.conversationId, 'messages'] });
+      void queryClient.invalidateQueries({ queryKey: api.messagesQueryKey(message.conversationId) });
     },
   });
 
@@ -497,15 +498,17 @@ function MessageMedia({ message, isOutbound }: { message: Message; isOutbound: b
 interface MessageBubbleProps {
   message: Message;
   channelType?: ChannelType;
+  /** Who sent an outbound message (agent name / "sent from the app"). Off for a мизоҷ: every reply is theirs. */
+  showSender?: boolean;
 }
 
-export function MessageBubble({ message, channelType }: MessageBubbleProps) {
+export function MessageBubble({ message, channelType, showSender = true }: MessageBubbleProps) {
   const { t } = useTranslation('inbox');
   const isOutbound = message.direction === 'Outbound';
   // is_echo аз Meta: агенте набуд, худи мижоздор мустақим аз барномаи Instagram/Facebook
   // навиштааст — sentByUserId/sentByUserName холианд (ниг. InstagramPayloadParser/FacebookPayloadParser).
   const sentFromAppLabel =
-    isOutbound && !message.sentByUserName && channelType && channelType !== 'WhatsApp'
+    showSender && isOutbound && !message.sentByUserName && channelType && channelType !== 'WhatsApp'
       ? t('sentFromApp', { channel: channelType })
       : null;
   const MediaIcon = message.type !== 'Text' ? MEDIA_ICON[message.type] : undefined;
@@ -534,7 +537,7 @@ export function MessageBubble({ message, channelType }: MessageBubbleProps) {
         {message.isInternalNote && (
           <p className="text-warning text-2xs font-semibold">{t('internalNote')}</p>
         )}
-        {isOutbound && message.sentByUserName && (
+        {showSender && isOutbound && message.sentByUserName && (
           <p className="text-2xs opacity-70">{message.sentByUserName}</p>
         )}
         {sentFromAppLabel && <p className="text-2xs opacity-70">{sentFromAppLabel}</p>}

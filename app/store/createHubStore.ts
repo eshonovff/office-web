@@ -20,7 +20,7 @@ interface HubStoreState {
  * (e.g. two panes both wanting inbox realtime) can call `start()` freely
  * without opening duplicate sockets.
  */
-export function createHubStore(hubPath: string) {
+export function createHubStore(hubPath: string, accessTokenFactory?: () => Promise<string>) {
   let starting: Promise<void> | null = null;
   let connectionGeneration = 0;
 
@@ -35,7 +35,7 @@ export function createHubStore(hubPath: string) {
       if (get().connection) return starting ?? Promise.resolve();
 
       const generation = ++connectionGeneration;
-      const connection = createHubConnection(hubPath);
+      const connection = createHubConnection(hubPath, accessTokenFactory);
       connection.onreconnecting(() => set({ status: 'reconnecting' }));
       connection.onreconnected(() => set((state) => ({ status: 'connected', reconnectCount: state.reconnectCount + 1, error: null })));
       connection.onclose(() => set({ status: 'disconnected', connection: null }));
