@@ -25,8 +25,9 @@ export function Splash() {
   return (
     <div id="app-splash">
       <div className="splash-content">
+        <img src="/brand/mark.png" alt="" className="splash-mark" />
         <p className="splash-logo">
-          Office<span>.nizom</span>
+          Office <span>Nizom</span>
         </p>
         <div className="splash-loader" />
         <p className="splash-hint" key={index}>

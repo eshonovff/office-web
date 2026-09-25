@@ -16,7 +16,9 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { useNotificationsRealtime } from "~/hooks/useNotificationsRealtime";
 import { formatRelativeTime } from "~/lib/format";
+import { formatPaymentAmount } from "~/lib/customerSubscription";
 import { cn } from "~/lib/utils";
+import type { SubscriptionReceiptPayload } from "~/types/subscriptionRequests";
 import type {
   DeadlineTomorrowPayload,
   NotificationDto,
@@ -86,6 +88,9 @@ export function NotificationBell() {
       case "whatsapp_error":
         navigate("/channels");
         return;
+      case "subscription_receipt":
+        navigate("/subscriptions");
+        return;
     }
   }
 
@@ -104,6 +109,15 @@ export function NotificationBell() {
       case "whatsapp_error": {
         const payload = parsePayload<WhatsAppErrorPayload>(notification.payloadJson);
         return payload?.message ?? t("messages.whatsappError");
+      }
+      case "subscription_receipt": {
+        const payload = parsePayload<SubscriptionReceiptPayload>(notification.payloadJson);
+        return payload
+          ? t("messages.subscriptionReceipt", {
+              tier: payload.tier,
+              amount: `${formatPaymentAmount(payload.amount)} ${payload.currency}`,
+            })
+          : t("messages.subscriptionReceiptGeneric");
       }
       default:
         return notification.type;

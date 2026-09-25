@@ -1,0 +1,140 @@
+{
+  "nodes": {
+    "message": "Сообщение",
+    "condition": "Условие",
+    "action": "Действие",
+    "note": "Заметка"
+  },
+  "panel": {
+    "selectHint": "Выберите узел на canvas, чтобы его настроить"
+  },
+  "toolbar": {
+    "undo": "Отменить",
+    "redo": "Повторить",
+    "settings": "Настройки",
+    "settingsSaved": "Настройки сохранены",
+    "stats": "Статистика",
+    "saving": "Сохранение...",
+    "saved": "Сохранено",
+    "saveError": "Ошибка сохранения"
+  },
+  "stats": {
+    "total": "Всего сессий",
+    "finished": "Завершено",
+    "active": "Активно/ожидает",
+    "failed": "Ошибка",
+    "perNode": "По узлам",
+    "recentFailures": "Последние ошибки"
+  },
+  "nodePanels": {
+    "continue": "Продолжить",
+    "message": {
+      "empty": "Текст пуст",
+      "textLabel": "Текст сообщения",
+      "textPlaceholder": "Введите текст...",
+      "insertVariable": "Вставить переменную",
+      "builtInVariables": "Данные контакта",
+      "customVariables": "Собранные в этом flow",
+      "mediaLabel": "Вложение (фото/видео/голосовое)",
+      "mediaType": {
+        "image": "Фото прикреплено",
+        "video": "Видео прикреплено",
+        "audio": "Голосовое прикреплено",
+        "file": "Файл прикреплён"
+      },
+      "mediaAttachedNoPreview": "Загружено ранее — превью недоступно после перезагрузки",
+      "mediaDisabledWithButtons": "Вложение и кнопки нельзя использовать вместе — уберите кнопки, чтобы прикрепить файл",
+      "attachFile": "Прикрепить фото/видео",
+      "recordVoice": "Записать голосовое",
+      "uploadFailed": "Не удалось загрузить файл",
+      "fileTooLarge": "Файл слишком большой. Максимум для Instagram: {{max}}",
+      "voiceUnsupported": "Браузер не поддерживает запись голоса",
+      "voicePermissionDenied": "Нет доступа к микрофону",
+      "buttonsLabel": "Кнопки (до 3)",
+      "buttonTitlePlaceholder": "Текст кнопки",
+      "buttonAction": {
+        "next": "Продолжить flow",
+        "url": "Открыть ссылку"
+      },
+      "allowRepeat": "Разрешить повторное нажатие",
+      "addButton": "Добавить кнопку",
+      "untitledButton": "Кнопка"
+    },
+    "condition": {
+      "empty": "Правила не заданы — всегда \"совпадает\"",
+      "matchLabel": "Способ совпадения",
+      "matchAll": "Все правила",
+      "matchAny": "Любое правило",
+      "match": "Совпало",
+      "nomatch": "Не совпало",
+      "summary": {
+        "all": "{{count}} правил(о) (все должны быть верны)",
+        "any": "{{count}} правил(о) (достаточно одного)"
+      },
+      "field": {
+        "subscription": "Подписка",
+        "tags": "Тег",
+        "time": "Время",
+        "date": "Дата",
+        "weekday": "День недели",
+        "variable": "Переменная..."
+      },
+      "subscriptionHint": "Проверка: контакт подписан на аккаунт",
+      "tagPlaceholder": "Название тега",
+      "variableNamePlaceholder": "Имя переменной",
+      "valuePlaceholder": "Значение",
+      "op": {
+        "equals": "Равно",
+        "not_equals": "Не равно",
+        "contains": "Содержит",
+        "has": "Есть",
+        "not_has": "Нет",
+        "before": "До",
+        "after": "После"
+      },
+      "weekday": {
+        "Monday": "Понедельник",
+        "Tuesday": "Вторник",
+        "Wednesday": "Среда",
+        "Thursday": "Четверг",
+        "Friday": "Пятница",
+        "Saturday": "Суббота",
+        "Sunday": "Воскресенье"
+      },
+      "addRule": "Добавить правило"
+    },
+    "action": {
+      "kindLabel": "Тип действия",
+      "kind": {
+        "delay": "Задержка",
+        "add_tags": "Добавить тег",
+        "remove_tags": "Удалить тег",
+        "set_variable": "Задать переменную",
+        "collect_input": "Получить ответ пользователя",
+        "http_request": "HTTP-запрос",
+        "goto_flow": "Перейти в другой flow"
+      },
+      "delayMinutesLabel": "Задержка (минут)",
+      "tagsLabel": "Теги",
+      "variableKeyLabel": "Имя переменной",
+      "variableValueLabel": "Значение",
+      "collectInputHint": "Следующий ответ пользователя сохранится в эту переменную",
+      "httpUrlLabel": "URL (только https)",
+      "httpMethodLabel": "Метод",
+      "httpBodyLabel": "Тело запроса (JSON)",
+      "targetFlowLabel": "Целевой flow",
+      "gotoFlowHint": "Этот узел завершает сессию — а не переходит в другой flow",
+      "gotoFlowLoopWarning": "⚠ У выбранного flow есть переход обратно на этот flow — получится замкнутый круг. Первая сессия завершится, но конечная попадёт в статус «Ошибка».",
+      "empty": "Не настроено",
+      "summary": {
+        "delay": "{{count}} мин. задержки",
+        "collectInput": "Сохранить в: {{key}}",
+        "gotoFlow": "Сессия завершится"
+      }
+    },
+    "note": {
+      "empty": "Пустая заметка",
+      "placeholder": "Напишите заметку..."
+    }
+  }
+}

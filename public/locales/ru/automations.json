@@ -1,0 +1,41 @@
+{
+  "pageTitle": "Автоматизации",
+  "noItems": "Пока не создано ни одной автоматизации",
+  "searchPlaceholder": "Поиск по названию...",
+  "openCanvas": "Открыть конструктор",
+  "contactCount_one": "{{count}} контакт",
+  "contactCount_few": "{{count}} контакта",
+  "contactCount_many": "{{count}} контактов",
+  "contactCount_other": "{{count}} контакта",
+  "conversion": "{{percent}}% завершили",
+  "deleted": "Автоматизация удалена",
+  "deleteConfirmTitle": "Удалить автоматизацию?",
+  "deleteConfirmDescription": "«{{name}}» будет удалена без возможности восстановления, вместе со статистикой и историей срабатываний.",
+  "byKeyword": {
+    "title": "Автоматизация по ключевому слову",
+    "hint": "Автоответ на комментарий/DM по ключевому слову"
+  },
+  "constructor": {
+    "title": "Конструктор",
+    "hint": "Визуальная цепочка сообщение/условие/действие (как в ManyChat)"
+  },
+  "sort": {
+    "default": "Сначала новые",
+    "name": "По названию",
+    "conversion": "По конверсии"
+  },
+  "templatePicker": {
+    "title": "Выбор шаблона",
+    "configureTitle": "Настройка flow",
+    "back": "Назад",
+    "create": "Создать",
+    "created": "Flow создан",
+    "blankTitle": "С нуля",
+    "blankHint": "Пустой canvas — узлы добавляете сами",
+    "triggerTypeLabel": "Триггер",
+    "triggerType": {
+      "instagram_comment": "Комментарий Instagram",
+      "instagram_dm": "DM Instagram"
+    }
+  }
+}

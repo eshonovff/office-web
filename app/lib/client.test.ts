@@ -72,6 +72,7 @@ function makeConflictError(url: string, detail: string) {
 describe("apiClient refresh queue", () => {
   beforeEach(() => {
     vi.resetModules();
+    vi.clearAllMocks(); // toast call counts must not leak between tests
     instances.length = 0;
   });
 
@@ -114,6 +115,32 @@ describe("apiClient refresh queue", () => {
 
     expect(useAuthStore.getState().accessToken).toBeNull();
     expect(window.location.href).toBe("/login");
+
+    Object.defineProperty(window, "location", { value: originalLocation, writable: true, configurable: true });
+  });
+
+  it("keeps the session when refresh fails because the server is unreachable (restart/deploy)", async () => {
+    const originalLocation = window.location;
+    Object.defineProperty(window, "location", {
+      value: { ...originalLocation, href: "" },
+      writable: true,
+      configurable: true,
+    });
+
+    const { apiClient } = await import("~/lib/client");
+    const { useAuthStore } = await import("~/store/useAuthStore");
+    const { toast } = await import("sonner");
+    void apiClient;
+    useAuthStore.setState({ accessToken: "stale-token", user: null, roles: [], permissions: [] });
+
+    const [apiClientMock, , refreshClientMock] = instances;
+    refreshClientMock.post.mockRejectedValue(new Error("Network Error")); // no response at all
+
+    await expect(apiClientMock._resRejected!(makeUnauthorizedError("/tasks"))).rejects.toBeTruthy();
+
+    expect(useAuthStore.getState().accessToken).toBe("stale-token");
+    expect(window.location.href).toBe("");
+    expect(toast.error).toHaveBeenCalledWith("errors.noConnection", { id: "no-connection" });
 
     Object.defineProperty(window, "location", { value: originalLocation, writable: true, configurable: true });
   });

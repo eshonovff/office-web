@@ -8,10 +8,20 @@ export interface AutomationTriggerConfig {
   postIds: string[];
 }
 
-export interface AutomationActionConfig {
+export interface AutomationConditionConfig {
+  requiresFollow: boolean;
+}
+
+export interface AutomationReplyAction {
   commentReplies: string[];
   dmText: string;
   dmButtonUrl: string | null;
+  dmButtonTitle: string | null;
+}
+
+export interface AutomationActionConfig {
+  onMatch: AutomationReplyAction;
+  onNotFollowing: AutomationReplyAction | null;
 }
 
 export interface AutomationRuleListItem {
@@ -20,6 +30,7 @@ export interface AutomationRuleListItem {
   isActive: boolean;
   triggerType: string;
   triggerConfig: AutomationTriggerConfig;
+  conditionConfig: AutomationConditionConfig;
   actionConfig: AutomationActionConfig;
   cooldownMinutes: number;
   createdAt: string;
@@ -29,6 +40,7 @@ export interface AutomationRuleListItem {
 export interface CreateAutomationRuleRequest {
   name: string;
   triggerConfig: AutomationTriggerConfig;
+  conditionConfig: AutomationConditionConfig;
   actionConfig: AutomationActionConfig;
   cooldownMinutes: number;
 }
@@ -39,11 +51,14 @@ export interface DryRunAutomationRuleRequest {
   triggerConfig: AutomationTriggerConfig;
   commentText: string;
   mediaId?: string | null;
+  conditionConfig?: AutomationConditionConfig | null;
+  actorExternalId?: string | null;
 }
 
 export interface DryRunAutomationRuleResult {
   matched: boolean;
   matchedKeyword: string | null;
+  followCheckResult: 'Following' | 'NotFollowing' | 'Unknown' | null;
 }
 
 export interface InstagramMediaListItem {

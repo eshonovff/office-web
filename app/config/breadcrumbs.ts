@@ -26,6 +26,7 @@ export const BREADCRUMB_ROUTES: Record<string, BreadcrumbRouteConfig> = {
   '/projects/:id': { labelKey: 'projectDetail', ns: 'navigation', parent: '/projects', dynamic: true },
   '/inbox': { labelKey: 'navigation.inbox' },
   '/channels': { labelKey: 'channels', ns: 'navigation', parent: '/inbox' },
+  '/subscriptions': { labelKey: 'navigation.subscriptions' },
   '/change-password': { labelKey: 'changePassword', ns: 'navigation' },
 };
 

@@ -1,118 +1,155 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { AlertCircle, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useSearchParams } from "react-router";
-import { authApi } from "~/api/auth";
-import { ModeToggle } from "~/components/layout/ModeToggle";
-import { Button } from "~/components/ui/button";
-import { FormInput } from "~/components/ui/form/FormInput";
-import { canAccessRoute } from "~/config/permissions";
-import { useForm } from "~/hooks/useForm";
-import { cn } from "~/lib/utils";
-import { useAuthStore } from "~/store/useAuthStore";
-import { createLoginSchema, type LoginForm } from "~/validations/auth";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link, useNavigate, useSearchParams } from 'react-router';
+import { toast } from 'sonner';
+import { authApi } from '~/api/auth';
+import { customerAuthApi } from '~/api/customerAuth';
+import { ExternalAuthButtons } from '~/components/auth/ExternalAuthButtons';
+import { Button } from '~/components/ui/button';
+import { FormInput } from '~/components/ui/form/FormInput';
+import { useForm } from '~/hooks/useForm';
+import { customerLandingPath, isCustomerIdentifier, signInErrorOf, staffLandingPath } from '~/lib/signIn';
+import { useAuthStore } from '~/store/useAuthStore';
+import { useCustomerAuthStore } from '~/store/useCustomerAuthStore';
+import { createSignInSchema, type SignInForm } from '~/validations/auth';
 
+// The one sign-in page for everyone: staff with their username, a мизоҷ with their email
+// (see lib/signIn.ts for how the two are told apart and why that is safe).
 export default function LoginPage() {
-  const { t } = useTranslation("auth");
-  const { t: tVal } = useTranslation("validation");
-  const [searchParams] = useSearchParams();
+  const { t } = useTranslation(['auth', 'customerAuth']);
+  const { t: tVal } = useTranslation('validation');
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const schema = createLoginSchema(tVal);
+  const schema = createSignInSchema(tVal);
   const {
     control,
     handleSubmit,
+    getValues,
+    watch,
     formState: { isSubmitting: isFormSubmitting },
-  } = useForm<LoginForm>({
+  } = useForm<SignInForm>({
     resolver: zodResolver(schema),
-    defaultValues: { username: "", password: "" },
+    defaultValues: { identifier: '', password: '' },
   });
 
   const {
     mutate,
     isPending,
-    error: loginError,
+    error: signInError,
   } = useMutation({
-    mutationFn: authApi.login,
-    onSuccess: (response) => {
-      useAuthStore.getState().setSession(response.accessToken, response.user);
+    mutationFn: async ({ identifier, password }: SignInForm) => {
+      const id = identifier.trim();
+      if (isCustomerIdentifier(id)) {
+        return { kind: 'customer' as const, response: await customerAuthApi.login({ email: id, password }) };
+      }
+      return { kind: 'staff' as const, response: await authApi.login({ username: id, password }) };
+    },
+    onSuccess: (result) => {
+      const redirectTo = searchParams.get('redirectTo');
 
-      if (response.mustChangePassword) {
-        navigate("/change-password");
+      if (result.kind === 'customer') {
+        useCustomerAuthStore.getState().setSession(result.response.accessToken, result.response.customer);
+        navigate(customerLandingPath(redirectTo));
         return;
       }
 
-      const redirectTo = searchParams.get("redirectTo");
-      const target = redirectTo && canAccessRoute(redirectTo, response.user.permissions) ? redirectTo : "/";
-      navigate(target);
+      useAuthStore.getState().setSession(result.response.accessToken, result.response.user);
+      if (result.response.mustChangePassword) {
+        navigate('/change-password');
+        return;
+      }
+      navigate(staffLandingPath(redirectTo, result.response.user.permissions));
     },
   });
 
+  // Back from /reset-password: say so once, then drop the flag so a reload does not repeat it.
+  useEffect(() => {
+    if (searchParams.get('passwordReset') !== '1') return;
+    toast.success(t('customerAuth:resetPassword.done'), { id: 'password-reset' });
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams, t]);
+
   const isSubmitting = isFormSubmitting || isPending;
+  const error = signInError ? signInErrorOf(signInError) : null;
+  const typedEmail = watch('identifier').trim();
+  const forgotLink = isCustomerIdentifier(typedEmail)
+    ? `/forgot-password?email=${encodeURIComponent(typedEmail)}`
+    : '/forgot-password';
 
   return (
-    <>
-      <div className="bg-foreground text-background hidden flex-col justify-between p-12 lg:flex">
-        <div className="text-2xl font-bold tracking-tight">Office</div>
-        <div className="space-y-4">
-          <h1 className="text-4xl leading-tight font-bold">{t("hero.title")}</h1>
-          <p className="text-background/60 text-lg">{t("hero.subtitle")}</p>
-        </div>
-        <div className="flex gap-2">
-          {(["w-4", "w-8", "w-12", "w-16", "w-20"] as const).map((w, i) => (
-            <div key={i} className={cn("bg-background/20 h-1 rounded-full", w)} />
-          ))}
-        </div>
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h2 className="text-3xl font-bold">{t('signIn')}</h2>
+        <p className="text-muted-foreground">{t('welcome')}</p>
       </div>
 
-      <div className="bg-background flex flex-col">
-        <div className="flex justify-end p-4">
-          <ModeToggle />
+      <form onSubmit={handleSubmit((data) => mutate(data))} className="space-y-4">
+        <div className="space-y-1.5">
+          <FormInput
+            control={control}
+            name="identifier"
+            label={t('identifier')}
+            type="text"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+          />
+          <p className="text-muted-foreground text-xs">{t('identifierHint')}</p>
+        </div>
+        <FormInput
+          control={control}
+          name="password"
+          label={t('password')}
+          placeholder={t('passwordPlaceholder')}
+          type={showPassword ? 'text' : 'password'}
+          autoComplete="current-password"
+          endIcon={
+            showPassword ? (
+              <EyeOff className="h-4 w-4 cursor-pointer" onClick={() => setShowPassword(false)} />
+            ) : (
+              <Eye className="h-4 w-4 cursor-pointer" onClick={() => setShowPassword(true)} />
+            )
+          }
+        />
+
+        <div className="-mt-2 text-right">
+          <Link to={forgotLink} className="text-primary text-sm hover:underline">
+            {t('forgotLink')}
+          </Link>
         </div>
 
-        <div className="flex flex-1 items-center justify-center px-8">
-          <div className="w-full max-w-sm space-y-8">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold">{t("signIn")}</h2>
-              <p className="text-muted-foreground">{t("welcome")}</p>
-            </div>
-
-            <form onSubmit={handleSubmit((data) => mutate(data))} className="space-y-4">
-              <FormInput control={control} name="username" label={t("username")} type="text" autoComplete="username" />
-              <FormInput
-                control={control}
-                name="password"
-                label={t("password")}
-                placeholder={t("passwordPlaceholder")}
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                endIcon={
-                  showPassword ? (
-                    <EyeOff className="h-4 w-4 cursor-pointer" onClick={() => setShowPassword(false)} />
-                  ) : (
-                    <Eye className="h-4 w-4 cursor-pointer" onClick={() => setShowPassword(true)} />
-                  )
-                }
-              />
-
-              {loginError && (
-                <div className="text-destructive flex items-center gap-2 text-sm">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{t("loginError")}</span>
-                </div>
-              )}
-
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? t("submitting") : t("signIn")}
-              </Button>
-            </form>
+        {error && (
+          <div role="alert" className="text-destructive flex items-center gap-2 text-sm">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{error === 'invalid' ? t('loginError') : t(`errors.${error}`)}</span>
+            {error === 'notVerified' && (
+              <Link
+                to={`/verify-email?email=${encodeURIComponent(getValues('identifier').trim())}`}
+                className="text-primary shrink-0 hover:underline">
+                {t('customerAuth:accountLogin.goVerify')}
+              </Link>
+            )}
           </div>
-        </div>
-        <div className="p-4" />
-      </div>
-    </>
+        )}
+
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? t('submitting') : t('signIn')}
+        </Button>
+      </form>
+
+      <p className="text-muted-foreground text-center text-sm">
+        {t('customerAuth:accountLogin.noAccount')}{' '}
+        <Link to="/register" className="text-primary hover:underline">
+          {t('customerAuth:accountLogin.registerLink')}
+        </Link>
+      </p>
+
+      <ExternalAuthButtons />
+    </div>
   );
 }

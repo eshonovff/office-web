@@ -1,9 +1,10 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
 
-export const createLoginSchema = (t: TFunction) =>
+// The shared sign-in page: one field for a staff username or a мизоҷ email (lib/signIn.ts).
+export const createSignInSchema = (t: TFunction) =>
   z.object({
-    username: z.string().min(1, t("usernameRequired", { ns: "validation" })),
+    identifier: z.string().trim().min(1, t("identifierRequired", { ns: "validation" })),
     password: z.string().min(1, t("passwordRequired", { ns: "validation" })),
   });
 
@@ -19,5 +20,7 @@ export const createChangePasswordSchema = (t: TFunction) =>
       path: ["confirmPassword"],
     });
 
-export type LoginForm = z.infer<ReturnType<typeof createLoginSchema>>;
+export type SignInForm = z.infer<ReturnType<typeof createSignInSchema>>;
+/** Body of the staff POST /api/auth/login. */
+export type LoginForm = { username: string; password: string };
 export type ChangePasswordForm = z.infer<ReturnType<typeof createChangePasswordSchema>>;

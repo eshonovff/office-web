@@ -13,6 +13,7 @@ export const i18nConfig = {
   ns: [
     defaultNS,
     'auth',
+    'customerAuth',
     'validation',
     'users',
     'roles',
@@ -23,6 +24,9 @@ export const i18nConfig = {
     'notifications',
     'dashboard',
     'instagramAutomation',
+    'automations',
+    'flows',
+    'subscriptions',
   ],
   detection: {
     order: ['localStorage'],

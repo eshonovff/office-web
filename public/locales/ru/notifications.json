@@ -6,6 +6,8 @@
     "taskAssigned": "Вам назначена задача: «{{title}}»",
     "deadlineTomorrow": "Срок задачи истекает завтра: «{{title}}»",
     "mention": "Вас упомянули в комментарии",
-    "whatsappError": "Ошибка подключения WhatsApp"
+    "whatsappError": "Ошибка подключения WhatsApp",
+    "subscriptionReceipt": "Новый чек за тариф {{tier}} — {{amount}}",
+    "subscriptionReceiptGeneric": "Пришёл новый чек об оплате"
   }
 }

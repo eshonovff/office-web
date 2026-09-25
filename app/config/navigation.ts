@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { Inbox, KanbanSquare, LayoutDashboard, Settings, ShieldCheck, Users } from "lucide-react";
+import { Inbox, KanbanSquare, LayoutDashboard, ReceiptText, Settings, ShieldCheck, Users } from "lucide-react";
 import type { ComponentType } from "react";
 import { Permissions, type PermissionKey } from "~/config/permissions";
 import type { useCan } from "~/hooks/useCan";
@@ -9,13 +9,17 @@ export interface NavItem {
   url?: string;
   icon?: ComponentType<{ className?: string }>;
   permission?: PermissionKey | PermissionKey[];
+  /** A live count shown next to the title (NavMain reads it from the `badges` it is given). */
+  badgeKey?: NavBadgeKey;
   items?: NavItem[];
 }
+
+export type NavBadgeKey = "pendingSubscriptions";
 
 export const getSidebarConfig = (t: TFunction): NavItem[] => [
   {
     title: t("navigation.dashboard"),
-    url: "/",
+    url: "/dashboard",
     icon: LayoutDashboard,
   },
   {
@@ -41,6 +45,13 @@ export const getSidebarConfig = (t: TFunction): NavItem[] => [
     url: "/inbox",
     icon: Inbox,
     permission: Permissions.Inbox.View,
+  },
+  {
+    title: t("navigation.subscriptions"),
+    url: "/subscriptions",
+    icon: ReceiptText,
+    permission: Permissions.Subscriptions.Manage,
+    badgeKey: "pendingSubscriptions",
   },
   {
     title: t("navigation.settings"),

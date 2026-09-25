@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import { subscriptionRequestKeys } from '~/api/subscriptionRequests';
 import { useSignalR } from '~/hooks/useSignalR';
 import { useInboxHub } from '~/store/useInboxHub';
 import type { NotificationDto } from '~/types/notification';
@@ -18,6 +19,7 @@ export function useNotificationsRealtime() {
   useEffect(() => {
     if (reconnectCount === 0) return;
     void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    void queryClient.invalidateQueries({ queryKey: subscriptionRequestKeys.all });
   }, [queryClient, reconnectCount]);
 
   useSignalR(connection, {
@@ -28,6 +30,10 @@ export function useNotificationsRealtime() {
         if (old.some((n) => n.id === incoming.id)) return old;
         return [incoming, ...old];
       });
+      // A мизоҷ sent a receipt: the moderator's badge and queue update without a reload.
+      if (incoming.type === 'subscription_receipt') {
+        void queryClient.invalidateQueries({ queryKey: subscriptionRequestKeys.all });
+      }
     },
   });
 }

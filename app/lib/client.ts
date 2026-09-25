@@ -1,6 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
 import i18next from "i18next";
 import { toast } from "sonner";
+import { isSessionRejected, withCrossTabLock } from "~/lib/authFailure";
 import { getQueryClient } from "~/lib/query-client";
 import { useAuthStore } from "~/store/useAuthStore";
 import type { RefreshResponse } from "~/types/auth";
@@ -33,8 +34,9 @@ let refreshPromise: Promise<string> | null = null;
 
 export function refreshAccessToken(): Promise<string> {
   if (!refreshPromise) {
-    refreshPromise = refreshClient
-      .post<RefreshResponse>("/auth/refresh")
+    refreshPromise = withCrossTabLock("office-staff-refresh", () =>
+      refreshClient.post<RefreshResponse>("/auth/refresh"),
+    )
       .then(({ data }) => {
         useAuthStore.getState().setAccessToken(data.accessToken);
         return data.accessToken;
@@ -124,7 +126,14 @@ apiClient.interceptors.response.use(
         return apiClient(config);
       } catch (refreshError) {
         onRefreshed(null);
-        logout();
+        // Only a refused refresh ends the session. If the server is unreachable or failing
+        // (a restart, a deploy, a network blip) the refresh cookie is still good — keep the
+        // session and fail just this request.
+        if (isSessionRejected(refreshError)) {
+          logout();
+        } else {
+          toast.error(i18next.t("errors.noConnection", { ns: "common" }), { id: "no-connection" });
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -136,7 +145,7 @@ apiClient.interceptors.response.use(
     }
 
     if (!error.response) {
-      toast.error(i18next.t("errors.noConnection", { ns: "common" }));
+      toast.error(i18next.t("errors.noConnection", { ns: "common" }), { id: "no-connection" });
       return Promise.reject(error);
     }
 
