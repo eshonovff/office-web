@@ -1,6 +1,7 @@
 import { Check, Copy, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ChannelLogo } from '~/components/shared/ChannelLogo';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
@@ -106,7 +107,8 @@ export function ContextPanel({ conversation, onStatusChange, isChangingStatus }:
             <ExternalLink className="h-3 w-3 shrink-0" />@{conversation.contactUsername}
           </a>
         )}
-        <Badge variant="outline" className="text-2xs">
+        <Badge variant="outline" className="gap-1 text-2xs">
+          <ChannelLogo type={conversation.channelType} className="size-3" />
           {t(`channelType.${conversation.channelType}`)}
         </Badge>
       </div>

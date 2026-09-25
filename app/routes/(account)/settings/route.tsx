@@ -6,7 +6,7 @@ import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { customerChannelsApi } from '~/api/customerFlows';
 import { customerSubscriptionsApi } from '~/api/customerSubscriptions';
-import { InstagramGlyph } from '~/components/icons/InstagramGlyph';
+import { ChannelLogo } from '~/components/shared/ChannelLogo';
 import { ConfirmDialog } from '~/components/shared/ConfirmDialog';
 import { Modal } from '~/components/shared/Modal';
 import { Badge } from '~/components/ui/badge';
@@ -144,7 +144,7 @@ export default function CustomerSettingsPage() {
                   ? 'border-primary bg-primary/5 ring-primary ring-1'
                   : 'hover:bg-muted/50'
               )}>
-              <InstagramGlyph className="size-5 shrink-0" />
+              <ChannelLogo type="Instagram" className="size-6" />
               <span className="font-medium">{account.name}</span>
             </button>
           ))}
@@ -181,7 +181,7 @@ function ChannelRow({
 
   return (
     <li className="flex flex-wrap items-center gap-3 rounded-xl border p-3">
-      <InstagramGlyph className="size-5 shrink-0" />
+      <ChannelLogo type={channel.type} label={channel.type} className="size-6" />
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium">{channel.name}</p>
         {channel.webhookSetupWarning && channel.isActive && (
