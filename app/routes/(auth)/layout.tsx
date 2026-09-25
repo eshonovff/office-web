@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, Outlet } from 'react-router';
 import { LanguageSwitcher } from '~/components/layout/LanguageSwitcher';
 import { ModeToggle } from '~/components/layout/ModeToggle';
+import { BrandLogo } from '~/components/shared/BrandLogo';
 import { cn } from '~/lib/utils';
 
 // One look for every way in: sign in (staff and мизоҷ alike), register, verify the email.
@@ -12,8 +13,8 @@ export default function AuthLayout() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="bg-foreground text-background hidden flex-col justify-between p-12 lg:flex">
-        <Link to="/" className="text-2xl font-bold tracking-tight">
-          {t('brand')}
+        <Link to="/" className="self-start">
+          <BrandLogo tileClassName="size-10" nameClassName="text-2xl" />
         </Link>
         <div className="space-y-4">
           <h1 className="text-4xl leading-tight font-bold">{t('hero.title')}</h1>
@@ -29,8 +30,8 @@ export default function AuthLayout() {
       <div className="bg-background flex flex-col">
         <div className="flex items-center justify-between gap-2 p-4">
           {/* On a phone the left panel is hidden — the brand moves up here. */}
-          <Link to="/" className="text-lg font-bold tracking-tight lg:invisible">
-            {t('brand')}
+          <Link to="/" className="lg:invisible">
+            <BrandLogo nameClassName="text-lg" />
           </Link>
           <div className="flex items-center gap-2">
             <LanguageSwitcher />

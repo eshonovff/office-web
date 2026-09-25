@@ -17,6 +17,12 @@
   ҳарфи калон ва фосила → `/account`), мизоҷ бо рамзи хато (ҳамон паём), email-и тасдиқнашуда
   (паём + "Тасдиқ кунед"), `/account/login?redirectTo=//evil.com` → `/account`.
 
+**Логотипи Office Nizom:** нишона (бе матн) дар плиткаи сафед — `components/shared/BrandLogo.tsx`
+(номи "Office Nizom" матни зинда аз `common:brand`, мувофиқи мавзӯ): вуруд/сабти ном, landing,
+sidebar-и кормандон ва мизоҷ (ҷамъшуда — танҳо нишона), экрани боргузорӣ. Favicon (ICO бо PNG-и
+32px), `icon-192`, `apple-touch-icon`, `<title>`. Файлҳо: `public/brand/`; асл ва нишонаи
+1024px барои App Review-и Meta — `docs/brand/` (ниг. README он ҷо).
+
 ## Ҳолати 2026-09-24
 
 > ⚠️ Сатрҳои 2026-08-18 то 2026-09-24 дар ин файл сабт НАШУДААНД (кор дар чатҳои дигар

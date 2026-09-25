@@ -37,8 +37,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+export const links: Route.LinksFunction = () => [
+  { rel: 'icon', href: '/favicon.ico', sizes: '32x32' },
+  { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/brand/icon-192.png' },
+  { rel: 'apple-touch-icon', href: '/brand/apple-touch-icon.png' },
+];
+
 export default function App() {
-  return <Outlet />;
+  const { t } = useTranslation('common');
+  // React 19 hoists <title> into <head>; the brand name comes from the locale files like all text.
+  return (
+    <>
+      <title>{t('brand')}</title>
+      <Outlet />
+    </>
+  );
 }
 
 export function HydrateFallback() {
