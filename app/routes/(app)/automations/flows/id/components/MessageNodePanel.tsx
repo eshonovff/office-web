@@ -29,6 +29,11 @@ const BUILT_IN_VARIABLES = ['firstName', 'lastName', 'fullName', 'username', 'cl
 // backend — ҳамин рақам, чунки Flow ҳамеша канали Instagram аст, санҷиши дуюм дар сервер аст).
 const MAX_MEDIA_BYTES = 25 * 1024 * 1024;
 
+// Same bounds as the backend (MessageBlock.MaxTextLength / MaxVariants): Instagram's text limit,
+// and five wordings in all, as for the public replies under a comment.
+const MAX_TEXT = 1000;
+const MAX_VARIANTS = 4;
+
 interface MessageNodePanelProps {
   config: MessageNodeConfig;
   channelId: string;
@@ -43,6 +48,9 @@ export function MessageNodePanel({ config, channelId, customVariableKeys, onChan
   const flowApi = useFlowBuilderApi();
   const { t } = useTranslation('flows');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const variantRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
+  // Where "insert variable" writes: the main text, or the variant last focused.
+  const [variableTarget, setVariableTarget] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [mediaError, setMediaError] = useState<string | null>(null);
@@ -57,7 +65,9 @@ export function MessageNodePanel({ config, channelId, customVariableKeys, onChan
   // Ҳимояи дифоъӣ: config-и маълумоти кӯҳна/вайроншуда метавонад ин майдонҳоро надошта бошад.
   const buttons = config.buttons ?? [];
   const blocks = config.blocks ?? [];
-  const text = blocks.find((b) => b.type === 'text')?.text ?? '';
+  const textBlock = blocks.find((b) => b.type === 'text');
+  const text = textBlock?.text ?? '';
+  const variants = textBlock?.variants ?? [];
   const mediaBlock = blocks.find((b) => b.type !== 'text') ?? null;
 
   useEffect(() => {
@@ -91,15 +101,25 @@ export function MessageNodePanel({ config, channelId, customVariableKeys, onChan
     },
   });
 
+  function textBlockOf(value: string, nextVariants: string[]): MessageBlock {
+    return { type: 'text', text: value, mediaId: null, ...(nextVariants.length > 0 ? { variants: nextVariants } : {}) };
+  }
+
   function setText(value: string) {
-    const next: MessageBlock[] = [{ type: 'text', text: value, mediaId: null }];
+    const next: MessageBlock[] = [textBlockOf(value, variants)];
+    if (mediaBlock) next.push(mediaBlock);
+    onChange({ ...config, blocks: next });
+  }
+
+  function setVariants(nextVariants: string[]) {
+    const next: MessageBlock[] = [textBlockOf(text, nextVariants)];
     if (mediaBlock) next.push(mediaBlock);
     onChange({ ...config, blocks: next });
   }
 
   function setMediaBlockValue(block: MessageBlock | null) {
     const next: MessageBlock[] = [];
-    if (text) next.push({ type: 'text', text, mediaId: null });
+    if (text || variants.length > 0) next.push(textBlockOf(text, variants));
     if (block) next.push(block);
     onChange({ ...config, blocks: next });
   }
@@ -189,12 +209,15 @@ export function MessageNodePanel({ config, channelId, customVariableKeys, onChan
   // Тағйирёбандаро дар нуқтаи курсор мегузорад (на танҳо дар охир) — курсор баъд аз он
   // рост баъди {{key}} мемонад, то корбар фавран идома дода тавонад.
   function insertVariable(key: string) {
-    const el = textareaRef.current;
+    const target = variableTarget !== null && variableTarget < variants.length ? variableTarget : null;
+    const el = target === null ? textareaRef.current : variantRefs.current[target];
+    const current = target === null ? text : variants[target];
     const token = `{{${key}}}`;
-    const start = el?.selectionStart ?? text.length;
-    const end = el?.selectionEnd ?? text.length;
-    const next = text.slice(0, start) + token + text.slice(end);
-    setText(next);
+    const start = el?.selectionStart ?? current.length;
+    const end = el?.selectionEnd ?? current.length;
+    const next = current.slice(0, start) + token + current.slice(end);
+    if (target === null) setText(next);
+    else setVariants(variants.map((v, i) => (i === target ? next : v)));
     requestAnimationFrame(() => {
       el?.focus();
       el?.setSelectionRange(start + token.length, start + token.length);
@@ -221,7 +244,9 @@ export function MessageNodePanel({ config, channelId, customVariableKeys, onChan
         <Textarea
           ref={textareaRef}
           rows={4}
+          maxLength={MAX_TEXT}
           value={text}
+          onFocus={() => setVariableTarget(null)}
           onChange={(e) => setText(e.target.value)}
           placeholder={t('nodePanels.message.textPlaceholder')}
         />
@@ -254,6 +279,50 @@ export function MessageNodePanel({ config, channelId, customVariableKeys, onChan
             )}
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label>{t('nodePanels.message.variantsLabel')}</Label>
+        <p className="text-muted-foreground text-2xs">{t('nodePanels.message.variantsHint')}</p>
+        {variants.map((variant, index) => (
+          <div key={index} className="flex items-start gap-1.5">
+            <Textarea
+              ref={(el) => {
+                variantRefs.current[index] = el;
+              }}
+              rows={2}
+              maxLength={MAX_TEXT}
+              value={variant}
+              aria-label={t('nodePanels.message.variant', { number: index + 2 })}
+              placeholder={t('nodePanels.message.variant', { number: index + 2 })}
+              onFocus={() => setVariableTarget(index)}
+              onChange={(e) => setVariants(variants.map((v, i) => (i === index ? e.target.value : v)))}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t('nodePanels.message.removeVariant')}
+              onClick={() => {
+                setVariableTarget(null);
+                setVariants(variants.filter((_, i) => i !== index));
+              }}>
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        ))}
+        {variants.length < MAX_VARIANTS && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            disabled={!text.trim()}
+            onClick={() => setVariants([...variants, ''])}>
+            <Plus className="h-3.5 w-3.5" />
+            {t('nodePanels.message.addVariant')}
+          </Button>
+        )}
       </div>
 
       <div className="space-y-1.5">

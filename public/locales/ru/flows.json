@@ -58,7 +58,13 @@
       },
       "allowRepeat": "Разрешить повторное нажатие",
       "addButton": "Добавить кнопку",
-      "untitledButton": "Кнопка"
+      "untitledButton": "Кнопка",
+      "variantsLabel": "Другие варианты этого сообщения",
+      "variantsHint": "Бот отправляет каждому один из текстов — одинаковый текст всем Instagram считает спамом. До 5 текстов.",
+      "variant": "Вариант {{number}}",
+      "addVariant": "Ещё вариант",
+      "removeVariant": "Удалить вариант",
+      "variantsCount": "+{{count}} вар."
     },
     "condition": {
       "empty": "Правила не заданы — всегда \"совпадает\"",

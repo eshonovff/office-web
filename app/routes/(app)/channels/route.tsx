@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { channelsApi } from '~/api/channels';
+import { ChannelLogo } from '~/components/shared/ChannelLogo';
 import { ConfirmDialog } from '~/components/shared/ConfirmDialog';
 import { EmptyState } from '~/components/shared/EmptyState';
 import { Panel } from '~/components/layout/Panel';
@@ -148,9 +149,12 @@ export default function ChannelsPage() {
           {channels.map((channel) => (
             <Panel key={channel.id} className="flex flex-col gap-3">
               <div className="flex items-start justify-between gap-2">
-                <div>
-                  <span className="font-semibold">{channel.name}</span>
-                  <p className="text-muted-foreground text-2xs">{t(`channelType.${channel.type}`)}</p>
+                <div className="flex min-w-0 items-start gap-2.5">
+                  <ChannelLogo type={channel.type} className="mt-0.5 size-8" />
+                  <div className="min-w-0">
+                    <span className="font-semibold">{channel.name}</span>
+                    <p className="text-muted-foreground text-2xs">{t(`channelType.${channel.type}`)}</p>
+                  </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   {!channel.isActive && (

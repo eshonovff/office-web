@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { customerChatKeys, customerChatsApi } from '~/api/customerChats';
+import { ChannelLogo } from '~/components/shared/ChannelLogo';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Skeleton } from '~/components/ui/skeleton';
@@ -121,7 +122,14 @@ export function ChatList({ selectedId, onSelect }: ChatListProps) {
                     'hover:bg-muted/60 flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors',
                     chat.id === selectedId && 'bg-muted'
                   )}>
-                  <ContactAvatar name={contactTitle(chat, '?')} url={chat.contactAvatarUrl} />
+                  <span className="relative shrink-0">
+                    <ContactAvatar name={contactTitle(chat, '?')} url={chat.contactAvatarUrl} />
+                    <ChannelLogo
+                      type={chat.channelType}
+                      label={chat.channelType}
+                      className="ring-background absolute -right-0.5 -bottom-0.5 size-4 rounded-full ring-2"
+                    />
+                  </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-2">
                       <p className="truncate text-sm font-medium">{contactTitle(chat, t('chats.unknownContact'))}</p>

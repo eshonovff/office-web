@@ -1,6 +1,6 @@
 import { useDraggable } from '@dnd-kit/core';
-import { MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ChannelLogo } from '~/components/shared/ChannelLogo';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
 import { Badge } from '~/components/ui/badge';
 import { formatRelativeTime } from '~/lib/format';
@@ -60,7 +60,7 @@ export function ConversationListItem({ conversation, active, draggable, onClick 
         </div>
 
         <div className="flex items-center gap-1.5">
-          <MessageCircle className="text-muted-foreground h-3 w-3 shrink-0" />
+          <ChannelLogo type={conversation.channelType} className="size-3" />
           <span className="text-muted-foreground truncate text-2xs">{t(`channelType.${conversation.channelType}`)}</span>
         </div>
 

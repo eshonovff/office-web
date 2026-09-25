@@ -22,6 +22,9 @@ export interface MessageBlock {
   // attachment_id) is opaque and can't be fetched back as a viewable image, so this
   // is the only way to show a preview after a page reload.
   previewDataUri?: string | null;
+  // Text blocks only: other wordings of the same message — the bot sends each contact one of
+  // text + variants (office-api MessageTextPicker), so not everyone gets the identical text.
+  variants?: string[] | null;
 }
 
 export interface UploadFlowMediaResult {
