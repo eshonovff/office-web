@@ -11,6 +11,7 @@ import { FormTextarea } from '~/components/ui/form/FormTextarea';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { useForm } from '~/hooks/useForm';
+import { cn } from '~/lib/utils';
 import { commentAutomationRuleSchema, type CommentAutomationRuleForm } from '~/validations/commentAutomationRule';
 import type { AutomationRuleListItem, CreateAutomationRuleRequest } from '~/types/commentAutomation';
 import { DryRunPanel } from './DryRunPanel';
@@ -100,7 +101,17 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
         </Button>
       }>
       <form id="automation-rule-form" className="space-y-4" onSubmit={handleSubmit(submit)}>
-        <FormInput control={control} name="name" label={t('fields.name')} required />
+        <div className="grid gap-4 sm:grid-cols-[1fr_11rem]">
+          <FormInput control={control} name="name" label={t('fields.name')} required />
+          <FormInput
+            control={control}
+            name="cooldownMinutes"
+            type="number"
+            min={0}
+            label={t('fields.cooldownMinutes')}
+            required
+          />
+        </div>
 
         <TriggerConfigFields
           channelId={channelId}
@@ -155,16 +166,23 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
               required
               rows={3}
             />
-            <FormInput control={control} name="dmButtonUrl" label={t('fields.dmButtonUrl')} placeholder="https://..." />
-            {dmButtonUrl?.trim() && (
+            <div className={cn('grid gap-4', dmButtonUrl?.trim() && 'sm:grid-cols-[1fr_12rem]')}>
               <FormInput
                 control={control}
-                name="dmButtonTitle"
-                label={t('fields.dmButtonTitle')}
-                maxLength={20}
-                required
+                name="dmButtonUrl"
+                label={t('fields.dmButtonUrl')}
+                placeholder="https://..."
               />
-            )}
+              {dmButtonUrl?.trim() && (
+                <FormInput
+                  control={control}
+                  name="dmButtonTitle"
+                  label={t('fields.dmButtonTitle')}
+                  maxLength={20}
+                  required
+                />
+              )}
+            </div>
           </>
         )}
 
@@ -199,15 +217,6 @@ export function RuleFormModal({ channelId, rule, open, onClose, onSave, isSaving
             )}
           </div>
         )}
-
-        <FormInput
-          control={control}
-          name="cooldownMinutes"
-          type="number"
-          min={0}
-          label={t('fields.cooldownMinutes')}
-          required
-        />
 
         <DryRunPanel
           channelId={channelId}

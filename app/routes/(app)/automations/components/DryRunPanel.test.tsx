@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { commentAutomationApi } from '~/api/commentAutomation';
@@ -10,9 +10,9 @@ vi.mock('~/api/commentAutomation', () => ({
   commentAutomationApi: { dryRun: vi.fn() },
 }));
 
-function renderPanel(props: Partial<React.ComponentProps<typeof DryRunPanel>> = {}) {
+function renderPanel(props: Partial<React.ComponentProps<typeof DryRunPanel>> = {}, { expanded = true } = {}) {
   const queryClient = makeQueryClient();
-  return render(
+  const result = render(
     <QueryClientProvider client={queryClient}>
       <DryRunPanel
         channelId="ig1"
@@ -25,11 +25,28 @@ function renderPanel(props: Partial<React.ComponentProps<typeof DryRunPanel>> = 
       />
     </QueryClientProvider>
   );
+  // The panel starts closed; the checks below are about it once opened.
+  if (expanded) fireEvent.click(screen.getByRole('button', { name: 'dryRun.title' }));
+  return result;
 }
 
 describe('DryRunPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('starts closed — only its title, until opened', async () => {
+    const user = userEvent.setup();
+    renderPanel({}, { expanded: false });
+
+    const toggle = screen.getByRole('button', { name: 'dryRun.title' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByPlaceholderText('dryRun.placeholder')).not.toBeInTheDocument();
+
+    await user.click(toggle);
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByPlaceholderText('dryRun.placeholder')).toBeInTheDocument();
   });
 
   it('never calls dryRun before the user runs the check', () => {

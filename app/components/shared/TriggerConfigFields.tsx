@@ -42,17 +42,45 @@ export function TriggerConfigFields({
 
   return (
     <>
-      <div className="space-y-1.5">
-        <Label>{t('fields.matchMode')}</Label>
-        <CustomSelect
-          options={[
-            { value: 'keyword', label: t('matchMode.keyword') },
-            { value: 'all', label: t('matchMode.all') },
-          ]}
-          value={matchMode}
-          onChange={(v) => onMatchModeChange((v as AutomationMatchMode) ?? 'keyword')}
-        />
-        {matchMode === 'all' && <p className="text-destructive text-2xs">{t('matchModeAllWarning')}</p>}
+      {/* Side by side when the form is wide enough (the rule form), one under the other in the
+          narrower flow modals — a container query, not the screen width. */}
+      <div className="@container">
+        <div className="grid gap-4 @xl:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>{t('fields.matchMode')}</Label>
+            <CustomSelect
+              options={[
+                { value: 'keyword', label: t('matchMode.keyword') },
+                { value: 'all', label: t('matchMode.all') },
+              ]}
+              value={matchMode}
+              onChange={(v) => onMatchModeChange((v as AutomationMatchMode) ?? 'keyword')}
+            />
+            {matchMode === 'all' && <p className="text-destructive text-2xs">{t('matchModeAllWarning')}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>{t('fields.postScope')}</Label>
+            <CustomSelect
+              options={[
+                { value: 'all', label: t('postScope.all') },
+                { value: 'selected', label: t('postScope.selected') },
+              ]}
+              value={postScope}
+              onChange={(v) => onPostScopeChange((v as AutomationPostScope) ?? 'all')}
+            />
+            {postScope === 'selected' && (
+              <div className="flex items-center gap-2 pt-1">
+                <Button type="button" variant="outline" size="sm" onClick={() => setPickingMedia(true)}>
+                  {t('choosePosts')}
+                </Button>
+                <span className="text-muted-foreground text-2xs">
+                  {t('postsSelectedCount', { count: postIds.length })}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {matchMode === 'keyword' && (
@@ -61,26 +89,6 @@ export function TriggerConfigFields({
           <ChipInput value={keywords} onChange={onKeywordsChange} />
         </div>
       )}
-
-      <div className="space-y-1.5">
-        <Label>{t('fields.postScope')}</Label>
-        <CustomSelect
-          options={[
-            { value: 'all', label: t('postScope.all') },
-            { value: 'selected', label: t('postScope.selected') },
-          ]}
-          value={postScope}
-          onChange={(v) => onPostScopeChange((v as AutomationPostScope) ?? 'all')}
-        />
-        {postScope === 'selected' && (
-          <div className="flex items-center gap-2 pt-1">
-            <Button type="button" variant="outline" size="sm" onClick={() => setPickingMedia(true)}>
-              {t('choosePosts')}
-            </Button>
-            <span className="text-muted-foreground text-2xs">{t('postsSelectedCount', { count: postIds.length })}</span>
-          </div>
-        )}
-      </div>
 
       {pickingMedia && (
         <MediaPickerModal
