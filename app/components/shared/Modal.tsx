@@ -14,13 +14,14 @@ interface ModalProps {
 /**
  * Base modal component.
  *
- * - Content scrolls inside the dialog while header and footer stay fixed.
+ * - Content scrolls inside the dialog while header and footer stay fixed — and only when it is
+ *   taller than the screen allows (the dialog may use all but 1rem above and below).
  * - The shared Dialog wrapper owns the overlay and focus behavior.
  */
 export function Modal({ open, onClose, title, children, footer, className }: ModalProps) {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className={cn('bg-sidebar flex max-h-[85vh] flex-col sm:max-w-lg', className)}>
+      <DialogContent className={cn('bg-sidebar flex max-h-[calc(100dvh-2rem)] flex-col sm:max-w-lg', className)}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>

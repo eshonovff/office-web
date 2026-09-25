@@ -1,10 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
+import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Textarea } from '~/components/ui/textarea';
 import { useFlowBuilderApi } from '~/lib/flowBuilderApi';
+import { cn } from '~/lib/utils';
 import type { AutomationMatchMode, AutomationPostScope } from '~/types/commentAutomation';
 
 interface DryRunPanelProps {
@@ -26,6 +28,9 @@ export function DryRunPanel({ channelId, matchMode, keywords, postScope, postIds
   const { t } = useTranslation('instagramAutomation');
   const [commentText, setCommentText] = useState('');
   const [actorId, setActorId] = useState('');
+  // Closed at first: a check tried now and then, not part of the rule — open, it made the rule
+  // form taller than most screens.
+  const [expanded, setExpanded] = useState(false);
   // Staff or мизоҷ API — whichever area the rule form is in (FlowBuilderApiProvider).
   const { dryRunRule } = useFlowBuilderApi();
 
@@ -49,51 +54,64 @@ export function DryRunPanel({ channelId, matchMode, keywords, postScope, postIds
 
   return (
     <div className="border-border space-y-2 rounded-lg border p-3">
-      <p className="text-sm font-medium">{t('dryRun.title')}</p>
-      <p className="text-muted-foreground text-2xs">{t('dryRun.notice')}</p>
-      <Textarea
-        value={commentText}
-        onChange={(e) => setCommentText(e.target.value)}
-        placeholder={t('dryRun.placeholder')}
-        rows={2}
-      />
-      {requiresFollow && (
-        <div className="space-y-1">
-          <Input
-            value={actorId}
-            onChange={(e) => setActorId(e.target.value)}
-            placeholder={t('dryRun.actorIdPlaceholder')}
-          />
-          <p className="text-muted-foreground text-2xs">{t('dryRun.actorIdHint')}</p>
-        </div>
-      )}
-      <Button
+      <button
         type="button"
-        variant="outline"
-        size="sm"
-        disabled={isPending || !commentText.trim()}
-        onClick={() => mutate()}>
-        {t('dryRun.run')}
-      </Button>
-
-      {data && (
-        <div className="space-y-1">
-          <p
-            className={
-              data.matched ? 'text-sm text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground text-sm'
-            }>
-            {data.matched
-              ? t('dryRun.matched', { keyword: data.matchedKeyword ?? t('dryRun.anyComment') })
-              : t('dryRun.notMatched')}
-          </p>
-          {data.matched && requiresFollow && (
-            <p className="text-muted-foreground text-2xs">
-              {data.followCheckResult
-                ? t(`dryRun.followResult.${data.followCheckResult}` as const)
-                : t('dryRun.followResultSkipped')}
-            </p>
+        aria-expanded={expanded}
+        onClick={() => setExpanded((e) => !e)}
+        className="flex w-full items-center justify-between gap-2 text-left text-sm font-medium">
+        {t('dryRun.title')}
+        <ChevronDown
+          className={cn('text-muted-foreground size-4 shrink-0 transition-transform', expanded && 'rotate-180')}
+        />
+      </button>
+      {expanded && (
+        <>
+          <p className="text-muted-foreground text-2xs">{t('dryRun.notice')}</p>
+          <Textarea
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder={t('dryRun.placeholder')}
+            rows={2}
+          />
+          {requiresFollow && (
+            <div className="space-y-1">
+              <Input
+                value={actorId}
+                onChange={(e) => setActorId(e.target.value)}
+                placeholder={t('dryRun.actorIdPlaceholder')}
+              />
+              <p className="text-muted-foreground text-2xs">{t('dryRun.actorIdHint')}</p>
+            </div>
           )}
-        </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isPending || !commentText.trim()}
+            onClick={() => mutate()}>
+            {t('dryRun.run')}
+          </Button>
+
+          {data && (
+            <div className="space-y-1">
+              <p
+                className={
+                  data.matched ? 'text-sm text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground text-sm'
+                }>
+                {data.matched
+                  ? t('dryRun.matched', { keyword: data.matchedKeyword ?? t('dryRun.anyComment') })
+                  : t('dryRun.notMatched')}
+              </p>
+              {data.matched && requiresFollow && (
+                <p className="text-muted-foreground text-2xs">
+                  {data.followCheckResult
+                    ? t(`dryRun.followResult.${data.followCheckResult}` as const)
+                    : t('dryRun.followResultSkipped')}
+                </p>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
