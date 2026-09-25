@@ -13,7 +13,9 @@ export function MessageNodeCard({ id, data, selected }: NodeProps<FlowCanvasNode
   // Ҳимояи дифоъӣ: config-и маълумоти кӯҳна/вайроншуда метавонад ин майдонҳоро надошта бошад.
   const blocks = config.blocks ?? [];
   const buttons = config.buttons ?? [];
-  const firstText = blocks.find((b) => b.type === 'text')?.text;
+  const textBlock = blocks.find((b) => b.type === 'text');
+  const firstText = textBlock?.text;
+  const variantCount = (textBlock?.variants ?? []).filter((v) => v.trim()).length;
   const mediaBlock = blocks.find((b) => b.type !== 'text');
   const ports = getOutputPorts('message', { ...config, blocks, buttons });
 
@@ -37,6 +39,9 @@ export function MessageNodeCard({ id, data, selected }: NodeProps<FlowCanvasNode
       ) : (
         <>
           {firstText && <p className="line-clamp-3">{firstText}</p>}
+          {variantCount > 0 && (
+            <p className="text-muted-foreground">{t('nodePanels.message.variantsCount', { count: variantCount })}</p>
+          )}
           {mediaBlock && (
             <div className="flex items-center gap-1.5">
               {mediaBlock.previewDataUri ? (
