@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router';
+import { toast } from 'sonner';
 import { authApi } from '~/api/auth';
 import { customerAuthApi } from '~/api/customerAuth';
 import { ExternalAuthButtons } from '~/components/auth/ExternalAuthButtons';
@@ -20,7 +21,7 @@ import { createSignInSchema, type SignInForm } from '~/validations/auth';
 export default function LoginPage() {
   const { t } = useTranslation(['auth', 'customerAuth']);
   const { t: tVal } = useTranslation('validation');
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
@@ -29,6 +30,7 @@ export default function LoginPage() {
     control,
     handleSubmit,
     getValues,
+    watch,
     formState: { isSubmitting: isFormSubmitting },
   } = useForm<SignInForm>({
     resolver: zodResolver(schema),
@@ -65,8 +67,19 @@ export default function LoginPage() {
     },
   });
 
+  // Back from /reset-password: say so once, then drop the flag so a reload does not repeat it.
+  useEffect(() => {
+    if (searchParams.get('passwordReset') !== '1') return;
+    toast.success(t('customerAuth:resetPassword.done'), { id: 'password-reset' });
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams, t]);
+
   const isSubmitting = isFormSubmitting || isPending;
   const error = signInError ? signInErrorOf(signInError) : null;
+  const typedEmail = watch('identifier').trim();
+  const forgotLink = isCustomerIdentifier(typedEmail)
+    ? `/forgot-password?email=${encodeURIComponent(typedEmail)}`
+    : '/forgot-password';
 
   return (
     <div className="space-y-8">
@@ -103,6 +116,12 @@ export default function LoginPage() {
             )
           }
         />
+
+        <div className="-mt-2 text-right">
+          <Link to={forgotLink} className="text-primary text-sm hover:underline">
+            {t('forgotLink')}
+          </Link>
+        </div>
 
         {error && (
           <div role="alert" className="text-destructive flex items-center gap-2 text-sm">

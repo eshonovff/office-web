@@ -8,6 +8,7 @@ import { customerAuthApi } from '~/api/customerAuth';
 import { makeQueryClient } from '~/lib/query-client';
 import { useAuthStore } from '~/store/useAuthStore';
 import { useCustomerAuthStore } from '~/store/useCustomerAuthStore';
+import { toast } from 'sonner';
 import LoginPage from './route';
 
 const navigate = vi.fn();
@@ -18,6 +19,7 @@ vi.mock('react-router', async (importOriginal) => ({
 }));
 
 vi.mock('~/api/auth', () => ({ authApi: { login: vi.fn() } }));
+vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('~/api/customerAuth', () => ({ customerAuthApi: { login: vi.fn(), externalLogin: vi.fn() } }));
 
 const staffUser = { id: 'u1', fullName: 'Owner', username: 'owner', permissions: ['users.view'] };
@@ -167,5 +169,22 @@ describe('LoginPage (shared by staff and мизоҷ)', () => {
     expect(await screen.findByText('identifierRequired')).toBeInTheDocument();
     expect(authApi.login).not.toHaveBeenCalled();
     expect(customerAuthApi.login).not.toHaveBeenCalled();
+  });
+
+  it('links to "forgot password", carrying a typed email along', async () => {
+    renderPage();
+    const link = screen.getByRole('link', { name: 'forgotLink' });
+    expect(link).toHaveAttribute('href', '/forgot-password');
+
+    await userEvent.type(screen.getByLabelText('identifier'), 'faridun@example.com');
+    expect(link).toHaveAttribute('href', '/forgot-password?email=faridun%40example.com');
+  });
+
+  it('confirms a finished password reset once', async () => {
+    renderPage('/login?passwordReset=1');
+
+    await waitFor(() =>
+      expect(toast.success).toHaveBeenCalledWith('customerAuth:resetPassword.done', { id: 'password-reset' })
+    );
   });
 });

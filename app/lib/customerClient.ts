@@ -46,7 +46,14 @@ export function refreshCustomerAccessToken(): Promise<string> {
 }
 
 // These forms all show their own inline error — no duplicate toast on top.
-const SILENT_URLS = ['/auth/register', '/auth/verify-email', '/auth/resend-code', '/auth/login'];
+const SILENT_URLS = [
+  '/auth/register',
+  '/auth/verify-email',
+  '/auth/resend-code',
+  '/auth/login',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+];
 const isSilent = (url?: string): boolean => SILENT_URLS.some((silent) => url?.includes(silent));
 
 customerApiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {

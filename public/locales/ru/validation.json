@@ -18,5 +18,6 @@
   "codeRequired": "Введите код",
   "codeLength": "Код должен состоять из 6 цифр",
   "codeDigitsOnly": "Код должен содержать только цифры",
-  "identifierRequired": "Введите email или логин"
+  "identifierRequired": "Введите email или логин",
+  "passwordMaxLength": "Пароль не должен быть длиннее 128 символов"
 }

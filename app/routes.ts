@@ -8,6 +8,8 @@ export default [
     route('login', 'routes/(auth)/login/route.tsx'),
     route('register', 'routes/(auth)/register/route.tsx'),
     route('verify-email', 'routes/(auth)/verify-email/route.tsx'),
+    route('forgot-password', 'routes/(auth)/forgot-password/route.tsx'),
+    route('reset-password', 'routes/(auth)/reset-password/route.tsx'),
   ]),
   route('account/login', 'routes/account-login-redirect.tsx'),
 

@@ -17,6 +17,12 @@
   ҳарфи калон ва фосила → `/account`), мизоҷ бо рамзи хато (ҳамон паём), email-и тасдиқнашуда
   (паём + "Тасдиқ кунед"), `/account/login?redirectTo=//evil.com` → `/account`.
 
+**Барқарор кардани рамзи мизоҷ:** `/login` → "Рамзро фаромӯш кардед?" (бо email-и навишташуда)
+→ `/forgot-password` (ҷавоби якхела, танаффуси 60 с, ишора барои кормандон) → email →
+`/reset-password#token=…` (токен аз fragment хонда шуда, фавран аз сатри суроға тоза мешавад; рамз
+ду бор) → `/login?passwordReset=1` (паём). Пайванди нодуруст/истифодашуда → "пайванди нав гиред".
+Backend ва таҳлили амният: `office-api/docs/phases/phase-14-customer-automations.md`.
+
 **Логотипи Office Nizom:** нишона (бе матн) дар плиткаи сафед — `components/shared/BrandLogo.tsx`
 (номи "Office Nizom" матни зинда аз `common:brand`, мувофиқи мавзӯ): вуруд/сабти ном, landing,
 sidebar-и кормандон ва мизоҷ (ҷамъшуда — танҳо нишона), экрани боргузорӣ. Favicon (ICO бо PNG-и

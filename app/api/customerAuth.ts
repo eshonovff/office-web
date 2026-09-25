@@ -21,6 +21,15 @@ export const customerAuthApi = {
     const { data } = await customerApiClient.post<CustomerAuthResponse>('/auth/login', payload);
     return data;
   },
+  /** Always the same answer, whether or not the email has an account (the backend never tells). */
+  forgotPassword: async (email: string): Promise<CustomerAuthMessageResponse> => {
+    const { data } = await customerApiClient.post<CustomerAuthMessageResponse>('/auth/forgot-password', { email });
+    return data;
+  },
+  /** Ends every session of the account; the мизоҷ signs in again afterwards. */
+  resetPassword: async (token: string, newPassword: string): Promise<void> => {
+    await customerApiClient.post('/auth/reset-password', { token, newPassword });
+  },
   logout: async (): Promise<void> => {
     await customerApiClient.post('/auth/logout');
   },
