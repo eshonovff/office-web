@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CustomSelect } from '~/components/shared/CustomSelect';
 import { Modal } from '~/components/shared/Modal';
+import { PublicRepliesField } from '~/components/shared/PublicRepliesField';
 import { TriggerConfigFields } from '~/components/shared/TriggerConfigFields';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
+import { publicRepliesValid } from '~/lib/publicReplies';
 import type { AutomationMatchMode, AutomationPostScope } from '~/types/commentAutomation';
 import { FLOW_TRIGGER_TYPES, type FlowDetail, type FlowTriggerType, type UpdateFlowRequest } from '~/types/flow';
 
@@ -27,17 +29,27 @@ export function FlowSettingsModal({ channelId, flow, open, onClose, onSave, isSa
   const [keywords, setKeywords] = useState<string[]>(flow.triggerConfig.keywords);
   const [postScope, setPostScope] = useState<AutomationPostScope>(flow.triggerConfig.postScope);
   const [postIds, setPostIds] = useState<string[]>(flow.triggerConfig.postIds);
+  const [publicReplies, setPublicReplies] = useState<string[]>(flow.triggerConfig.publicReplies ?? []);
+  const isComment = triggerType === 'instagram_comment';
 
   const canSave =
     name.trim().length > 0 &&
     (matchMode !== 'keyword' || keywords.some((k) => k.trim())) &&
-    (postScope !== 'selected' || postIds.length > 0);
+    (postScope !== 'selected' || postIds.length > 0) &&
+    (!isComment || publicRepliesValid(publicReplies));
 
   function submit() {
     onSave({
       name,
       triggerType,
-      triggerConfig: { matchMode, keywords: keywords.filter((k) => k.trim()), postScope, postIds },
+      triggerConfig: {
+        matchMode,
+        keywords: keywords.filter((k) => k.trim()),
+        postScope,
+        postIds,
+        // Only a comment has something to reply under.
+        publicReplies: isComment ? publicReplies.map((r) => r.trim()) : [],
+      },
     });
   }
 
@@ -80,6 +92,8 @@ export function FlowSettingsModal({ channelId, flow, open, onClose, onSave, isSa
           postIds={postIds}
           onPostIdsChange={setPostIds}
         />
+
+        {isComment && <PublicRepliesField value={publicReplies} onChange={setPublicReplies} />}
       </div>
     </Modal>
   );

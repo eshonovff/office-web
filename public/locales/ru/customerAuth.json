@@ -60,7 +60,8 @@
     "analytics": "Аналитика",
     "broadcasts": "Рассылки",
     "training": "Обучение",
-    "new": "Новое"
+    "new": "Новое",
+    "comments": "Комментарии"
   },
   "billing": {
     "title": "Тариф и оплата",
@@ -261,5 +262,52 @@
       "reconnectAction": "Переподключить Instagram",
       "window": "С последнего сообщения подписчика прошло 24 часа — Instagram разрешит ответ только после его нового сообщения."
     }
+  },
+  "comments": {
+    "noInstagram": "Чтобы видеть комментарии, сначала подключите Instagram.",
+    "connectInstagram": "Подключить Instagram",
+    "readOnlyPlan": "Тариф закончился — комментарии видны, но действия недоступны.",
+    "choosePlan": "Выбрать тариф",
+    "reconnect": "Подключение Instagram нужно обновить.",
+    "reconnectAction": "Переподключить",
+    "postsFailed": "Не удалось получить посты из Instagram.",
+    "noPosts": "Постов нет.",
+    "noCaption": "Без подписи",
+    "count": "Комментариев: {{count}}",
+    "morePosts": "Более ранние посты",
+    "pickPost": "Выберите пост из списка",
+    "back": "Назад",
+    "openInInstagram": "В Instagram",
+    "sync": "Ранние комментарии",
+    "filter": {
+      "all": "Все",
+      "new": "Новые",
+      "unanswered": "Без ответа",
+      "hidden": "Скрытые"
+    },
+    "noComments": "Комментариев пока нет.",
+    "noneForFilter": "В этом фильтре комментариев нет.",
+    "you": "Вы",
+    "fan": "Подписчик",
+    "automated": "автоматически",
+    "new": "новый",
+    "hidden": "скрыт",
+    "directSent": "Direct отправлен",
+    "autoReplyFailed": "Автоответ не отправлен: {{reason}}",
+    "reply": "Ответить",
+    "direct": "В Direct",
+    "hide": "Скрыть",
+    "unhide": "Показать",
+    "delete": "Удалить",
+    "replyPlaceholder": "Ответ под комментарием…",
+    "send": "Отправить",
+    "replied": "Ответ опубликован",
+    "deleteTitle": "Удалить комментарий?",
+    "deleteDescription": "Комментарий будет удалён в самом Instagram вместе с ответами. Отменить нельзя.",
+    "deleted": "Комментарий удалён",
+    "directTitle": "Сообщение в Direct {{username}}",
+    "directPlaceholder": "Напишите сообщение…",
+    "directHint": "Instagram разрешает только одно сообщение на комментарий — до {{until}}. Ответ подписчика придёт в «Чаты».",
+    "directDone": "Сообщение отправлено в Direct"
   }
 }

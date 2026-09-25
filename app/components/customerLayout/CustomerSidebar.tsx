@@ -13,6 +13,7 @@ import { CustomerAccessStatus } from './CustomerAccessStatus';
 import { CustomerNavMain } from './CustomerNavMain';
 import { BrandLogo } from '~/components/shared/BrandLogo';
 import { customerChatKeys, customerChatsApi } from '~/api/customerChats';
+import { customerCommentKeys, customerCommentsApi } from '~/api/customerComments';
 
 // Mirrors AppSidebar (staff) — same shell, its own menu (getCustomerSidebarConfig): static,
 // no permission gating (a customer has none), and mostly disabled — see that file for why.
@@ -26,6 +27,11 @@ export function CustomerSidebar() {
     queryFn: customerChatsApi.unreadCount,
     refetchInterval: 60_000,
   });
+  const { data: newComments } = useQuery({
+    queryKey: customerCommentKeys.newCount,
+    queryFn: customerCommentsApi.newCount,
+    refetchInterval: 60_000,
+  });
 
   return (
     <Sidebar collapsible="icon" className="mt-2 border-none">
@@ -35,7 +41,7 @@ export function CustomerSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <CustomerNavMain items={items} badges={{ unreadChats }} />
+            <CustomerNavMain items={items} badges={{ unreadChats, newComments }} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

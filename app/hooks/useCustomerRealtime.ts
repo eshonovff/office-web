@@ -1,13 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { customerChatKeys } from '~/api/customerChats';
+import { customerCommentKeys } from '~/api/customerComments';
 import { useSignalR } from '~/hooks/useSignalR';
 import { useCustomerHub } from '~/store/useCustomerHub';
 
 /**
  * The мизоҷ's realtime connection, owned by the (account) layout so the sidebar's unread badge
- * stays live on every page. The server only ever says "this chat changed" (ChatUpdated with an
- * id); the data itself is re-read from /api/public, so nothing arrives that the tenant filter
+ * stays live on every page. The server only ever says "this chat changed" (ChatUpdated) or "this
+ * post's comments changed" (CommentsUpdated), with ids only; the data itself is re-read from /api/public, so nothing arrives that the tenant filter
  * has not passed. After a reconnect everything is re-read, in case events were missed.
  */
 export function useCustomerRealtime() {
@@ -29,10 +30,13 @@ export function useCustomerRealtime() {
   }, []);
 
   useEffect(() => {
-    if (reconnectCount > 0) void queryClient.invalidateQueries({ queryKey: customerChatKeys.all });
+    if (reconnectCount === 0) return;
+    void queryClient.invalidateQueries({ queryKey: customerChatKeys.all });
+    void queryClient.invalidateQueries({ queryKey: customerCommentKeys.all });
   }, [queryClient, reconnectCount]);
 
   useSignalR(connection, {
     ChatUpdated: () => void queryClient.invalidateQueries({ queryKey: customerChatKeys.all }),
+    CommentsUpdated: () => void queryClient.invalidateQueries({ queryKey: customerCommentKeys.all }),
   });
 }

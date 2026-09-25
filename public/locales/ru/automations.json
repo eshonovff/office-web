@@ -37,5 +37,15 @@
       "instagram_comment": "Комментарий Instagram",
       "instagram_dm": "DM Instagram"
     }
+  },
+  "publicReplies": {
+    "toggle": "Также отвечать под постом",
+    "hint": "Под комментарием появится короткий ответ — по очереди из этих вариантов: одинаковый текст под каждым комментарием Instagram считает спамом.",
+    "variant": "Вариант {{number}}",
+    "remove": "Удалить",
+    "add": "Добавить вариант",
+    "default1": "Написали вам в Direct 📩",
+    "default2": "Проверьте Direct ✉️",
+    "default3": "Ответ в Direct 👀"
   }
 }

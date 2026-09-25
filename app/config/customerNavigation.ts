@@ -7,6 +7,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   type LucideIcon,
+  MessageCircle,
   MessageSquare,
   Rocket,
   Send,
@@ -21,7 +22,7 @@ export interface CustomerNavItem {
   disabled?: boolean;
   isNew?: boolean;
   /** A live count next to the title (CustomerNavMain reads it from the `badges` it is given). */
-  badgeKey?: 'unreadChats';
+  badgeKey?: 'unreadChats' | 'newComments';
 }
 
 // Static — a customer has no permissions to filter by (unlike getSidebarConfig for staff).
@@ -38,6 +39,12 @@ export const getCustomerSidebarConfig = (t: TFunction): CustomerNavItem[] => [
     url: '/account/chats',
     icon: MessageSquare,
     badgeKey: 'unreadChats',
+  },
+  {
+    title: t('sidebar.comments', { ns: 'customerAuth' }),
+    url: '/account/comments',
+    icon: MessageCircle,
+    badgeKey: 'newComments',
   },
   { title: t('sidebar.contacts', { ns: 'customerAuth' }), icon: Contact, disabled: true },
   { title: t('sidebar.analytics', { ns: 'customerAuth' }), icon: ChartColumn, disabled: true },

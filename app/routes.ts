@@ -20,6 +20,7 @@ export default [
     route('account/automations/flows/:id', 'routes/(account)/automations/flows/id/route.tsx'),
     route('account/settings', 'routes/(account)/settings/route.tsx'),
     route('account/chats', 'routes/(account)/chats/route.tsx'),
+    route('account/comments', 'routes/(account)/comments/route.tsx'),
   ]),
 
   layout('routes/(app)/layout.tsx', [

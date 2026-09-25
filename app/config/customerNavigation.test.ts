@@ -11,4 +11,11 @@ describe('мизоҷ sidebar', () => {
     expect(chats?.disabled).toBeFalsy();
     expect(chats?.badgeKey).toBe('unreadChats');
   });
+
+  it('opens Comments, with its new-comments badge', () => {
+    const comments = getCustomerSidebarConfig(t).find((item) => item.title === 'sidebar.comments');
+    expect(comments?.url).toBe('/account/comments');
+    expect(comments?.disabled).toBeFalsy();
+    expect(comments?.badgeKey).toBe('newComments');
+  });
 });

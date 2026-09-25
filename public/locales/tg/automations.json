@@ -35,5 +35,15 @@
       "instagram_comment": "Коментарии Instagram",
       "instagram_dm": "DM-и Instagram"
     }
+  },
+  "publicReplies": {
+    "toggle": "Зери пост ҳам ҷавоб нависед",
+    "hint": "Зери шарҳ кӯтоҳ ҷавоб меравад, бо навбат аз ин вариантҳо — матни якхела зери ҳар шарҳ ба назари Instagram спам аст.",
+    "variant": "Варианти {{number}}",
+    "remove": "Нест кардан",
+    "add": "Вариант илова кунед",
+    "default1": "Ба Direct навиштем 📩",
+    "default2": "Direct-ро санҷед ✉️",
+    "default3": "Ҷавоб дар Direct аст 👀"
   }
 }
