@@ -3,6 +3,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { customerChatKeys, customerChatsApi } from '~/api/customerChats';
+import { ChannelLogo } from '~/components/shared/ChannelLogo';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Skeleton } from '~/components/ui/skeleton';
@@ -105,6 +106,7 @@ export function ChatThread({ conversationId, onBack }: ChatThreadProps) {
                     </a>
                   )}
                   {chat.contactUsername && ' · '}
+                  <ChannelLogo type={chat.channelType} className="mr-1 inline-block size-3 align-[-2px]" />
                   {chat.channelName}
                 </p>
               </div>
