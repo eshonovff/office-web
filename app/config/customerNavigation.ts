@@ -46,7 +46,7 @@ export const getCustomerSidebarConfig = (t: TFunction): CustomerNavItem[] => [
     icon: MessageCircle,
     badgeKey: 'newComments',
   },
-  { title: t('sidebar.contacts', { ns: 'customerAuth' }), icon: Contact, disabled: true },
+  { title: t('sidebar.contacts', { ns: 'customerAuth' }), url: '/account/contacts', icon: Contact },
   { title: t('sidebar.analytics', { ns: 'customerAuth' }), icon: ChartColumn, disabled: true },
   { title: t('sidebar.broadcasts', { ns: 'customerAuth' }), icon: Send, disabled: true },
   { title: t('sidebar.training', { ns: 'customerAuth' }), icon: GraduationCap, disabled: true },

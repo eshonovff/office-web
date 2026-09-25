@@ -379,6 +379,7 @@ describe('CommentsPage — auto-reply tab', () => {
 
     await user.click(await screen.findByRole('button', { name: 'actions.edit' }));
     const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: 'dryRun.title' }));
     await user.type(within(dialog).getByPlaceholderText('dryRun.placeholder'), 'Нархаш чанд?');
     await user.click(within(dialog).getByText('dryRun.run'));
     await waitFor(() => expect(customerCommentRulesApi.dryRun).toHaveBeenCalledWith('ch1', expect.anything()));

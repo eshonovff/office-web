@@ -20,15 +20,18 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+// Inline addons pull their button toward the edge with a smaller padding, not a negative margin:
+// a negative margin pushed the addon's box past the input group, and a scroll container around
+// it (a modal body) scrolled sideways by those few pixels.
 const inputGroupAddonVariants = cva(
   "flex h-auto cursor-text items-center justify-center gap-2 py-1.5 text-sm font-medium text-muted-foreground select-none group-data-[disabled=true]/input-group:opacity-50 [&>kbd]:rounded-[calc(var(--radius)-5px)] [&>svg:not([class*='size-'])]:size-4",
   {
     variants: {
       align: {
         "inline-start":
-          "order-first pl-2 has-[>button]:ml-[-0.3rem] has-[>kbd]:ml-[-0.15rem]",
+          "order-first pl-2 has-[>button]:pl-[0.2rem] has-[>kbd]:pl-[0.35rem]",
         "inline-end":
-          "order-last pr-2 has-[>button]:mr-[-0.3rem] has-[>kbd]:mr-[-0.15rem]",
+          "order-last pr-2 has-[>button]:pr-[0.2rem] has-[>kbd]:pr-[0.35rem]",
         "block-start":
           "order-first w-full justify-start px-2.5 pt-2 group-has-[>input]/input-group:pt-2 [.border-b]:pb-2",
         "block-end":

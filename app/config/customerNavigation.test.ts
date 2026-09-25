@@ -18,4 +18,10 @@ describe('мизоҷ sidebar', () => {
     expect(comments?.disabled).toBeFalsy();
     expect(comments?.badgeKey).toBe('newComments');
   });
+
+  it('opens Contacts', () => {
+    const contacts = getCustomerSidebarConfig(t).find((item) => item.title === 'sidebar.contacts');
+    expect(contacts?.url).toBe('/account/contacts');
+    expect(contacts?.disabled).toBeFalsy();
+  });
 });
