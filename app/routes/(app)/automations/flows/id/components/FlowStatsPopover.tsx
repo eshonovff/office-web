@@ -6,6 +6,7 @@ import { Button } from '~/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { Skeleton } from '~/components/ui/skeleton';
 import type { FlowCanvasNode } from '~/lib/flowGraph';
+import { cn } from '~/lib/utils';
 
 interface FlowStatsPopoverProps {
   flowId: string;
@@ -61,6 +62,7 @@ function FlowStatsBody({ flowId, nodes }: { flowId: string; nodes: FlowCanvasNod
         <StatBox label={t('stats.finished')} value={stats.finishedSessions} />
         <StatBox label={t('stats.active')} value={stats.activeOrWaitingSessions} />
         <StatBox label={t('stats.failed')} value={stats.failedSessions} />
+        <StatBox label={t('stats.conversions')} value={stats.conversions ?? 0} className="col-span-2" />
       </div>
       {nodes.length > 0 && (
         <div className="border-border space-y-1 border-t pt-2">
@@ -87,9 +89,9 @@ function FlowStatsBody({ flowId, nodes }: { flowId: string; nodes: FlowCanvasNod
   );
 }
 
-function StatBox({ label, value }: { label: string; value: number }) {
+function StatBox({ label, value, className }: { label: string; value: number; className?: string }) {
   return (
-    <div className="border-border rounded-md border p-1.5">
+    <div className={cn('border-border rounded-md border p-1.5', className)}>
       <p className="text-muted-foreground">{label}</p>
       <p className="text-sm font-semibold">{value}</p>
     </div>

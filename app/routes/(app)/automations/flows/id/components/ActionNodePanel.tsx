@@ -16,6 +16,7 @@ const ACTION_KINDS: ActionKind[] = [
   'collect_input',
   'http_request',
   'goto_flow',
+  'conversion',
 ];
 
 interface ActionNodePanelProps {
@@ -60,6 +61,12 @@ export function ActionNodePanel({ config, flows, currentFlowId, onChange }: Acti
           onChange={(v) => v && changeKind(v as ActionKind)}
         />
       </div>
+
+      {config.kind === 'conversion' && (
+        <p className="bg-muted/60 text-muted-foreground rounded-md px-2.5 py-2 text-xs">
+          {t('nodePanels.action.conversionHint')}
+        </p>
+      )}
 
       {config.kind === 'delay' && (
         <div className="space-y-1.5">

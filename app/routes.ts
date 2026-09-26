@@ -23,6 +23,7 @@ export default [
     route('account/comments', 'routes/(account)/comments/route.tsx'),
     route('account/contacts', 'routes/(account)/contacts/route.tsx'),
     route('account/broadcasts', 'routes/(account)/broadcasts/route.tsx'),
+    route('account/analytics', 'routes/(account)/analytics/route.tsx'),
   ]),
 
   layout('routes/(app)/layout.tsx', [

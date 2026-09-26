@@ -3,9 +3,13 @@ import i18next from 'i18next';
 
 const numberLocales = { tg: 'tg-TJ', ru: 'ru-RU' } as const;
 
-export function fmtTJS(v: number): string {
+export function fmtNumber(v: number): string {
   const locale = numberLocales[i18next.language as keyof typeof numberLocales] ?? numberLocales.tg;
-  return `${v.toLocaleString(locale)} TJS`;
+  return v.toLocaleString(locale);
+}
+
+export function fmtTJS(v: number): string {
+  return `${fmtNumber(v)} TJS`;
 }
 
 export function fmtTime(s: string): string {
