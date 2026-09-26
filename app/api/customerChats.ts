@@ -38,6 +38,15 @@ export const customerChatsApi = {
     });
     return data;
   },
+  /** A voice note recorded in the browser (WebM, Ogg or MP4) — the server makes it AAC for Instagram. */
+  sendVoiceNote: async (id: string, file: File): Promise<Message> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const { data } = await customerApiClient.post<Message>(`/conversations/${id}/voice-note`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+  },
   cancelMessage: async (id: string, messageId: string): Promise<Message> => {
     const { data } = await customerApiClient.post<Message>(`/conversations/${id}/messages/${messageId}/cancel`);
     return data;
