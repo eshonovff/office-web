@@ -2,6 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
+import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { conversationsApi } from '~/api/conversations';
 import { customerChatsApi } from '~/api/customerChats';
@@ -21,6 +22,7 @@ vi.mock('~/api/customerChats', async (importOriginal) => ({
     get: vi.fn(),
     listMessages: vi.fn(),
     send: vi.fn(),
+    sendMedia: vi.fn(),
     cancelMessage: vi.fn(),
     markAsRead: vi.fn(),
     getMediaBlob: vi.fn(),
@@ -174,6 +176,40 @@ describe('ChatsPage', () => {
     await waitFor(() => expect(customerChatsApi.send).toHaveBeenCalledWith('c1', 'Салом!'));
   });
 
+  it('sends a photo through the мизоҷ API — the chosen file, at once', async () => {
+    vi.mocked(customerChatsApi.sendMedia).mockResolvedValue(
+      message({ id: 'm3', direction: 'Outbound', type: 'Image' })
+    );
+    renderPage('/account/chats?c=c1');
+    const user = userEvent.setup();
+    const photo = new File(['jpg'], 'photo.jpg', { type: 'image/jpeg' });
+
+    await user.upload(await screen.findByLabelText('chats.attach', { selector: 'input' }), photo);
+
+    await waitFor(() => expect(customerChatsApi.sendMedia).toHaveBeenCalledWith('c1', photo));
+    expect(customerChatsApi.send).not.toHaveBeenCalled();
+  });
+
+  const bigPng = () => {
+    const file = new File(['x'], 'big.png', { type: 'image/png' });
+    Object.defineProperty(file, 'size', { value: 8 * 1024 * 1024 + 1 }); // Instagram: images up to 8 MB
+    return file;
+  };
+
+  it.each([
+    ['an SVG', () => new File(['<svg/>'], 'x.svg', { type: 'image/svg+xml' }), 'chats.fileNotAllowed'],
+    ['an HTML page', () => new File(['<html/>'], 'x.html', { type: 'text/html' }), 'chats.fileNotAllowed'],
+    ['an image over 8 MB', bigPng, 'chats.fileTooBig'],
+  ])('refuses %s before sending anything', async (_label, makeFile, reason) => {
+    renderPage('/account/chats?c=c1');
+    const user = userEvent.setup({ applyAccept: false });
+
+    await user.upload(await screen.findByLabelText('chats.attach', { selector: 'input' }), makeFile());
+
+    expect(toast.error).toHaveBeenCalledWith(reason);
+    expect(customerChatsApi.sendMedia).not.toHaveBeenCalled();
+  });
+
   it('Shift+Enter is a new line, not a send', async () => {
     renderPage('/account/chats?c=c1');
     const user = userEvent.setup();
@@ -197,6 +233,7 @@ describe('ChatsPage', () => {
     expect(within(note).getByText(reason)).toBeInTheDocument();
     if (link) expect(within(note).getByRole('link')).toHaveAttribute('href', link);
     expect(screen.queryByRole('textbox', { name: 'chats.placeholder' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'chats.attach' })).not.toBeInTheDocument(); // no file either
   });
 
   it('fetches media through the мизоҷ API only — never the staff one', async () => {
