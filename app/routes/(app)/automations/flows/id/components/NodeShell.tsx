@@ -12,7 +12,8 @@ interface NodeShellProps {
   hasTarget?: boolean;
   /** Шумораи контактҳое, ки то ин нод расидаанд (FlowStats) — undefined = нишон дода намешавад (масалан Note). */
   contactCount?: number;
-  outputs: { id: string; label: string }[];
+  /** One row per way out; `stat` — a small number beside it (e.g. a button's clicks). */
+  outputs: { id: string; label: string; stat?: string | null }[];
   children: ReactNode;
 }
 
@@ -62,6 +63,11 @@ export function NodeShell({
             <div
               key={output.id}
               className="border-border text-2xs relative flex items-center justify-end border-b px-3 py-1.5 last:rounded-b-lg last:border-b-0">
+              {output.stat && (
+                <span className="text-muted-foreground mr-auto shrink-0 pr-2 tabular-nums" title={t('stats.buttonClicks')}>
+                  {output.stat}
+                </span>
+              )}
               <span className="truncate">{output.label}</span>
               <Handle type="source" position={Position.Right} id={output.id} className="!bg-primary !h-2.5 !w-2.5" />
             </div>

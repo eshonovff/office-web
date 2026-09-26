@@ -60,7 +60,7 @@ export interface ConditionNodeConfig {
 }
 
 export type ActionKind =
-  'delay' | 'add_tags' | 'remove_tags' | 'set_variable' | 'collect_input' | 'http_request' | 'goto_flow';
+  'delay' | 'add_tags' | 'remove_tags' | 'set_variable' | 'collect_input' | 'http_request' | 'goto_flow' | 'conversion';
 
 export interface ActionNodeConfig {
   kind: ActionKind;
@@ -158,6 +158,13 @@ export interface FlowFailure {
   createdAt: string;
 }
 
+/** How many people clicked one "next" button of a message (each once). */
+export interface FlowButtonStat {
+  nodeId: string;
+  buttonIndex: number;
+  contactCount: number;
+}
+
 export interface FlowStats {
   totalSessions: number;
   finishedSessions: number;
@@ -165,6 +172,9 @@ export interface FlowStats {
   failedSessions: number;
   nodes: FlowNodeStat[];
   recentFailures: FlowFailure[];
+  buttons: FlowButtonStat[];
+  /** People who reached the goal («Мақсад») step — each once, all time. */
+  conversions: number;
 }
 
 export interface FlowTemplateListItem {

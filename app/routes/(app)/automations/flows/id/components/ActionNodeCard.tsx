@@ -51,6 +51,8 @@ function ActionSummary({ config }: { config: ActionNodeConfig }) {
       return <p className="truncate">{config.httpUrl || t('nodePanels.action.empty')}</p>;
     case 'goto_flow':
       return <p>{t('nodePanels.action.summary.gotoFlow')}</p>;
+    case 'conversion':
+      return <p>{t('nodePanels.action.summary.conversion')}</p>;
     default:
       return null;
   }

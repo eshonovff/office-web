@@ -24,4 +24,10 @@ describe('мизоҷ sidebar', () => {
     expect(contacts?.url).toBe('/account/contacts');
     expect(contacts?.disabled).toBeFalsy();
   });
+
+  it('opens Analytics', () => {
+    const analytics = getCustomerSidebarConfig(t).find((item) => item.title === 'sidebar.analytics');
+    expect(analytics?.url).toBe('/account/analytics');
+    expect(analytics?.disabled).toBeFalsy();
+  });
 });

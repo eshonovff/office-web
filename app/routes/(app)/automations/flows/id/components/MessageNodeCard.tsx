@@ -3,12 +3,13 @@ import { MessageSquareText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getOutputPorts, type FlowCanvasNode } from '~/lib/flowGraph';
 import type { MessageNodeConfig } from '~/types/flow';
-import { useNodeContactCount } from './flowStatsContext';
+import { clickRate, useButtonClickCounts, useNodeContactCount } from './flowStatsContext';
 import { NodeShell } from './NodeShell';
 
 export function MessageNodeCard({ id, data, selected }: NodeProps<FlowCanvasNode>) {
   const { t } = useTranslation('flows');
   const contactCount = useNodeContactCount(id);
+  const clicks = useButtonClickCounts(id);
   const config = data.config as MessageNodeConfig;
   // Ҳимояи дифоъӣ: config-и маълумоти кӯҳна/вайроншуда метавонад ин майдонҳоро надошта бошад.
   const blocks = config.blocks ?? [];
@@ -31,6 +32,8 @@ export function MessageNodeCard({ id, data, selected }: NodeProps<FlowCanvasNode
           ? buttons.map((button, index) => ({
               id: ports[index],
               label: button.title || t('nodePanels.message.untitledButton'),
+              // A link opens a site — Instagram tells nobody it was clicked, so only "next" is counted.
+              stat: button.action === 'next' ? clickRate(clicks(index), contactCount) : null,
             }))
           : [{ id: 'default', label: t('nodePanels.continue') }]
       }>
