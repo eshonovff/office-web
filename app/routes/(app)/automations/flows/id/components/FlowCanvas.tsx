@@ -20,7 +20,7 @@ import type { FlowNodeType } from '~/types/flow';
 import { ActionNodeCard } from './ActionNodeCard';
 import { ConditionNodeCard } from './ConditionNodeCard';
 import { DeletableEdge } from './DeletableEdge';
-import { FlowNodeStatsProvider } from './flowStatsContext';
+import { FlowNodeStatsProvider, toStatsMaps } from './flowStatsContext';
 import { MessageNodeCard } from './MessageNodeCard';
 import { NodePalette } from './NodePalette';
 import { NoteNodeCard } from './NoteNodeCard';
@@ -78,7 +78,7 @@ export function FlowCanvas({
     queryKey: ['flows', flowId, 'stats'],
     queryFn: () => flowApi.flows.stats(flowId),
   });
-  const nodeCountById = useMemo(() => new Map(stats?.nodes.map((n) => [n.nodeId, n.contactCount]) ?? []), [stats]);
+  const statsMaps = useMemo(() => toStatsMaps(stats), [stats]);
 
   // onDelete тавассути data мегузарад (на мустақим ба edges-и аслӣ навишта мешавад) — то
   // toGraphRequest (лоиҳа санадро аз e.id/source/target месозад, на e.data) бетаъсир монад.
@@ -89,7 +89,7 @@ export function FlowCanvas({
 
   return (
     <div className="relative flex-1">
-      <FlowNodeStatsProvider value={nodeCountById}>
+      <FlowNodeStatsProvider value={statsMaps}>
         <ReactFlow
           // Follow the app theme — without it the zoom controls and minimap stay light in dark mode.
           colorMode={resolvedTheme === 'dark' ? 'dark' : 'light'}
