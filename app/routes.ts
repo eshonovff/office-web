@@ -22,6 +22,7 @@ export default [
     route('account/chats', 'routes/(account)/chats/route.tsx'),
     route('account/comments', 'routes/(account)/comments/route.tsx'),
     route('account/contacts', 'routes/(account)/contacts/route.tsx'),
+    route('account/broadcasts', 'routes/(account)/broadcasts/route.tsx'),
   ]),
 
   layout('routes/(app)/layout.tsx', [

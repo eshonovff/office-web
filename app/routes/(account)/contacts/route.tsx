@@ -53,9 +53,10 @@ export default function ContactsPage() {
     queryFn: () => customerContactsApi.tags(channelId),
   });
 
-  const exportCsv = useMutation({
+  // A real Excel file (.xlsx) — it opens in columns in any spreadsheet app, whatever its language.
+  const exportExcel = useMutation({
     mutationFn: () => customerContactsApi.export(filter, i18n.language === 'ru' ? 'ru' : 'tg'),
-    onSuccess: (blob) => saveFile(blob, `contacts-${dayjs().format('YYYY-MM-DD')}.csv`),
+    onSuccess: (blob) => saveFile(blob, `${t('contacts.title')} ${dayjs().format('YYYY-MM-DD')}.xlsx`),
   });
 
   const setParam = (key: string, value: string | null) =>
@@ -117,8 +118,8 @@ export default function ContactsPage() {
           type="button"
           variant="outline"
           className="gap-1.5"
-          disabled={!hasPlan || exportCsv.isPending || total === 0}
-          onClick={() => exportCsv.mutate()}>
+          disabled={!hasPlan || exportExcel.isPending || total === 0}
+          onClick={() => exportExcel.mutate()}>
           <Download className="size-4" />
           {t('contacts.export')}
         </Button>
