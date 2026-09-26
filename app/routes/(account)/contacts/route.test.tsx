@@ -235,11 +235,17 @@ describe('ContactsPage', () => {
     expect(screen.getByRole('button', { name: 'contacts.delete' })).toBeEnabled();
   });
 
-  it('exports what is on screen — same filters', async () => {
+  it('exports what is on screen — same filters — as an Excel file', async () => {
     const user = userEvent.setup();
-    vi.mocked(customerContactsApi.export).mockResolvedValue(new Blob(['x'], { type: 'text/csv' }));
+    vi.mocked(customerContactsApi.export).mockResolvedValue(
+      new Blob(['x'], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    );
     const createObjectURL = vi.fn(() => 'blob:contacts');
     Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() });
+    const saved: string[] = [];
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      saved.push(this.download);
+    });
     renderPage('/account/contacts?tag=vip');
     await screen.findByRole('button', { name: /Нилуфар/ });
 
@@ -249,6 +255,8 @@ describe('ContactsPage', () => {
       expect(customerContactsApi.export).toHaveBeenCalledWith({ channelId: undefined, search: '', tag: 'vip' }, 'tg')
     );
     await waitFor(() => expect(createObjectURL).toHaveBeenCalled());
+    expect(saved).toEqual([expect.stringMatching(/^contacts\.title \d{4}-\d{2}-\d{2}\.xlsx$/)]);
+    click.mockRestore();
   });
 
   it('on a phone: the list, then the card alone with a way back', async () => {
