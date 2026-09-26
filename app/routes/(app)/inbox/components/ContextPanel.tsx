@@ -11,6 +11,7 @@ import { Permissions } from '~/config/permissions';
 import { useCan } from '~/hooks/useCan';
 import { formatDate, formatPhoneNumber } from '~/lib/format';
 import type { ConversationDetail, ConversationStatus } from '~/types/conversation';
+import { useAvatarUrl } from '../useAvatarUrl';
 import { AssignmentHistory } from './AssignmentHistory';
 
 const ALL_STATUSES: ConversationStatus[] = ['New', 'InProgress', 'Waiting', 'Closed'];
@@ -30,6 +31,7 @@ export function ContextPanel({ conversation, onStatusChange, isChangingStatus }:
 
   const displayName = conversation.contactName || conversation.externalId;
   const initials = displayName.slice(0, 2).toUpperCase();
+  const avatar = useAvatarUrl(conversation.contactAvatarUrl);
 
   // Only WhatsApp's externalId is a phone number — Instagram/Facebook use a
   // platform-scoped user id there (IGSID/PSID), meaningless to a human. This
@@ -66,7 +68,7 @@ export function ContextPanel({ conversation, onStatusChange, isChangingStatus }:
     <div className="min-w-0 space-y-4 p-3">
       <div className="flex min-w-0 flex-col items-center gap-2 pt-2 text-center">
         <Avatar size="lg">
-          {conversation.contactAvatarUrl && <AvatarImage src={conversation.contactAvatarUrl} />}
+          {avatar && <AvatarImage src={avatar} />}
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
         <div className="flex min-w-0 max-w-full items-center gap-1">

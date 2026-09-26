@@ -6,6 +6,7 @@ import { Badge } from '~/components/ui/badge';
 import { formatRelativeTime } from '~/lib/format';
 import { cn } from '~/lib/utils';
 import type { ConversationListItem as ConversationListItemType, ConversationStatus } from '~/types/conversation';
+import { useAvatarUrl } from '../useAvatarUrl';
 
 const STATUS_CLASS: Record<ConversationStatus, string> = {
   New: 'text-primary border-primary/30',
@@ -32,6 +33,7 @@ export function ConversationListItem({ conversation, active, draggable, onClick 
 
   const displayName = conversation.contactName || conversation.externalId;
   const initials = displayName.slice(0, 2).toUpperCase();
+  const avatar = useAvatarUrl(conversation.contactAvatarUrl);
 
   return (
     <div
@@ -45,7 +47,7 @@ export function ConversationListItem({ conversation, active, draggable, onClick 
         isDragging && 'opacity-40'
       )}>
       <Avatar>
-        {conversation.contactAvatarUrl && <AvatarImage src={conversation.contactAvatarUrl} />}
+        {avatar && <AvatarImage src={avatar} />}
         <AvatarFallback className="text-2xs">{initials}</AvatarFallback>
       </Avatar>
 
