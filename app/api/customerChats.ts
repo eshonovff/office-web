@@ -29,6 +29,15 @@ export const customerChatsApi = {
     const { data } = await customerApiClient.post<Message>(`/conversations/${id}/messages`, { body });
     return data;
   },
+  /** A photo, video, audio or PDF into the chat — the server checks the type, size, plan and window again. */
+  sendMedia: async (id: string, file: File): Promise<Message> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const { data } = await customerApiClient.post<Message>(`/conversations/${id}/media`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+  },
   cancelMessage: async (id: string, messageId: string): Promise<Message> => {
     const { data } = await customerApiClient.post<Message>(`/conversations/${id}/messages/${messageId}/cancel`);
     return data;
